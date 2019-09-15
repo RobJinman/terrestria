@@ -1,4 +1,5 @@
 import { Scene, Game } from "phaser";
+import "../styles/styles.scss";
 
 class MainScene extends Scene {
   constructor() {

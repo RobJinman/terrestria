@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const merge = require("webpack-merge");
 const TerserPlugin = require("terser-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -22,6 +23,14 @@ const baseConfig = {
         test: /\.ts$/,
         use: "ts-loader",
         exclude: /node_modules/
+      },
+      {
+        test: /\.scss$/,
+        use: [
+          "style-loader",
+          "css-loader",
+          "sass-loader"
+        ]
       }
     ]
   },
@@ -44,11 +53,16 @@ const baseConfig = {
     ]
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      title: "Pinata Demo 1",
+      template: path.resolve(rootDir, "index.html"),
+      inject: true,
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true
+      }
+    }),
     new CopyWebpackPlugin([
-      {
-        from: path.resolve(rootDir, "index.html"),
-        to: distDir
-      },
       {
         from: path.resolve(rootDir, "assets", "**", "*"),
         to: distDir
