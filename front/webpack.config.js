@@ -22,7 +22,10 @@ const baseConfig = {
       {
         test: /\.ts$/,
         use: "ts-loader",
-        exclude: /node_modules/
+        exclude: [
+          /\.spec.ts$/,
+          /node_modules/
+        ]
       },
       {
         test: /\.scss$/,
