@@ -6,9 +6,13 @@ const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
 const PING_INTERVAL_MS = 5000;
 
-interface UserConnection {
-  ws: WebSocket;
+interface ExtWebSocket extends WebSocket {
   isAlive: boolean;
+  userId: string|null;
+};
+
+interface UserConnection {
+  ws: ExtWebSocket;
   playerId: string;
   game: Game;
 }
@@ -37,12 +41,33 @@ export class App {
 
     this._games.add(new Game());
 
-    setInterval(this._checkConnections.bind(this), PING_INTERVAL_MS);
+    this._wss.on("connection", ws => this._handleConnection(ws));
 
-    this._wss.on("connection", ws => {
-      console.log("Got connection");
-      ws.once("message", msg => this._handleLogIn(ws, msg.toString()));
-    });
+    setInterval(() => this._checkConnections(), PING_INTERVAL_MS);
+  }
+
+  // =======================================================
+  // _handleConnection
+  // =======================================================
+  private _handleConnection(ws: WebSocket) {
+    console.log("Got connection");
+
+    const sock = <ExtWebSocket>ws;
+    sock.isAlive = true;
+    sock.userId = null;
+
+    ws.on("pong", () => this._handlePong(sock));
+
+    // Interpret the first message as a log in
+    ws.once("message", msg => this._handleLogIn(ws, msg.toString()));
+  }
+
+  // =======================================================
+  // _handlePong
+  // =======================================================
+  private _handlePong(sock: ExtWebSocket) {
+    console.log(`PONG, id = ${sock.userId}`);
+    sock.isAlive = true;
   }
 
   // =======================================================
@@ -54,7 +79,6 @@ export class App {
     const user = this._users.get(id);
 
     if (user) {
-      user.ws.terminate;
       user.game.removePlayer(id);
       user.ws.terminate();
 
@@ -71,22 +95,23 @@ export class App {
   // _checkConnections
   // =======================================================
   private _checkConnections() {
-    const pendingDelete: string[] = [];
+    this._wss.clients.forEach(ws => {
+      const sock = <ExtWebSocket>ws;
+      if (sock.isAlive === false) {
+        console.log("Terminating connection, id = " + sock.userId);
 
-    this._users.forEach(user => {
-      if (user.isAlive === false) {
-        pendingDelete.push(user.playerId);
+        sock.terminate();
+        if (sock.userId) {
+          this._users.delete(sock.userId);
+        }
       }
+      else {
+        console.log(`PING, id = ${sock.userId}`);
 
-      user.isAlive = false;
-      user.ws.ping();
-
-      console.log(`PING, id = ${user.playerId}`);
+        sock.isAlive = false;
+        sock.ping();
+      }
     });
-
-    for (const id of pendingDelete) {
-      this._terminateUser(id);
-    }
   }
 
   // =======================================================
@@ -172,6 +197,8 @@ export class App {
   private async _handleLogIn(ws: WebSocket, msg: string) {
     console.log("Handling log in");
 
+    const sock = <ExtWebSocket>ws;
+
     let logInReq: LogInRequest|null = null;
     try {
       logInReq = <LogInRequest>JSON.parse(msg);
@@ -187,15 +214,15 @@ export class App {
     const id = "deadbeef";
     const token = "abcdef";
 
+    sock.userId = id;
+
     this._users.set(id, {
-      isAlive: true,
       playerId: id,
-      ws: ws,
+      ws: sock,
       game: this._assignPlayerToAvailableGame(id, token)
     });
 
-    ws.on("pong", this._handlePong.bind(this, id));
-    ws.on("close", this._terminateUser.bind(this, id));
+    ws.on("close", () => this._terminateUser(id));
 
     this._onMessage(ws, this._handleClientMessage.bind(this), id);
 
@@ -203,18 +230,6 @@ export class App {
       type: GameResponseType.LOGIN_SUCCESS,
       data: null
     });
-  }
-
-  // =======================================================
-  // _handlePong
-  // =======================================================
-  private _handlePong(id: string) {
-    console.log(`PONG, id = ${id}`);
-
-    const conn = this._users.get(id);
-    if (conn) {
-      conn.isAlive = true;
-    }
   }
 
   // =======================================================
