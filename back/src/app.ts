@@ -2,7 +2,8 @@ import https from "https";
 import http from "http";
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./error";
-import { Game, GameResponseType, PlayerAction, GameResponse } from "./game";
+import { Game, GameResponseType, GameResponse } from "./game";
+import { ActionType, LogInPayload, deserialiseMessage } from "./actions";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -252,23 +253,14 @@ export class App {
   // =======================================================
   // _handleLogIn
   // =======================================================
-  private async _handleLogIn(sock: ExtWebSocket, msg: string) {
+  private async _handleLogIn(sock: ExtWebSocket, data: LogInPayload) {
     console.log("Handling log in");
-
-    let logInReq: LogInRequest|null = null;
-    try {
-      logInReq = <LogInRequest>JSON.parse(msg);
-    }
-    catch (err) {
-      throw new GameError("Malformed request: " + err,
-                          ErrorCode.MALFORMED_REQUEST);
-    }
 
     let id: string = "";
     let token: string = "";
 
     try {
-      const auth = await this._pinataAuth(logInReq);
+      const auth = await this._pinataAuth(data);
       id = auth.accountId;
       token = auth.token;
 
@@ -303,21 +295,17 @@ export class App {
   private async _handleClientMessage(sock: ExtWebSocket,
                                      msg: string) {
     console.log("Handling client message");
-    let action: PlayerAction|null = null;
+    const action = deserialiseMessage(msg);
 
-    try {
-      action = <PlayerAction>JSON.parse(msg);
-    }
-    catch (err) {
-      throw new GameError("Malformed request: " + err,
-                          ErrorCode.MALFORMED_REQUEST);
-    }
-
-    if (!sock.userId) {
-      // If player has no ID, interpret this request as a log in attempt
-      await this._handleLogIn(sock, msg);
+    if (action.type === ActionType.LOG_IN) {
+      const data = <LogInPayload>action.data;
+      await this._handleLogIn(sock, data);
     }
     else {
+      if (!sock.userId) {
+        throw new GameError("User not logged in", ErrorCode.NOT_AUTHORISED);
+      }
+
       const client = this._users.get(sock.userId);
       if (!client) {
         throw new GameError("No such client", ErrorCode.INTERNAL_ERROR);

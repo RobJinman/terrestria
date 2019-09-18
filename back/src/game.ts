@@ -1,24 +1,15 @@
 import { GameError, ErrorCode } from "./error";
+import { ActionType, PlayerAction } from "./actions";
 
 interface Player {
   id: string,
   token: string
 }
 
-export enum ActionType {
-  MOVE,
-  JUMP
-}
-
-export interface PlayerAction {
-  type: ActionType;
-  data: any;
-}
-
 export enum GameResponseType {
-  ERROR,
-  LOGIN_SUCCESS,
-  GAME_STATE
+  ERROR = "ERROR",
+  LOGIN_SUCCESS = "LOGIN_SUCCESS",
+  GAME_STATE = "GAME_STATE"
 }
 
 export interface GameResponse {
