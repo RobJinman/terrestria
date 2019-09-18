@@ -1,4 +1,6 @@
-import WebSocket, { Data } from "ws";
+import https from "https";
+import http from "http";
+import WebSocket from "ws";
 import { GameError, ErrorCode } from "./error";
 import { Game, GameResponseType, PlayerAction, GameResponse } from "./game";
 
@@ -22,9 +24,12 @@ interface LogInRequest {
   password: string;
 }
 
-type HandlerFn = (ws: WebSocket,
-                  msg: string,
-                  ...extraArgs: any) => Promise<void>;
+interface PinataAuthResponse {
+  accountId: string;
+  token: string;
+}
+
+type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
   private _wss: WebSocket.Server;
@@ -58,8 +63,9 @@ export class App {
 
     ws.on("pong", () => this._handlePong(sock));
 
-    // Interpret the first message as a log in
-    ws.once("message", msg => this._handleLogIn(ws, msg.toString()));
+    ws.on("message", data => {
+      this._wrap(ws, () => this._handleClientMessage(sock, data.toString()));
+    });
   }
 
   // =======================================================
@@ -125,16 +131,13 @@ export class App {
   // =======================================================
   // _wrap
   //
-  // Should not throw. Wraps an async message handler function in a try-catch
-  // block.
+  // Wraps an async function in a try-catch block and returns an error response
+  // over the websocket on error.
   // =======================================================
-  private async _wrap(ws: WebSocket,
-                      msg: Data,
-                      fn: HandlerFn,
-                      ...extraArgs: any) {
+  private async _wrap(ws: WebSocket, fn: HandlerFn) {
     try {
       try {
-        await fn(ws, msg.toString(), ...extraArgs);
+        await fn();
       }
       catch (err) {
         let response: GameResponse = {
@@ -151,13 +154,6 @@ export class App {
     catch (err) {
       console.error("Error! " + err);
     }
-  }
-
-  // =======================================================
-  // _onMessage
-  // =======================================================
-  private _onMessage(ws: WebSocket, fn: HandlerFn, ...extraArgs: any) {
-    ws.on("message", msg => this._wrap(ws, msg, fn, ...extraArgs));
   }
 
   // =======================================================
@@ -190,14 +186,74 @@ export class App {
   }
 
   // =======================================================
-  // _handleLogIn
+  // _pinataAuth
   //
   // Authenticate against the Pinata servers
   // =======================================================
-  private async _handleLogIn(ws: WebSocket, msg: string) {
-    console.log("Handling log in");
+  private async _pinataAuth(logInReq: LogInRequest):
+    Promise<PinataAuthResponse> {
 
-    const sock = <ExtWebSocket>ws;
+    console.log("Authenticating");
+
+    return new Promise<PinataAuthResponse>((resolve, reject) => {
+      const email = logInReq.email;
+      const password = logInReq.password;
+
+      const body = {
+        email,
+        password
+      };
+
+      const payload = JSON.stringify(body);
+
+      console.log(payload);
+
+      const options: http.RequestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": payload.length,
+        },
+        agent: false
+      };
+
+      const url = "http://localhost:3000/gamer/log-in";
+
+      let req = http.request(url, options, res => {
+        let json = "";
+
+        res.on("data", chunk => {
+          json += chunk;
+        })
+
+        res.on("end", () => {
+          try {
+            if (res.statusCode != 200) {
+              reject(`Error authenticating user: Status ${res.statusCode}`);
+            }
+            const data = JSON.parse(json);
+            resolve(data);
+          }
+          catch (err) {
+            reject("Error authenticating user: " + err);
+          }
+        });
+      });
+
+      req.on("error", err => {
+        reject("Error authenticating user: " + err);
+      });
+
+      req.write(payload);
+      req.end();
+    });
+  }
+
+  // =======================================================
+  // _handleLogIn
+  // =======================================================
+  private async _handleLogIn(sock: ExtWebSocket, msg: string) {
+    console.log("Handling log in");
 
     let logInReq: LogInRequest|null = null;
     try {
@@ -208,11 +264,20 @@ export class App {
                           ErrorCode.MALFORMED_REQUEST);
     }
 
-    // TODO: Authenticate against Pinata servers
-    console.log("Authenticating");
-    const email = logInReq.email;
-    const id = "deadbeef";
-    const token = "abcdef";
+    let id: string = "";
+    let token: string = "";
+
+    try {
+      const auth = await this._pinataAuth(logInReq);
+      id = auth.accountId;
+      token = auth.token;
+
+      console.log(`Logged in as player ${id} with token ${token}`);
+    }
+    catch (err) {
+      throw new GameError("Couldn't log into pinata: " + err,
+                          ErrorCode.AUTHENTICATION_FAILURE);
+    }
 
     sock.userId = id;
 
@@ -222,11 +287,9 @@ export class App {
       game: this._assignPlayerToAvailableGame(id, token)
     });
 
-    ws.on("close", () => this._terminateUser(id));
+    sock.on("close", () => this._terminateUser(id));
 
-    this._onMessage(ws, this._handleClientMessage.bind(this), id);
-
-    this._sendResponse(ws, {
+    this._sendResponse(sock, {
       type: GameResponseType.LOGIN_SUCCESS,
       data: null
     });
@@ -237,9 +300,8 @@ export class App {
   //
   // When a message comes in from the client, pass it onto the game instance
   // =======================================================
-  private async _handleClientMessage(ws: WebSocket,
-                                     msg: string,
-                                     playerId: string) {
+  private async _handleClientMessage(sock: ExtWebSocket,
+                                     msg: string) {
     console.log("Handling client message");
     let action: PlayerAction|null = null;
 
@@ -251,10 +313,16 @@ export class App {
                           ErrorCode.MALFORMED_REQUEST);
     }
 
-    const client = this._users.get(playerId);
-    if (!client) {
-      throw new GameError("No such client", ErrorCode.INTERNAL_ERROR);
+    if (!sock.userId) {
+      // If player has no ID, interpret this request as a log in attempt
+      await this._handleLogIn(sock, msg);
     }
-    client.game.handlePlayerAction(playerId, action);
+    else {
+      const client = this._users.get(sock.userId);
+      if (!client) {
+        throw new GameError("No such client", ErrorCode.INTERNAL_ERROR);
+      }
+      client.game.handlePlayerAction(sock.userId, action);
+    }
   }
 }
