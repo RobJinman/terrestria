@@ -1,9 +1,9 @@
-import https from "https";
-import http from "http";
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./error";
-import { Game, GameResponseType, GameResponse } from "./game";
-import { ActionType, LogInPayload, deserialiseMessage } from "./actions";
+import { Game } from "./game";
+import { ActionType, LogInPayload, deserialiseMessage } from "./action";
+import { GameResponse, GameResponseType } from "./response";
+import { pinataAuth } from "./pinata";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -18,16 +18,6 @@ interface UserConnection {
   ws: ExtWebSocket;
   playerId: string;
   game: Game;
-}
-
-interface LogInRequest {
-  email: string;
-  password: string;
-}
-
-interface PinataAuthResponse {
-  accountId: string;
-  token: string;
 }
 
 type HandlerFn = (...args: any) => Promise<void>;
@@ -187,70 +177,6 @@ export class App {
   }
 
   // =======================================================
-  // _pinataAuth
-  //
-  // Authenticate against the Pinata servers
-  // =======================================================
-  private async _pinataAuth(logInReq: LogInRequest):
-    Promise<PinataAuthResponse> {
-
-    console.log("Authenticating");
-
-    return new Promise<PinataAuthResponse>((resolve, reject) => {
-      const email = logInReq.email;
-      const password = logInReq.password;
-
-      const body = {
-        email,
-        password
-      };
-
-      const payload = JSON.stringify(body);
-
-      console.log(payload);
-
-      const options: http.RequestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": payload.length,
-        },
-        agent: false
-      };
-
-      const url = "http://localhost:3000/gamer/log-in";
-
-      let req = http.request(url, options, res => {
-        let json = "";
-
-        res.on("data", chunk => {
-          json += chunk;
-        })
-
-        res.on("end", () => {
-          try {
-            if (res.statusCode != 200) {
-              reject(`Error authenticating user: Status ${res.statusCode}`);
-            }
-            const data = JSON.parse(json);
-            resolve(data);
-          }
-          catch (err) {
-            reject("Error authenticating user: " + err);
-          }
-        });
-      });
-
-      req.on("error", err => {
-        reject("Error authenticating user: " + err);
-      });
-
-      req.write(payload);
-      req.end();
-    });
-  }
-
-  // =======================================================
   // _handleLogIn
   // =======================================================
   private async _handleLogIn(sock: ExtWebSocket, data: LogInPayload) {
@@ -260,7 +186,7 @@ export class App {
     let token: string = "";
 
     try {
-      const auth = await this._pinataAuth(data);
+      const auth = await pinataAuth(data);
       id = auth.accountId;
       token = auth.token;
 
