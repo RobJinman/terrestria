@@ -1,56 +1,34 @@
-import { Scene, Game } from "phaser";
+import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 
-class MainScene extends Scene {
-  constructor() {
-    super({
-      key: "MainScene"
-    });
+function init() {
+  const app = new PIXI.Application();
 
-    console.log("Hello");
+  const parentElement = document.getElementById("pinata-demo-app");
+  if (!parentElement) {
+    throw new Error("Could not find #pinata-demo-app");
   }
+  parentElement.appendChild(app.view);
 
-  preload() {
-    this.load.setBaseURL('http://labs.phaser.io');
-  
-    this.load.image('sky', 'assets/skies/space3.png');
-    this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-    this.load.image('red', 'assets/particles/red.png');
-  }
-  
-  create() {
-    this.add.image(400, 300, 'sky');
-  
-    var particles = this.add.particles('red');
-  
-    var emitter = particles.createEmitter({
-        speed: 100,
-        scale: { start: 1, end: 0 },
-        blendMode: "NORMAL"
+  app.loader.add('bunny', 'assets/ammo.png').load((loader, resources) => {
+    if (!resources.bunny) {
+      throw new Error("Missing resource 'bunny'");
+    }
+
+    const bunny = new PIXI.Sprite(resources.bunny.texture);
+
+    bunny.x = app.renderer.width / 2;
+    bunny.y = app.renderer.height / 2;
+
+    bunny.anchor.x = 0.5;
+    bunny.anchor.y = 0.5;
+
+    app.stage.addChild(bunny);
+
+    app.ticker.add(() => {
+        bunny.rotation += 0.01;
     });
-  
-    var logo = this.physics.add.image(400, 100, 'logo');
-  
-    logo.setVelocity(100, 200);
-    logo.setBounce(1, 1);
-    logo.setCollideWorldBounds(true);
-  
-    emitter.startFollow(logo);
-  }
+  });
 }
 
-const config = {
-  type: Phaser.AUTO,
-  parent: "pinata-demo-app",
-  width: 800,
-  height: 600,
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 200 }
-    }
-  },
-  scene: MainScene
-};
-
-new Game(config);
+init();
