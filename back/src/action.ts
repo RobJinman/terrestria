@@ -1,4 +1,5 @@
 import { GameError, ErrorCode } from "./error";
+import { EntityId } from "./entity_manager";
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
@@ -8,59 +9,60 @@ export enum ActionType {
 }
 
 const VALIDATORS: ValidatorFnMap = {
-  LOG_IN: isLogInPayload,
-  MOVE: isMovePayload,
-  JUMP: isJumpPayload,
+  LOG_IN: isLogInAction,
+  MOVE: isMoveAction,
+  JUMP: isJumpAction,
   // ...
 };
 
 // =======================================================
-// LogInPayload
+// LogInAction
 //
-export type LogInPayload = {
+export interface LogInAction extends PlayerAction {
   email: string;
   password: string;
 }
 
-export function isLogInPayload(obj: any): obj is LogInPayload {
+export function isLogInAction(obj: any): obj is LogInAction {
   return obj.email &&
          obj.password;
 }
 
 // =======================================================
-// MovePayload
+// MoveAction
 //
 export enum Direction {
-  UP,
-  RIGHT,
-  DOWN,
-  LEFT
+  UP = "UP",
+  RIGHT = "RIGHT",
+  DOWN = "DOWN",
+  LEFT = "LEFT"
 }
 
-export interface MovePayload {
+export interface MoveAction extends PlayerAction {
   direction: Direction;
 }
 
-export function isMovePayload(obj: any): obj is MovePayload {
-  return obj.direction && obj.direction in Direction;
+export function isMoveAction(obj: any): obj is MoveAction {
+  return obj.direction &&
+         obj.direction in Direction;
 }
 
 // =======================================================
-// JumpPayload
+// JumpAction
 //
-export interface JumpPayload {
+export interface JumpAction extends PlayerAction {
   // TODO
 }
 
-export function isJumpPayload(obj: any): obj is JumpPayload {
+export function isJumpAction(obj: any): obj is JumpAction {
   return true; // TODO
 }
 
 // =======================================================
 
 export interface PlayerAction {
-  type?: ActionType;
-  data?: any;
+  type: ActionType;
+  playerId: EntityId;
 }
 
 type ValidatorFn = (obj: any) => boolean;
@@ -88,7 +90,7 @@ export function deserialiseMessage(msg: string): PlayerAction {
                         ErrorCode.BAD_REQUEST);
   }
 
-  if (!validator(action.data)) {
+  if (!validator(action)) {
     throw new GameError(`Object is not valid ${action.type}`,
                         ErrorCode.BAD_REQUEST);
   }

@@ -1,5 +1,7 @@
-import { Component, EntityId, System } from "./entity_manager";
+import { Component, EntityId, System, ComponentPacket } from "./entity_manager";
 import { GameError } from "./error";
+import { ComponentType } from "./component_types";
+import { GameEvent } from "./event";
 
 export class AgentComponent extends Component {
   dirty: boolean = true;
@@ -55,20 +57,27 @@ export class AgentSystem extends System {
     this._components.delete(id);
   }
 
+  updateComponent(packet: ComponentPacket) {
+    // TODO
+  }
+
+  handleEvent(event: GameEvent) {
+    // TODO
+  }
+
   update() {
     // TODO
   }
 
   getDirties() {
-    const dirties: Component[] = [];
+    const dirties: ComponentPacket[] = [];
 
     this._components.forEach((c, id) => {
-      if (!c) {
-        throw new GameError(`No agent component for entity ${id}`);
-      }
-
       if (c.dirty) {
-        dirties.push(c);
+        dirties.push({
+          componentType: ComponentType.AGENT,
+          entityId: c.entityId
+        });
         c.dirty = false;
       }
     });

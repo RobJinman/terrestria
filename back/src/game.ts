@@ -1,24 +1,41 @@
 import _ from "underscore";
-import { GameError, ErrorCode } from "./error";
-import { ActionType, PlayerAction } from "./action";
+import { PlayerAction } from "./action";
 import { constructSoil, constructRock, constructGem,
          constructPlayer } from "./game_objects";
 import { EntityManager, EntityId } from "./entity_manager";
 import { SpatialSystem } from "./spatial_system";
 import { AgentSystem } from "./agent_system";
 import { ComponentType } from "./component_types";
+import { Pipe } from "./pipe";
+import { GameResponse, GameResponseType } from "./response";
+import { GameLogic } from "./game_logic";
 
-const WORLD_W = 100;
-const WORLD_H = 100;
+const WORLD_W = 10;
+const WORLD_H = 10;
+const FRAME_DURATION_MS = 100;
+
+function noThrow(fn: () => any) {
+  try {
+    return fn();
+  }
+  catch (err) {
+    console.error("Error! " + err);
+  }
+}
 
 export class Game {
   private static nextGameId: number = 0;
 
   private _id: number;
-  private _entityManager: EntityManager;  
+  private _pipe: Pipe;
+  private _entityManager: EntityManager;
+  private _loopTimeout: NodeJS.Timeout;
+  private _actionQueue: PlayerAction[] = [];
+  private _gameLogic: GameLogic;
 
-  constructor() {
+  constructor(pipe: Pipe) {
     this._id = Game.nextGameId++;
+    this._pipe = pipe;
     this._entityManager = new EntityManager();
 
     const spatialSystem = new SpatialSystem(WORLD_W, WORLD_H);
@@ -27,17 +44,44 @@ export class Game {
     this._entityManager.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._entityManager.addSystem(ComponentType.AGENT, agentSystem);
 
+    this._gameLogic = new GameLogic(this._entityManager);
+
     console.log(`Starting game ${this._id}`);
 
     this._populate();
+
+    this._loopTimeout = setInterval(() => noThrow(this._tick.bind(this)),
+                                    FRAME_DURATION_MS);
+  }
+
+  private _tick() {
+    while (this._actionQueue.length > 0) {
+      const action = <PlayerAction>this._actionQueue.shift();
+      this._gameLogic.handlePlayerAction(action);
+    }
+
+    this._entityManager.update();
+    const dirties = this._entityManager.getDirties();
+
+    if (dirties.length > 0) {
+      console.log("Sending state update");
+      console.log(dirties);
+
+      const response: GameResponse = {
+        type: GameResponseType.GAME_STATE,
+        data: dirties
+      };
+
+      this._pipe.send(response);
+    }
   }
 
   private _populate() {
     const spatialSys = <SpatialSystem>this._entityManager
                                           .getSystem(ComponentType.SPATIAL);
 
-    const numRocks = 10;
-    const numGems = 10;
+    const numRocks = 5;
+    const numGems = 5;
 
     const coords = [];
     for (let c = 0; c < WORLD_W; ++c) {
@@ -90,23 +134,15 @@ export class Game {
     return this._id;
   }
 
-  handlePlayerAction(entityId: EntityId, action: PlayerAction) {
-    console.log(`Handling player action, entityId = ${entityId}`);
-    console.log(action);
+  onPlayerAction(action: PlayerAction) {
+    console.log(`Received ${action.type} action from player ` +
+                `${action.playerId}`);
 
-    switch (action.type) {
-      case ActionType.MOVE: {
-        console.log("Player moved");
-        break;
-      }
-      case ActionType.JUMP: {
-        console.log("Player jumped");
-        break;
-      }
-      default: {
-        throw new GameError(`No such action '${action.type}'`,
-                            ErrorCode.BAD_REQUEST);
-      }
-    }
+    this._actionQueue.push(action);
+  }
+
+  terminate() {
+    console.log(`Terminating game ${this._id}`);
+    clearInterval(this._loopTimeout);
   }
 }

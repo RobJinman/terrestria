@@ -1,13 +1,13 @@
 import https from "https";
 import http from "http";
-import { LogInPayload } from "./action";
+import { LogInAction } from "./action";
 
 export interface PinataAuthResponse {
   accountId: string;
   token: string;
 }
 
-export async function pinataAuth(logInReq: LogInPayload):
+export async function pinataAuth(logInReq: LogInAction):
   Promise<PinataAuthResponse> {
 
   console.log("Authenticating");

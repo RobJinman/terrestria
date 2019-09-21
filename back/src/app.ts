@@ -1,10 +1,11 @@
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./error";
 import { Game } from "./game";
-import { ActionType, LogInPayload, deserialiseMessage } from "./action";
+import { ActionType, LogInAction, deserialiseMessage } from "./action";
 import { GameResponse, GameResponseType } from "./response";
 import { pinataAuth } from "./pinata";
 import { EntityId } from "./entity_manager";
+import { Pipe } from "./pipe";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -25,15 +26,15 @@ type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
   private _wss: WebSocket.Server;
+  private _pipe: Pipe;
   private _users: Map<EntityId, UserConnection>;
   private _games: Set<Game>;
 
   constructor() {
     this._wss = new WebSocket.Server({ port: SERVER_PORT });
+    this._pipe = new Pipe();
     this._games = new Set<Game>();
     this._users = new Map<EntityId, UserConnection>();
-
-    this._games.add(new Game());
 
     this._wss.on("connection", ws => this._handleConnection(ws));
 
@@ -65,11 +66,15 @@ export class App {
     const user = this._users.get(id);
 
     if (user) {
+      if (!this._pipe.removeSocket(user.ws)) {
+        throw new GameError("Error removing socket from pipe");
+      }
       user.game.removePlayer(id);
       user.ws.terminate();
 
       if (user.game.numPlayers === 0) {
         console.log("Deleting game " + user.game.id);
+        user.game.terminate();
         this._games.delete(user.game);
       }
     }
@@ -133,13 +138,13 @@ export class App {
       }
     });
 
-    const game = new Game();
+    const game = new Game(this._pipe);
     this._games.add(game);
 
     return game;
   }
 
-  private async _handleLogIn(sock: ExtWebSocket, data: LogInPayload) {
+  private async _handleLogIn(sock: ExtWebSocket, data: LogInAction) {
     console.log("Handling log in");
 
     let pinataId: string = "";
@@ -158,6 +163,7 @@ export class App {
                           ErrorCode.AUTHENTICATION_FAILURE);
     }
 
+    this._pipe.addSocket(sock);
     const game = this._chooseAvailableGame();
     const entityId = game.addPlayer(pinataId, pinataToken);
 
@@ -184,7 +190,7 @@ export class App {
     const action = deserialiseMessage(msg);
 
     if (action.type === ActionType.LOG_IN) {
-      const data = <LogInPayload>action.data;
+      const data = <LogInAction>action;
       await this._handleLogIn(sock, data);
     }
     else {
@@ -196,7 +202,8 @@ export class App {
       if (!client) {
         throw new GameError("No such client", ErrorCode.INTERNAL_ERROR);
       }
-      client.game.handlePlayerAction(sock.userId, action);
+      action.playerId = sock.userId;
+      client.game.onPlayerAction(action);
     }
   }
 }

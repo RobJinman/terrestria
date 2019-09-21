@@ -1,14 +1,29 @@
-import { EntityId, System, Component } from "./entity_manager";
+import { EntityId, System, Component, ComponentPacket } from "./entity_manager";
 import { GameError } from "./error";
+import { ComponentType } from "./component_types";
+import { GameEvent } from "./event";
+
+interface SpatialComponentPacket extends ComponentPacket {
+  x: number;
+  y: number;
+}
 
 export class SpatialComponent extends Component {
   dirty = true;
   private _x = 0;
   private _y = 0;
 
+  get x() {
+    return this._x;
+  }
+
   set x(value: number) {
     this._x = value;
     this.dirty = true;
+  }
+
+  get y() {
+    return this._y;
   }
 
   set y(value: number) {
@@ -34,14 +49,24 @@ export class SpatialSystem extends System {
     //this._createGrid(w, h);
   }
 
-  positionEntity(id: EntityId, x: number, y: number) {
-    const c = this._components.get(id);
-    if (!c) {
-      throw new GameError(`No spatial component for entity ${id}`);
-    }
+  updateComponent(packet: ComponentPacket) {
+    // TODO
+  }
 
+  positionEntity(id: EntityId, x: number, y: number) {
+    console.log(`Moving entity ${id} to (${x}, ${y})`);
+
+    const c = this.getComponent(id);
     c.x = x;
     c.y = y;
+  }
+
+  moveEntity(id: EntityId, dx: number, dy: number) {
+    console.log(`Moving entity ${id} by (${dx}, ${dy})`);
+
+    const c = this.getComponent(id);
+    c.x += dx;
+    c.y += dy;
   }
 
   numComponents() {
@@ -68,20 +93,25 @@ export class SpatialSystem extends System {
     this._components.delete(id);
   }
 
+  handleEvent(event: GameEvent) {
+    // TODO
+  }
+
   update() {
     // TODO
   }
 
   getDirties() {
-    const dirties: Component[] = [];
+    const dirties: SpatialComponentPacket[] = [];
 
     this._components.forEach((c, id) => {
-      if (!c) {
-        throw new GameError(`No spatial component for entity ${id}`);
-      }
-
       if (c.dirty) {
-        dirties.push(c);
+        dirties.push({
+          entityId: c.entityId,
+          componentType: ComponentType.SPATIAL,
+          x: c.x,
+          y: c.y
+        });
         c.dirty = false;
       }
     });

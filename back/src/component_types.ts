@@ -1,5 +1,5 @@
 export enum ComponentType {
-  RENDER,
-  SPATIAL,
-  AGENT
+  RENDER = "RENDER",
+  SPATIAL = "SPATIAL",
+  AGENT = "AGENT"
 }
