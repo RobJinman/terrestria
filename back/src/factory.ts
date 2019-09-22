@@ -1,7 +1,8 @@
-import { EntityId, getNextEntityId, EntityManager } from "./entity_manager";
-import { ComponentType } from "./component_types";
-import { AgentSystem, AgentComponent } from "./agent_system";
-import { SpatialSystem, SpatialComponent } from "./spatial_system";
+import { EntityId, getNextEntityId,
+         EntityManager } from "./common/entity_manager";
+import { ComponentType } from "./common/component_types";
+import { AgentSystem, AgentComponent } from "./common/agent_system";
+import { SpatialSystem, SpatialComponent } from "./common/spatial_system";
 
 export function constructSoil(manager: EntityManager): EntityId {
   const id = getNextEntityId();

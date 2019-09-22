@@ -1,17 +1,17 @@
 import _ from "underscore";
-import { PlayerAction } from "./action";
+import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
-         constructPlayer } from "./game_objects";
-import { EntityManager, EntityId } from "./entity_manager";
-import { SpatialSystem } from "./spatial_system";
-import { AgentSystem } from "./agent_system";
-import { ComponentType } from "./component_types";
+         constructPlayer } from "./factory";
+import { EntityManager, EntityId } from "./common/entity_manager";
+import { SpatialSystem } from "./common/spatial_system";
+import { AgentSystem } from "./common/agent_system";
+import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponse, GameResponseType } from "./response";
+import { GameResponseType, RGameState, RNewEntity } from "./common/response";
 import { GameLogic } from "./game_logic";
+import { EntityType } from "./common/game_objects";
+import { WORLD_W, WORLD_H, BLOCK_SZ } from "./common/config";
 
-const WORLD_W = 10;
-const WORLD_H = 10;
 const FRAME_DURATION_MS = 100;
 
 function noThrow(fn: () => any) {
@@ -28,7 +28,7 @@ export class Game {
 
   private _id: number;
   private _pipe: Pipe;
-  private _entityManager: EntityManager;
+  private _em: EntityManager;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
@@ -36,15 +36,15 @@ export class Game {
   constructor(pipe: Pipe) {
     this._id = Game.nextGameId++;
     this._pipe = pipe;
-    this._entityManager = new EntityManager();
+    this._em = new EntityManager();
 
-    const spatialSystem = new SpatialSystem(WORLD_W, WORLD_H);
+    const spatialSystem = new SpatialSystem(this._em, WORLD_W, WORLD_H);
     const agentSystem = new AgentSystem();
 
-    this._entityManager.addSystem(ComponentType.SPATIAL, spatialSystem);
-    this._entityManager.addSystem(ComponentType.AGENT, agentSystem);
+    this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
+    this._em.addSystem(ComponentType.AGENT, agentSystem);
 
-    this._gameLogic = new GameLogic(this._entityManager);
+    this._gameLogic = new GameLogic(this._em);
 
     console.log(`Starting game ${this._id}`);
 
@@ -60,16 +60,16 @@ export class Game {
       this._gameLogic.handlePlayerAction(action);
     }
 
-    this._entityManager.update();
-    const dirties = this._entityManager.getDirties();
+    this._em.update();
+    const dirties = this._em.getDirties();
 
     if (dirties.length > 0) {
       console.log("Sending state update");
       console.log(dirties);
 
-      const response: GameResponse = {
+      const response: RGameState = {
         type: GameResponseType.GAME_STATE,
-        data: dirties
+        packets: dirties
       };
 
       this._pipe.send(response);
@@ -77,57 +77,83 @@ export class Game {
   }
 
   private _populate() {
-    const spatialSys = <SpatialSystem>this._entityManager
-                                          .getSystem(ComponentType.SPATIAL);
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     const numRocks = 5;
     const numGems = 5;
 
-    const coords = [];
+    let coords: [number, number][] = [];
     for (let c = 0; c < WORLD_W; ++c) {
       for (let r = 0; r < WORLD_H; ++r) {
-        coords.push([c, r]);
+        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
       }
     }
 
-    _.shuffle(coords);
+    coords = _.shuffle(coords);
   
+    const response: RNewEntity = {
+      type: GameResponseType.NEW_ENTITIES,
+      newEntities: []
+    };
+
     let idx = 0;
     const rockCoords = coords.slice(0, numRocks);
     idx += numRocks;
-    const gemCoords = coords.slice(idx, numGems);
+    const gemCoords = coords.slice(idx, idx + numGems);
     idx += numGems;
     const soilCoords = coords.slice(idx);
 
     rockCoords.forEach(([c, r]) => {
-      const id = constructRock(this._entityManager);
+      const id = constructRock(this._em);
+      response.newEntities.push({
+        entityId: id,
+        entityType: EntityType.ROCK
+      });
       spatialSys.positionEntity(id, c, r);
     });
 
     gemCoords.forEach(([c, r]) => {
-      const id = constructGem(this._entityManager);
+      const id = constructGem(this._em);
+      response.newEntities.push({
+        entityId: id,
+        entityType: EntityType.GEM
+      });
       spatialSys.positionEntity(id, c, r);
     });
 
     soilCoords.forEach(([c, r]) => {
-      const id = constructSoil(this._entityManager);
+      const id = constructSoil(this._em);
+      response.newEntities.push({
+        entityId: id,
+        entityType: EntityType.SOIL
+      });
       spatialSys.positionEntity(id, c, r);
     });
+  
+    this._pipe.send(response);
   }
 
   addPlayer(pinataId: string, pinataToken: string): EntityId {
-    const id = constructPlayer(this._entityManager, pinataId, pinataToken);
+    const id = constructPlayer(this._em, pinataId, pinataToken);
+    const response: RNewEntity = {
+      type: GameResponseType.NEW_ENTITIES,
+      newEntities: [{
+        entityId: id,
+        entityType: EntityType.PLAYER
+      }]
+    };
+    this._pipe.send(response);
     console.log(`Adding player ${id}`);
     return id;
   }
 
   removePlayer(id: EntityId) {
     console.log(`Removing player ${id}`);
-    this._entityManager.removeEntity(id);
+    this._em.removeEntity(id);
   }
 
   get numPlayers() {
-    return this._entityManager.getSystem(ComponentType.AGENT).numComponents();
+    return this._em.getSystem(ComponentType.AGENT).numComponents();
   }
 
   get id() {

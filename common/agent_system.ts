@@ -1,4 +1,5 @@
-import { Component, EntityId, System, ComponentPacket } from "./entity_manager";
+import { Component, EntityId, System,
+         ComponentPacket } from "./entity_manager";
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent } from "./event";

@@ -1,14 +1,16 @@
-import { PlayerAction, ActionType, MoveAction, Direction } from "./action";
-import { EntityManager } from "./entity_manager";
-import { ComponentType } from "./component_types";
-import { SpatialSystem } from "./spatial_system";
+import { PlayerAction, ActionType, MoveAction,
+         Direction } from "./common/action";
+import { EntityManager } from "./common/entity_manager";
+import { ComponentType } from "./common/component_types";
+import { SpatialSystem } from "./common/spatial_system";
+import { BLOCK_SZ } from "./common/config";
 
 function directionToVector(dir: Direction) {
   switch (dir) {
-    case Direction.UP: return [0, 1];
-    case Direction.RIGHT: return [1, 0];
-    case Direction.DOWN: return [0, -1];
-    case Direction.LEFT: return [-1, 0];
+    case Direction.UP: return [0, BLOCK_SZ];
+    case Direction.RIGHT: return [BLOCK_SZ, 0];
+    case Direction.DOWN: return [0, -BLOCK_SZ];
+    case Direction.LEFT: return [-BLOCK_SZ, 0];
     default: return [0, 0];
   }
 }

@@ -1,6 +1,6 @@
 import https from "https";
 import http from "http";
-import { LogInAction } from "./action";
+import { LogInAction } from "./common/action";
 
 export interface PinataAuthResponse {
   accountId: string;

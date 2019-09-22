@@ -1,10 +1,11 @@
 import WebSocket from "ws";
-import { GameError, ErrorCode } from "./error";
+import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
-import { ActionType, LogInAction, deserialiseMessage } from "./action";
-import { GameResponse, GameResponseType } from "./response";
+import { ActionType, LogInAction,
+         deserialiseMessage } from "./common/action";
+import { GameResponse, GameResponseType, RError, RLoginSuccess } from "./common/response";
 import { pinataAuth } from "./pinata";
-import { EntityId } from "./entity_manager";
+import { EntityId } from "./common/entity_manager";
 import { Pipe } from "./pipe";
 
 const SERVER_PORT = 3001;
@@ -115,12 +116,10 @@ export class App {
         await fn();
       }
       catch (err) {
-        let response: GameResponse = {
+        let response: RError = {
           type: GameResponseType.ERROR,
-          data: {
-            code: err.code,
-            message: err.toString()
-          }
+          code: err.code,
+          message: err.toString()
         };
 
         this._sendResponse(ws, response);
@@ -177,10 +176,12 @@ export class App {
 
     sock.on("close", () => this._terminateUser(entityId));
 
-    this._sendResponse(sock, {
+    const response: RLoginSuccess = {
       type: GameResponseType.LOGIN_SUCCESS,
-      data: null
-    });
+      playerId: entityId
+    };
+
+    this._sendResponse(sock, response);
   }
 
   // When a message comes in from the client, pass it onto the game instance

@@ -33,9 +33,13 @@ export abstract class System {
   abstract addComponent(component: Component): void;
   abstract removeComponent(entityId: EntityId): void;
   abstract numComponents(): number;
+
+  // Server
   abstract update(): void;
   abstract handleEvent(event: GameEvent): void;
   abstract getDirties(): ComponentPacket[];
+
+  // Client
   abstract updateComponent(packet: ComponentPacket): void;
 }
 
@@ -58,6 +62,15 @@ export class EntityManager {
     return s;
   }
 
+  hasEntity(entityId: EntityId) {
+    this._systems.forEach(sys => {
+      if (sys.hasComponent(entityId)) {
+        return true;
+      }
+    })
+    return false;
+  }
+
   removeEntity(entityId: EntityId) {
     console.log(`Deleting entity ${entityId}`);
     this._systems.forEach(sys => sys.removeComponent(entityId));
@@ -69,6 +82,11 @@ export class EntityManager {
 
   update() {
     this._systems.forEach(sys => sys.update());
+  }
+
+  updateComponent(packet: ComponentPacket) {
+    const sys = this.getSystem(packet.componentType);
+    sys.updateComponent(packet);
   }
 
   getDirties(): ComponentPacket[] {
