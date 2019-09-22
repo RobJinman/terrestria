@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, MoveAction, Direction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError,
-         RNewEntity, RLoginSuccess} from "./common/response";
+         RNewEntities, RLoginSuccess, REntitiesDeleted} from "./common/response";
 import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
 import { SpatialSystem } from './common/spatial_system';
@@ -142,12 +142,21 @@ class App {
     console.log("Received error from server: " + response.message);
   }
 
+  private _deleteEntities(response: REntitiesDeleted) {
+    response.entities.forEach(entity => {
+      this._em.removeEntity(entity.id);
+    });
+  }
+
   private _onServerMessage(event: MessageEvent) {
     const msg = <GameResponse>JSON.parse(event.data);
     console.log(msg);
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
-        constructEntities(this._em, <RNewEntity>msg);
+        constructEntities(this._em, <RNewEntities>msg);
+        break;
+      case GameResponseType.ENTITIES_DELETED:
+        this._deleteEntities(<REntitiesDeleted>msg);
         break;
       case GameResponseType.GAME_STATE:
         this._updateGameState(<RGameState>msg);

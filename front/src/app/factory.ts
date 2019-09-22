@@ -1,5 +1,5 @@
 import { EntityManager, EntityId } from "./common/entity_manager";
-import { RNewEntity } from "./common/response";
+import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { SpatialComponent } from "./common/spatial_system";
 import { RenderComponent } from "./render_system";
@@ -35,21 +35,21 @@ function constructPlayer(em: EntityManager, id: EntityId) {
 }
 
 export function constructEntities(entityManager: EntityManager,
-                                  response: RNewEntity) {
-  response.newEntities.forEach(newEntity => {
-    console.log(`${newEntity.id} ${newEntity.type}`);
-    switch (newEntity.type) {
+                                  response: RNewEntities) {
+  response.entities.forEach(entity => {
+    console.log(`${entity.id} ${entity.type}`);
+    switch (entity.type) {
       case EntityType.PLAYER:
-        constructPlayer(entityManager, newEntity.id);
+        constructPlayer(entityManager, entity.id);
         break;
       case EntityType.GEM:
-        constructGem(entityManager, newEntity.id);
+        constructGem(entityManager, entity.id);
         break;
       case EntityType.ROCK:
-        constructRock(entityManager, newEntity.id);
+        constructRock(entityManager, entity.id);
         break;
       case EntityType.SOIL:
-        constructSoil(entityManager, newEntity.id);
+        constructSoil(entityManager, entity.id);
         break;
     }
   });

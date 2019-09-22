@@ -5,7 +5,7 @@ import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ResourcesMap } from "./definitions";
 import { ComponentType } from "./common/component_types";
-import { SpatialSystem, SpatialComponent } from "./common/spatial_system";
+import { SpatialComponent } from "./common/spatial_system";
 
 export class RenderComponent extends Component {
   imageResourceName: string = "";
@@ -65,7 +65,14 @@ export class RenderSystem extends System {
   }
 
   removeComponent(id: EntityId) {
-    this._components.delete(id);
+    if (this.hasComponent(id)) {
+      const c = this.getComponent(id);
+      if (c.sprite) {
+        this._pixi.stage.removeChild(c.sprite);
+      }
+
+      this._components.delete(id);
+    }
   }
 
   private _onEntityMoved(id: EntityId) {

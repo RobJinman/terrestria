@@ -8,7 +8,7 @@ import { SpatialSystem } from "./common/spatial_system";
 import { AgentSystem } from "./common/agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponseType, RGameState, RNewEntity } from "./common/response";
+import { GameResponseType, RGameState, RNewEntities, REntitiesDeleted } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ } from "./common/config";
 import { EntityType } from "./common/game_objects";
@@ -126,9 +126,9 @@ export class Game {
     const playerIdx = entities.findIndex(e => e.id == id);
     entities.splice(playerIdx, 1);
 
-    const newEntitiesResp: RNewEntity = {
+    const newEntitiesResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
-      newEntities: entities
+      entities: entities
     };
 
     const stateUpdateResp: RGameState = {
@@ -136,9 +136,9 @@ export class Game {
       packets: this._em.getState()
     }
 
-    const newPlayerResp: RNewEntity = {
+    const newPlayerResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
-      newEntities: [{
+      entities: [{
         id,
         type: EntityType.PLAYER
       }]
@@ -155,6 +155,17 @@ export class Game {
   removePlayer(id: EntityId) {
     console.log(`Removing player ${id}`);
     this._em.removeEntity(id);
+    this._pipe.removeSocket(id);
+
+    const response: REntitiesDeleted = {
+      type: GameResponseType.ENTITIES_DELETED,
+      entities: [{
+        id,
+        type: EntityType.PLAYER
+      }]
+    };
+
+    this._pipe.sendToAll(response);
   }
 
   get numPlayers() {

@@ -5,7 +5,8 @@ export enum GameResponseType {
   ERROR = "ERROR",
   LOGIN_SUCCESS = "LOGIN_SUCCESS",
   GAME_STATE = "GAME_STATE",
-  NEW_ENTITIES = "NEW_ENTITIES"
+  NEW_ENTITIES = "NEW_ENTITIES",
+  ENTITIES_DELETED = "ENTITIES_DELETED"
 }
 
 export interface GameResponse {
@@ -25,6 +26,10 @@ export interface RGameState extends GameResponse {
   packets: ComponentPacket[];
 }
 
-export interface RNewEntity extends GameResponse {
-  newEntities: Entity[];
+export interface RNewEntities extends GameResponse {
+  entities: Entity[];
+}
+
+export interface REntitiesDeleted extends GameResponse {
+  entities: Entity[];
 }
