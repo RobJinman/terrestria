@@ -1,11 +1,10 @@
-import { EntityManager, EntityId } from "../../../common/entity_manager";
-import { RNewEntity } from "../../../common/response";
-import { EntityType } from "../../../common/game_objects";
-import { ComponentType } from "../../../common/component_types";
-import { SpatialSystem,
-         SpatialComponent } from "../../../common/spatial_system";
+import { EntityManager, EntityId } from "./common/entity_manager";
+import { RNewEntity } from "./common/response";
+import { EntityType } from "./common/game_objects";
+import { ComponentType } from "./common/component_types";
+import { SpatialSystem, SpatialComponent } from "./common/spatial_system";
 import { RenderSystem, RenderComponent } from "./render_system";
-import { AgentSystem, AgentComponent } from "../../../common/agent_system";
+import { AgentSystem, AgentComponent } from "./common/agent_system";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);

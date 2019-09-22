@@ -1,16 +1,15 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction, Direction } from "../../../common/action";
+import { ActionType, MoveAction, Direction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError,
-         RNewEntity, 
-         RLoginSuccess} from "../../../common/response";
-import { EntityManager, EntityId } from '../../../common/entity_manager';
+         RNewEntity, RLoginSuccess} from "./common/response";
+import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
-import { SpatialSystem } from '../../../common/spatial_system';
-import { WORLD_W, WORLD_H } from "../../../common/config";
+import { SpatialSystem } from './common/spatial_system';
+import { WORLD_W, WORLD_H } from "./common/config";
 import { RenderSystem } from './render_system';
-import { ComponentType } from '../../../common/component_types';
-import { AgentSystem } from '../../../common/agent_system';
+import { ComponentType } from './common/component_types';
+import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
 
 const WEBSOCKET_URL = "ws://localhost:3001";

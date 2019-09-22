@@ -1,12 +1,11 @@
 import * as PIXI from 'pixi.js';
-import { EntityId, System, Component,
-         ComponentPacket, 
-         EntityManager} from "../../../common/entity_manager";
-import { GameError } from "../../../common/error";
-import { GameEvent, GameEventType, EEntityMoved } from "../../../common/event";
+import { EntityId, System, Component, ComponentPacket, 
+         EntityManager} from "./common/entity_manager";
+import { GameError } from "./common/error";
+import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ResourcesMap } from "./definitions";
-import { ComponentType } from "../../../common/component_types";
-import { SpatialSystem } from "../../../common/spatial_system";
+import { ComponentType } from "./common/component_types";
+import { SpatialSystem } from "./common/spatial_system";
 
 export class RenderComponent extends Component {
   imageResourceName: string = "";
