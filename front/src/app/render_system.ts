@@ -5,7 +5,7 @@ import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ResourcesMap } from "./definitions";
 import { ComponentType } from "./common/component_types";
-import { SpatialSystem } from "./common/spatial_system";
+import { SpatialSystem, SpatialComponent } from "./common/spatial_system";
 
 export class RenderComponent extends Component {
   imageResourceName: string = "";
@@ -70,9 +70,8 @@ export class RenderSystem extends System {
 
   private _onEntityMoved(id: EntityId) {
     if (this.hasComponent(id)) {
-      const spatialSys = <SpatialSystem>this._em
-                                            .getSystem(ComponentType.SPATIAL);
-      const spatialComp = spatialSys.getComponent(id);
+      const spatialComp =
+        <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
 
       const renderComp = this.getComponent(id);
       if (renderComp.sprite) {

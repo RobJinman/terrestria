@@ -85,6 +85,11 @@ export class EntityManager {
     return s;
   }
 
+  getComponent(componentType: ComponentType, entityId: EntityId) {
+    const sys = this.getSystem(componentType);
+    return sys.getComponent(entityId);
+  }
+
   entities(): Entity[] {
     return Array.from(this._entities.values());
   }
