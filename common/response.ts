@@ -1,5 +1,4 @@
-import { ComponentPacket, EntityId } from "./entity_manager";
-import { EntityType } from "./game_objects";
+import { ComponentPacket, EntityId, Entity } from "./entity_manager";
 import { ErrorCode } from "./error";
 
 export enum GameResponseType {
@@ -26,11 +25,6 @@ export interface RGameState extends GameResponse {
   packets: ComponentPacket[];
 }
 
-export interface NewEntity {
-  entityId: EntityId;
-  entityType: EntityType;
-}
-
 export interface RNewEntity extends GameResponse {
-  newEntities: NewEntity[];
+  newEntities: Entity[];
 }

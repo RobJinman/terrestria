@@ -10,7 +10,7 @@ export class AgentComponent extends Component {
   private _pinataToken: string;
 
   constructor(entityId: EntityId, pinataId: string, pinataToken: string) {
-    super(entityId);
+    super(entityId, ComponentType.AGENT);
     
     this._pinataId = pinataId;
     this._pinataToken = pinataToken;
@@ -68,6 +68,19 @@ export class AgentSystem extends System {
 
   update() {
     // TODO
+  }
+
+  getState() {
+    const packets: ComponentPacket[] = [];
+
+    this._components.forEach((c, id) => {
+      packets.push({
+        componentType: ComponentType.AGENT,
+        entityId: c.entityId
+      });
+    });
+
+    return packets;
   }
 
   getDirties() {

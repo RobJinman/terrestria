@@ -1,9 +1,9 @@
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
-import { ActionType, LogInAction,
-         deserialiseMessage } from "./common/action";
-import { GameResponse, GameResponseType, RError, RLoginSuccess } from "./common/response";
+import { ActionType, LogInAction, deserialiseMessage } from "./common/action";
+import { GameResponse, GameResponseType, RError,
+         RLoginSuccess } from "./common/response";
 import { pinataAuth } from "./pinata";
 import { EntityId } from "./common/entity_manager";
 import { Pipe } from "./pipe";
@@ -27,13 +27,11 @@ type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
   private _wss: WebSocket.Server;
-  private _pipe: Pipe;
   private _users: Map<EntityId, UserConnection>;
   private _games: Set<Game>;
 
   constructor() {
-    this._wss = new WebSocket.Server({ port: SERVER_PORT });
-    this._pipe = new Pipe();
+    this._wss = new WebSocket.Server({ port: SERVER_PORT });;
     this._games = new Set<Game>();
     this._users = new Map<EntityId, UserConnection>();
 
@@ -57,7 +55,7 @@ export class App {
   }
 
   private _handlePong(sock: ExtWebSocket) {
-    console.log(`PONG, id = ${sock.userId}`);
+    //console.log(`PONG, id = ${sock.userId}`);
     sock.isAlive = true;
   }
 
@@ -67,9 +65,6 @@ export class App {
     const user = this._users.get(id);
 
     if (user) {
-      if (!this._pipe.removeSocket(user.ws)) {
-        throw new GameError("Error removing socket from pipe");
-      }
       user.game.removePlayer(id);
       user.ws.terminate();
 
@@ -95,7 +90,7 @@ export class App {
         }
       }
       else {
-        console.log(`PING, id = ${sock.userId}`);
+        //console.log(`PING, id = ${sock.userId}`);
 
         sock.isAlive = false;
         sock.ping();
@@ -131,13 +126,15 @@ export class App {
   }
 
   private _chooseAvailableGame(): Game {
-    this._games.forEach(game => {
+    const games: Game[] = Array.from(this._games);
+
+    for (let game of games) {
       if (game.numPlayers < MAX_PLAYERS_PER_GAME) {
         return game;
       }
-    });
+    }
 
-    const game = new Game(this._pipe);
+    const game = new Game();
     this._games.add(game);
 
     return game;
@@ -162,9 +159,8 @@ export class App {
                           ErrorCode.AUTHENTICATION_FAILURE);
     }
 
-    this._pipe.addSocket(sock);
     const game = this._chooseAvailableGame();
-    const entityId = game.addPlayer(pinataId, pinataToken);
+    const entityId = game.addPlayer(sock, pinataId, pinataToken);
 
     sock.userId = entityId;
 

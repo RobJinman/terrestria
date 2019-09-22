@@ -1,6 +1,7 @@
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent } from "./event";
+import { EntityType } from "./game_objects";
 
 export type EntityId = number;
 
@@ -17,13 +18,19 @@ export interface ComponentPacket {
 
 export abstract class Component {
   private _entityId: EntityId;
+  private _type: ComponentType;
 
-  constructor(entityId: EntityId) {
+  constructor(entityId: EntityId, type: ComponentType) {
     this._entityId = entityId;
+    this._type = type;
   }
 
   get entityId(): EntityId {
     return this._entityId;
+  }
+
+  get type(): ComponentType {
+    return this._type;
   }
 }
 
@@ -38,16 +45,32 @@ export abstract class System {
   abstract update(): void;
   abstract handleEvent(event: GameEvent): void;
   abstract getDirties(): ComponentPacket[];
+  abstract getState(): ComponentPacket[];
 
   // Client
   abstract updateComponent(packet: ComponentPacket): void;
 }
 
+export interface Entity {
+  id: EntityId;
+  type: EntityType;
+}
+
 export class EntityManager {
   private _systems: Map<ComponentType, System>;
+  private _entities: Map<EntityId, Entity>;
 
   constructor() {
     this._systems = new Map<ComponentType, System>();
+    this._entities = new Map<EntityId, Entity>();
+  }
+
+  addEntity(id: EntityId, type: EntityType, components: Component[]) {
+    this._entities.set(id, { id, type });
+    components.forEach(c => {
+      const sys = this.getSystem(c.type);
+      sys.addComponent(c);
+    });
   }
 
   addSystem(componentType: ComponentType, system: System) {
@@ -62,18 +85,14 @@ export class EntityManager {
     return s;
   }
 
-  hasEntity(entityId: EntityId) {
-    this._systems.forEach(sys => {
-      if (sys.hasComponent(entityId)) {
-        return true;
-      }
-    })
-    return false;
+  entities(): Entity[] {
+    return Array.from(this._entities.values());
   }
 
   removeEntity(entityId: EntityId) {
     console.log(`Deleting entity ${entityId}`);
     this._systems.forEach(sys => sys.removeComponent(entityId));
+    this._entities.delete(entityId);
   }
 
   postEvent(event: GameEvent) {
@@ -94,5 +113,12 @@ export class EntityManager {
     this._systems.forEach(sys => dirties.push(...sys.getDirties()));
 
     return dirties;
+  }
+
+  getState(): ComponentPacket[] {
+    let packets: ComponentPacket[] = [];
+    this._systems.forEach(sys => packets.push(...sys.getState()));
+
+    return packets;
   }
 }

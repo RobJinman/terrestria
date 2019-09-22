@@ -12,7 +12,7 @@ export class RenderComponent extends Component {
   sprite?: PIXI.Sprite;
 
   constructor(entityId: EntityId, imageResourceName: string) {
-    super(entityId);
+    super(entityId, ComponentType.RENDER);
     this.imageResourceName = imageResourceName;
   }
 }
@@ -98,6 +98,10 @@ export class RenderSystem extends System {
   }
 
   getDirties() {
+    return [];
+  }
+
+  getState() {
     return [];
   }
 

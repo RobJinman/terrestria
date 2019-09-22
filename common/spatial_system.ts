@@ -15,6 +15,10 @@ export class SpatialComponent extends Component {
   private _x = 0;
   private _y = 0;
 
+  constructor(entityId: EntityId) {
+    super(entityId, ComponentType.SPATIAL);
+  }
+
   get x() {
     return this._x;
   }
@@ -56,7 +60,7 @@ export class SpatialSystem extends System {
   }
 
   positionEntity(id: EntityId, x: number, y: number) {
-    console.log(`Moving entity ${id} to (${x}, ${y})`);
+    //console.log(`Moving entity ${id} to (${x}, ${y})`);
 
     const c = this.getComponent(id);
     c.x = x;
@@ -107,6 +111,21 @@ export class SpatialSystem extends System {
 
   update() {
     // TODO
+  }
+
+  getState() {
+    const packets: SpatialComponentPacket[] = [];
+
+    this._components.forEach((c, id) => {
+      packets.push({
+        componentType: ComponentType.SPATIAL,
+        entityId: c.entityId,
+        x: c.x,
+        y: c.y
+      });
+    });
+
+    return packets;
   }
 
   getDirties() {

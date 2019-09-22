@@ -1,74 +1,55 @@
 import { EntityManager, EntityId } from "./common/entity_manager";
 import { RNewEntity } from "./common/response";
 import { EntityType } from "./common/game_objects";
-import { ComponentType } from "./common/component_types";
-import { SpatialSystem, SpatialComponent } from "./common/spatial_system";
-import { RenderSystem, RenderComponent } from "./render_system";
-import { AgentSystem, AgentComponent } from "./common/agent_system";
+import { SpatialComponent } from "./common/spatial_system";
+import { RenderComponent } from "./render_system";
+import { AgentComponent } from "./common/agent_system";
 
 function constructGem(em: EntityManager, id: EntityId) {
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
-
-  const spatialComp = new SpatialComponent(id);
-  spatialSys.addComponent(spatialComp);
-
   const renderComp = new RenderComponent(id, "gem");
-  renderSys.addComponent(renderComp);
+  const spatialComp = new SpatialComponent(id);
+
+  em.addEntity(id, EntityType.GEM, [ spatialComp, renderComp ]);
 }
 
 function constructRock(em: EntityManager, id: EntityId) {
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
-
-  const spatialComp = new SpatialComponent(id);
-  spatialSys.addComponent(spatialComp);
-
   const renderComp = new RenderComponent(id, "rock");
-  renderSys.addComponent(renderComp);
+  const spatialComp = new SpatialComponent(id);
+
+  em.addEntity(id, EntityType.ROCK, [ spatialComp, renderComp ]);
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
-
-  const spatialComp = new SpatialComponent(id);
-  spatialSys.addComponent(spatialComp);
-
   const renderComp = new RenderComponent(id, "soil");
-  renderSys.addComponent(renderComp);
+  const spatialComp = new SpatialComponent(id);
+
+  em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp ]);
 }
 
 function constructPlayer(em: EntityManager, id: EntityId) {
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
-  const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
-
-  const spatialComp = new SpatialComponent(id);
-  spatialSys.addComponent(spatialComp);
-
   const renderComp = new RenderComponent(id, "man");
-  renderSys.addComponent(renderComp);
-
+  const spatialComp = new SpatialComponent(id);
   const agentComp = new AgentComponent(id, "", "");
-  agentSys.addComponent(agentComp);
+
+  em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp, renderComp ]);
 }
 
 export function constructEntities(entityManager: EntityManager,
                                   response: RNewEntity) {
   response.newEntities.forEach(newEntity => {
-    switch (newEntity.entityType) {
+    console.log(`${newEntity.id} ${newEntity.type}`);
+    switch (newEntity.type) {
       case EntityType.PLAYER:
-        constructPlayer(entityManager, newEntity.entityId);
+        constructPlayer(entityManager, newEntity.id);
         break;
       case EntityType.GEM:
-        constructGem(entityManager, newEntity.entityId);
+        constructGem(entityManager, newEntity.id);
         break;
       case EntityType.ROCK:
-        constructRock(entityManager, newEntity.entityId);
+        constructRock(entityManager, newEntity.id);
         break;
       case EntityType.SOIL:
-        constructSoil(entityManager, newEntity.entityId);
+        constructSoil(entityManager, newEntity.id);
         break;
     }
   });

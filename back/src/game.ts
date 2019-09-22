@@ -1,3 +1,4 @@
+import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
@@ -9,8 +10,8 @@ import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntity } from "./common/response";
 import { GameLogic } from "./game_logic";
-import { EntityType } from "./common/game_objects";
 import { WORLD_W, WORLD_H, BLOCK_SZ } from "./common/config";
+import { EntityType } from "./common/game_objects";
 
 const FRAME_DURATION_MS = 100;
 
@@ -33,9 +34,9 @@ export class Game {
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
 
-  constructor(pipe: Pipe) {
+  constructor() {
     this._id = Game.nextGameId++;
-    this._pipe = pipe;
+    this._pipe = new Pipe();
     this._em = new EntityManager();
 
     const spatialSystem = new SpatialSystem(this._em, WORLD_W, WORLD_H);
@@ -65,14 +66,14 @@ export class Game {
 
     if (dirties.length > 0) {
       console.log("Sending state update");
-      console.log(dirties);
+      //console.log(dirties);
 
       const response: RGameState = {
         type: GameResponseType.GAME_STATE,
         packets: dirties
       };
 
-      this._pipe.send(response);
+      this._pipe.sendToAll(response);
     }
   }
 
@@ -91,11 +92,6 @@ export class Game {
 
     coords = _.shuffle(coords);
   
-    const response: RNewEntity = {
-      type: GameResponseType.NEW_ENTITIES,
-      newEntities: []
-    };
-
     let idx = 0;
     const rockCoords = coords.slice(0, numRocks);
     idx += numRocks;
@@ -105,45 +101,54 @@ export class Game {
 
     rockCoords.forEach(([c, r]) => {
       const id = constructRock(this._em);
-      response.newEntities.push({
-        entityId: id,
-        entityType: EntityType.ROCK
-      });
       spatialSys.positionEntity(id, c, r);
     });
 
     gemCoords.forEach(([c, r]) => {
       const id = constructGem(this._em);
-      response.newEntities.push({
-        entityId: id,
-        entityType: EntityType.GEM
-      });
       spatialSys.positionEntity(id, c, r);
     });
 
     soilCoords.forEach(([c, r]) => {
       const id = constructSoil(this._em);
-      response.newEntities.push({
-        entityId: id,
-        entityType: EntityType.SOIL
-      });
       spatialSys.positionEntity(id, c, r);
     });
-  
-    this._pipe.send(response);
   }
 
-  addPlayer(pinataId: string, pinataToken: string): EntityId {
+  addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
     const id = constructPlayer(this._em, pinataId, pinataToken);
-    const response: RNewEntity = {
+
+    console.log(`Adding player ${id}`);
+  
+    this._pipe.addSocket(id, socket);
+
+    const entities = this._em.entities();
+    const playerIdx = entities.findIndex(e => e.id == id);
+    entities.splice(playerIdx, 1);
+
+    const newEntitiesResp: RNewEntity = {
+      type: GameResponseType.NEW_ENTITIES,
+      newEntities: entities
+    };
+
+    const stateUpdateResp: RGameState = {
+      type: GameResponseType.GAME_STATE,
+      packets: this._em.getState()
+    }
+
+    const newPlayerResp: RNewEntity = {
       type: GameResponseType.NEW_ENTITIES,
       newEntities: [{
-        entityId: id,
-        entityType: EntityType.PLAYER
+        id,
+        type: EntityType.PLAYER
       }]
     };
-    this._pipe.send(response);
-    console.log(`Adding player ${id}`);
+
+    this._pipe.send(id, newEntitiesResp);
+    this._pipe.send(id, stateUpdateResp);
+
+    this._pipe.sendToAll(newPlayerResp);
+
     return id;
   }
 
