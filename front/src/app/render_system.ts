@@ -44,6 +44,7 @@ export class RenderSystem extends System {
     this._components.set(component.entityId, component);
 
     const resource = this._getResource(component.imageResourceName);
+    resource.texture.rotate = 8;
     component.sprite = new PIXI.Sprite(resource.texture);
 
     this._onEntityMoved(component.entityId);

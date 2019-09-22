@@ -61,6 +61,10 @@ class App {
 
   constructor() {
     this._pixi = new PIXI.Application();
+    const renderer = this._pixi.renderer;
+    this._pixi.stage.position.y = renderer.height / renderer.resolution;
+    this._pixi.stage.scale.y = -1;
+
     this._ws = new WebSocket(WEBSOCKET_URL);
 
     this._ws.onmessage = ev => this._onServerMessage(ev);
