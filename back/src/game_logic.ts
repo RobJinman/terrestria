@@ -3,7 +3,7 @@ import { PlayerAction, ActionType, MoveAction,
 import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { SpatialSystem } from "./common/spatial_system";
-import { BLOCK_SZ } from "./common/config";
+import { BLOCK_SZ, PLAYER_SPEED } from "./common/config";
 
 function directionToVector(dir: Direction) {
   switch (dir) {
@@ -33,7 +33,7 @@ export class GameLogic {
         const ac = <MoveAction>action;
         console.log(ac);
         const v = directionToVector(ac.direction);
-        spatialSys.moveEntity(ac.playerId, v[0], v[1]);
+        spatialSys.moveEntity(ac.playerId, v[0], v[1], 1.0 / PLAYER_SPEED);
       }
     }
   }

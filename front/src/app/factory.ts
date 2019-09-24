@@ -37,7 +37,6 @@ function constructPlayer(em: EntityManager, id: EntityId) {
 export function constructEntities(entityManager: EntityManager,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
-    console.log(`${entity.id} ${entity.type}`);
     switch (entity.type) {
       case EntityType.PLAYER:
         constructPlayer(entityManager, entity.id);

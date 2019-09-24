@@ -31,7 +31,7 @@
   },
   "scripts": {
     "test": "jasmine-ts --config=jasmine.json",
-    "start": "NODE_ENV=development webpack-dev-server",
+    "start": "NODE_ENV=development webpack-dev-server --host 0.0.0.0",
     "build": "rm -rf ./dist/ && NODE_ENV=production webpack"
   },
   "author": "Rob Jinman",

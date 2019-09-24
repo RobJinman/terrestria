@@ -8,12 +8,12 @@ import { SpatialSystem } from "./common/spatial_system";
 import { AgentSystem } from "./common/agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponseType, RGameState, RNewEntities, REntitiesDeleted } from "./common/response";
+import { GameResponseType, RGameState, RNewEntities,
+         REntitiesDeleted } from "./common/response";
 import { GameLogic } from "./game_logic";
-import { WORLD_W, WORLD_H, BLOCK_SZ } from "./common/config";
+import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
+         SERVER_FRAME_RATE} from "./common/config";
 import { EntityType } from "./common/game_objects";
-
-const FRAME_DURATION_MS = 100;
 
 function noThrow(fn: () => any) {
   try {
@@ -39,7 +39,10 @@ export class Game {
     this._pipe = new Pipe();
     this._em = new EntityManager();
 
-    const spatialSystem = new SpatialSystem(this._em, WORLD_W, WORLD_H);
+    const spatialSystem = new SpatialSystem(this._em,
+                                            WORLD_W,
+                                            WORLD_H,
+                                            SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem();
 
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
@@ -52,7 +55,7 @@ export class Game {
     this._populate();
 
     this._loopTimeout = setInterval(() => noThrow(this._tick.bind(this)),
-                                    FRAME_DURATION_MS);
+                                    SERVER_FRAME_DURATION_MS);
   }
 
   private _tick() {
@@ -65,9 +68,6 @@ export class Game {
     const dirties = this._em.getDirties();
 
     if (dirties.length > 0) {
-      console.log("Sending state update");
-      //console.log(dirties);
-
       const response: RGameState = {
         type: GameResponseType.GAME_STATE,
         packets: dirties
@@ -91,7 +91,7 @@ export class Game {
     }
 
     coords = _.shuffle(coords);
-  
+
     let idx = 0;
     const rockCoords = coords.slice(0, numRocks);
     idx += numRocks;
@@ -116,15 +116,13 @@ export class Game {
   }
 
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
+    const entities = this._em.entities();
+  
     const id = constructPlayer(this._em, pinataId, pinataToken);
 
     console.log(`Adding player ${id}`);
   
     this._pipe.addSocket(id, socket);
-
-    const entities = this._em.entities();
-    const playerIdx = entities.findIndex(e => e.id == id);
-    entities.splice(playerIdx, 1);
 
     const newEntitiesResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
@@ -145,9 +143,8 @@ export class Game {
     };
 
     this._pipe.send(id, newEntitiesResp);
-    this._pipe.send(id, stateUpdateResp);
-
     this._pipe.sendToAll(newPlayerResp);
+    this._pipe.send(id, stateUpdateResp);
 
     return id;
   }

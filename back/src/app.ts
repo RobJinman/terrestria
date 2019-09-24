@@ -6,7 +6,6 @@ import { GameResponse, GameResponseType, RError,
          RLoginSuccess } from "./common/response";
 import { pinataAuth } from "./pinata";
 import { EntityId } from "./common/entity_manager";
-import { Pipe } from "./pipe";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -55,7 +54,6 @@ export class App {
   }
 
   private _handlePong(sock: ExtWebSocket) {
-    //console.log(`PONG, id = ${sock.userId}`);
     sock.isAlive = true;
   }
 
@@ -90,8 +88,6 @@ export class App {
         }
       }
       else {
-        //console.log(`PING, id = ${sock.userId}`);
-
         sock.isAlive = false;
         sock.ping();
       }

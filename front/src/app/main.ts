@@ -2,11 +2,13 @@ import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, MoveAction, Direction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError,
-         RNewEntities, RLoginSuccess, REntitiesDeleted} from "./common/response";
+         RNewEntities, RLoginSuccess,
+         REntitiesDeleted } from "./common/response";
 import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
 import { SpatialSystem } from './common/spatial_system';
-import { WORLD_W, WORLD_H } from "./common/config";
+import { WORLD_W, WORLD_H, BLOCK_SZ, CLIENT_FRAME_RATE,
+         PLAYER_SPEED } from "./common/config";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
@@ -14,40 +16,26 @@ import { ResourcesMap } from './definitions';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
-type KeyboardHandlerFn = () => void;
-
 class UserInput {
-  _keyDownHandlers: Map<string, KeyboardHandlerFn>;
-  _keyUpHandlers: Map<string, KeyboardHandlerFn>;
+  _keyStates: Map<string, boolean>;
 
   constructor() {
-    this._keyDownHandlers = new Map<string, KeyboardHandlerFn>();
-    this._keyUpHandlers = new Map<string, KeyboardHandlerFn>();
+    this._keyStates = new Map<string, boolean>();
 
     window.addEventListener("keydown", event => this._onKeyDown(event), false);
     window.addEventListener("keyup", event => this._onKeyUp(event), false);
   }
 
-  onKeyUp(key: string, handler: KeyboardHandlerFn) {
-    this._keyUpHandlers.set(key, handler);
-  }
-
-  onKeyDown(key: string, handler: KeyboardHandlerFn) {
-    this._keyDownHandlers.set(key, handler);
+  keyPressed(key: string): boolean {
+    return this._keyStates.get(key) === true;
   }
 
   private _onKeyDown(event: KeyboardEvent) {
-    const handler = this._keyDownHandlers.get(event.key);
-    if (handler) {
-      handler();
-    }
+    this._keyStates.set(event.key, true);
   }
 
   private _onKeyUp(event: KeyboardEvent) {
-    const handler = this._keyUpHandlers.get(event.key);
-    if (handler) {
-      handler();
-    }
+    this._keyStates.set(event.key, false);
   }
 }
 
@@ -57,7 +45,7 @@ class App {
   private _ws: WebSocket;
   private _em: EntityManager;
   private _userInput: UserInput;
-  private _playerId: EntityId = 0;
+  private _playerId: EntityId = -1;
 
   constructor() {
     this._pixi = new PIXI.Application();
@@ -70,7 +58,10 @@ class App {
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
     this._em = new EntityManager();
-    const spatialSystem = new SpatialSystem(this._em, WORLD_W, WORLD_H);
+    const spatialSystem = new SpatialSystem(this._em,
+                                            WORLD_W,
+                                            WORLD_H,
+                                            CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em, this._pixi);
     const agentSystem = new AgentSystem();
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
@@ -78,28 +69,67 @@ class App {
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
     this._userInput = new UserInput();
-    this._userInput.onKeyDown("ArrowUp", () => this._onArrowKey(Direction.UP));
-    this._userInput.onKeyDown("ArrowRight",
-                              () => this._onArrowKey(Direction.RIGHT));
-    this._userInput.onKeyDown("ArrowDown",
-                              () => this._onArrowKey(Direction.DOWN));
-    this._userInput.onKeyDown("ArrowLeft",
-                              () => this._onArrowKey(Direction.LEFT));
 
     this._insertElement();
+
+    this._pixi.ticker.add(delta => this._tick(delta));
   }
 
-  private _onArrowKey(direction: Direction) {
-    console.log("Moving " + direction);
+  private _tick(delta: number) {
+    this._keyboard();
+    this._em.update();
+  }
 
-    const data: MoveAction = {
-      type: ActionType.MOVE,
-      playerId: this._playerId,
-      direction
-    };
+  private _keyboard() {
+    if (this._playerId == -1) {
+      return;
+    }
 
-    const dataString = JSON.stringify(data);
-    this._ws.send(dataString);
+    let direction: Direction|null = null;
+
+    if (this._userInput.keyPressed("ArrowUp")) {
+      direction = Direction.UP;
+    }
+    else if (this._userInput.keyPressed("ArrowRight")) {
+      direction = Direction.RIGHT;
+    }
+    else if (this._userInput.keyPressed("ArrowDown")) {
+      direction = Direction.DOWN;
+    }
+    else if (this._userInput.keyPressed("ArrowLeft")) {
+      direction = Direction.LEFT;
+    }
+
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const c = spatialSys.getComponent(this._playerId);
+
+    if (direction !== null && !c.moving()) {
+      const t = 1.0 / PLAYER_SPEED;
+
+      switch (direction) {
+        case Direction.UP:
+          spatialSys.moveEntity(this._playerId, 0, BLOCK_SZ, t);
+          break;
+        case Direction.RIGHT:
+          spatialSys.moveEntity(this._playerId, BLOCK_SZ, 0, t);
+          break;
+        case Direction.DOWN:
+          spatialSys.moveEntity(this._playerId, 0, -BLOCK_SZ, t);
+          break;
+        case Direction.LEFT:
+          spatialSys.moveEntity(this._playerId, -BLOCK_SZ, 0, t);
+          break;
+      }
+
+      const data: MoveAction = {
+        type: ActionType.MOVE,
+        playerId: this._playerId,
+        direction
+      };
+
+      const dataString = JSON.stringify(data);
+      this._ws.send(dataString);
+    }
   }
 
   _logIn() {
@@ -150,7 +180,7 @@ class App {
 
   private _onServerMessage(event: MessageEvent) {
     const msg = <GameResponse>JSON.parse(event.data);
-    console.log(msg);
+
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
         constructEntities(this._em, <RNewEntities>msg);

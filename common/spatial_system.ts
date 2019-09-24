@@ -4,6 +4,16 @@ import { EntityId, System, Component,
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent, EEntityMoved, GameEventType } from "./event";
+import { SERVER_FRAME_DURATION_MS } from "./config";
+
+type Vec2 = {
+  x: number;
+  y: number;
+};
+
+function sqMagnitude(v: Vec2) {
+  return v.x * v.x + v.y * v.y;
+}
 
 interface SpatialComponentPacket extends ComponentPacket {
   x: number;
@@ -12,29 +22,39 @@ interface SpatialComponentPacket extends ComponentPacket {
 
 export class SpatialComponent extends Component {
   dirty = true;
-  private _x = 0;
-  private _y = 0;
+  private _pos: Vec2 = { x: 0, y: 0 };
+
+  velocity: Vec2 = { x: 0, y: 0 };
+  dest: Vec2 = { x: 0, y: 0 };
 
   constructor(entityId: EntityId) {
     super(entityId, ComponentType.SPATIAL);
   }
 
+  moving() {
+    return sqMagnitude(this.velocity) > 0.1;
+  }
+
   get x() {
-    return this._x;
+    return this._pos.x;
   }
 
   set x(value: number) {
-    this._x = value;
+    this._pos.x = value;
     this.dirty = true;
   }
 
   get y() {
-    return this._y;
+    return this._pos.y;
   }
 
   set y(value: number) {
-    this._y = value;
+    this._pos.y = value;
     this.dirty = true;
+  }
+
+  get pos() {
+    return this._pos;
   }
 }
 
@@ -43,8 +63,12 @@ export class SpatialSystem extends System {
   private _em: EntityManager;
   private _w = 0;
   private _h = 0;
+  private _frameRate: number;
 
-  constructor(entityManager: EntityManager, w: number, h: number) {
+  constructor(entityManager: EntityManager,
+              w: number,
+              h: number,
+              frameRate: number) {
     super();
 
     this._em = entityManager;
@@ -52,33 +76,84 @@ export class SpatialSystem extends System {
 
     this._w = w;
     this._h = h;
+
+    this._frameRate = frameRate;
   }
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    this.positionEntity(c.entityId, packet.x, packet.y);
+    this.positionEntity(c.entityId,
+                        packet.x,
+                        packet.y,
+                        SERVER_FRAME_DURATION_MS / 1000);
   }
 
-  positionEntity(id: EntityId, x: number, y: number) {
-    //console.log(`Moving entity ${id} to (${x}, ${y})`);
+  private _updateEntityPos(c: SpatialComponent) {
+    const dx = c.velocity.x / this._frameRate;
+    const dy = c.velocity.y / this._frameRate;
+    c.x += dx;
+    c.y += dy;
+/*
+    console.log(`c.pos = ${c.x}, ${c.y}`);
+    console.log(`dx = ${dx}, dy = ${dy}`);
+    console.log(`velocity = ${c.velocity.x}, ${c.velocity.y}`);
+    console.log(`dest = ${c.dest.x}, ${c.dest.y}`);
+    console.log(`sqDistance = ${sqDistance(c.pos, c.dest)}`);
+    console.log(`abs delta = ${dx * dx + dy * dy}`);
+*/
+    const xDir = dx < 0 ? -1 : 1;
+    const yDir = dy < 0 ? -1 : 1;
 
-    const c = this.getComponent(id);
-    c.x = x;
-    c.y = y;
+    if (xDir * (c.x - c.dest.x) > 0 || yDir * (c.y - c.dest.y) > 0) {
+      c.x = c.dest.x;
+      c.y = c.dest.y;
+      c.velocity.x = 0;
+      c.velocity.y = 0;
+    }
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
-      entityId: id,
-      x,
-      y
+      entityId: c.entityId,
+      x: c.x,
+      y: c.y
     };
 
     this._em.postEvent(event);
   }
 
-  moveEntity(id: EntityId, dx: number, dy: number) {
+  positionEntity(id: EntityId, x: number, y: number, t: number = 0) {
+    //console.log(`Moving entity ${id} to (${x}, ${y})`);
+
     const c = this.getComponent(id);
-    this.positionEntity(id, c.x + dx, c.y + dy)
+
+    if (t > 0) {
+      c.velocity.x = (x - c.x) / t;
+      c.velocity.y = (y - c.y) / t;
+      c.dest.x = x;
+      c.dest.y = y;
+
+      this._updateEntityPos(c);
+    }
+    else {
+      c.x = x;
+      c.y = y;
+
+      const event: EEntityMoved = {
+        type: GameEventType.ENTITY_MOVED,
+        entityId: c.entityId,
+        x: c.x,
+        y: c.y
+      };
+  
+      this._em.postEvent(event);
+    }
+  }
+
+  moveEntity(id: EntityId, dx: number, dy: number, t: number = 0) {
+    const c = this.getComponent(id);
+    if (!c.moving()) {
+      this.positionEntity(id, c.x + dx, c.y + dy, t);
+    }
   }
 
   numComponents() {
@@ -110,7 +185,11 @@ export class SpatialSystem extends System {
   }
 
   update() {
-    // TODO
+    this._components.forEach(c => {
+      if (c.moving()) {
+        this._updateEntityPos(c);
+      }
+    });
   }
 
   getState() {

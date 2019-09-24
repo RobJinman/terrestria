@@ -82,8 +82,6 @@ export class RenderSystem extends System {
 
       const renderComp = this.getComponent(id);
       if (renderComp.sprite) {
-        console.log(`Entity ${id} at ${spatialComp.x}, ${spatialComp.y}`);
-
         renderComp.sprite.x = spatialComp.x;
         renderComp.sprite.y = spatialComp.y;
       }
