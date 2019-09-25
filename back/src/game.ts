@@ -59,10 +59,8 @@ export class Game {
   }
 
   private _tick() {
-    while (this._actionQueue.length > 0) {
-      const action = <PlayerAction>this._actionQueue.shift();
-      this._gameLogic.handlePlayerAction(action);
-    }
+    this._gameLogic.update(this._actionQueue);
+    this._actionQueue = [];
 
     this._em.update();
     const dirties = this._em.getDirties();

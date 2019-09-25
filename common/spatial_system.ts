@@ -122,6 +122,11 @@ export class SpatialSystem extends System {
     this._em.postEvent(event);
   }
 
+  entityIsMoving(id: EntityId) {
+    const c = this.getComponent(id);
+    return c.moving();
+  }
+
   positionEntity(id: EntityId, x: number, y: number) {
     this.stopEntity(id);
     const c = this.getComponent(id);
@@ -168,6 +173,14 @@ export class SpatialSystem extends System {
 
   stopEntity(id: EntityId) {
     const c = this.getComponent(id);
+    c.velocity.x = 0;
+    c.velocity.y = 0;
+  }
+
+  finishTween(id: EntityId) {
+    const c = this.getComponent(id);
+    c.x = c.dest.x;
+    c.y = c.dest.y;
     c.velocity.x = 0;
     c.velocity.y = 0;
   }
