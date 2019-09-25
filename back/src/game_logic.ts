@@ -17,17 +17,12 @@ function directionToVector(dir: Direction) {
 
 export class GameLogic {
   private _entityManager: EntityManager;
-  private _queuedMovedmentAction: PlayerAction|null = null;
 
   constructor(entityManager: EntityManager) {
     this._entityManager = entityManager;
   }
 
   update(actions: PlayerAction[]) {
-    if (this._queuedMovedmentAction) {
-      this._handlePlayerAction(this._queuedMovedmentAction);
-      this._queuedMovedmentAction = null;
-    }
     actions.forEach(action => this._handlePlayerAction(action));
   }
 
@@ -35,14 +30,9 @@ export class GameLogic {
     const spatialSys = <SpatialSystem>this._entityManager
                                           .getSystem(ComponentType.SPATIAL);
 
-    if (spatialSys.entityIsMoving(action.playerId)) {
-      this._queuedMovedmentAction = action;
-    }
-    else {
-      const v = directionToVector(action.direction);
-      const t = 1.0 / PLAYER_SPEED;
-      spatialSys.moveEntity_tween(action.playerId, v[0], v[1], t);
-    }
+    const v = directionToVector(action.direction);
+    const t = 1.0 / PLAYER_SPEED;
+    spatialSys.moveEntity_tween(action.playerId, v[0], v[1], t);
   }
 
   private _handlePlayerAction(action: PlayerAction) {
