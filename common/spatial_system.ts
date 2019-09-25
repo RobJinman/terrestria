@@ -82,10 +82,11 @@ export class SpatialSystem extends System {
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    this.positionEntity(c.entityId,
-                        packet.x,
-                        packet.y,
-                        SERVER_FRAME_DURATION_MS / 1000);
+    this.stopEntity(c.entityId);
+    this.positionEntity_tween(c.entityId,
+                              packet.x,
+                              packet.y,
+                              SERVER_FRAME_DURATION_MS / 1000);
   }
 
   private _updateEntityPos(c: SpatialComponent) {
@@ -121,39 +122,54 @@ export class SpatialSystem extends System {
     this._em.postEvent(event);
   }
 
-  positionEntity(id: EntityId, x: number, y: number, t: number = 0) {
-    //console.log(`Moving entity ${id} to (${x}, ${y})`);
-
+  positionEntity(id: EntityId, x: number, y: number) {
+    this.stopEntity(id);
     const c = this.getComponent(id);
 
-    if (t > 0) {
-      c.velocity.x = (x - c.x) / t;
-      c.velocity.y = (y - c.y) / t;
-      c.dest.x = x;
-      c.dest.y = y;
+    c.x = x;
+    c.y = y;
 
-      this._updateEntityPos(c);
-    }
-    else {
-      c.x = x;
-      c.y = y;
+    const event: EEntityMoved = {
+      type: GameEventType.ENTITY_MOVED,
+      entityId: c.entityId,
+      x: c.x,
+      y: c.y
+    };
 
-      const event: EEntityMoved = {
-        type: GameEventType.ENTITY_MOVED,
-        entityId: c.entityId,
-        x: c.x,
-        y: c.y
-      };
-  
-      this._em.postEvent(event);
+    this._em.postEvent(event);
+  }
+
+  moveEntity(id: EntityId, dx: number, dy: number) {
+    const c = this.getComponent(id);
+    this.positionEntity(id, c.x + dx, c.y + dy);
+  }
+
+  positionEntity_tween(id: EntityId, x: number, y: number, t: number = 0) {
+    const c = this.getComponent(id);
+    if (!c.moving()) {
+      if (t > 0) {
+        c.velocity.x = (x - c.x) / t;
+        c.velocity.y = (y - c.y) / t;
+        c.dest.x = x;
+        c.dest.y = y;
+
+        this._updateEntityPos(c);
+      }
+      else {
+        this.positionEntity(id, x, y);
+      }
     }
   }
 
-  moveEntity(id: EntityId, dx: number, dy: number, t: number = 0) {
+  moveEntity_tween(id: EntityId, dx: number, dy: number, t: number = 0) {
     const c = this.getComponent(id);
-    if (!c.moving()) {
-      this.positionEntity(id, c.x + dx, c.y + dy, t);
-    }
+    this.positionEntity_tween(id, c.x + dx, c.y + dy, t);
+  }
+
+  stopEntity(id: EntityId) {
+    const c = this.getComponent(id);
+    c.velocity.x = 0;
+    c.velocity.y = 0;
   }
 
   numComponents() {

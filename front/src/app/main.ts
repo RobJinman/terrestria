@@ -110,16 +110,16 @@ class App {
 
       switch (direction) {
         case Direction.UP:
-          spatialSys.moveEntity(this._playerId, 0, BLOCK_SZ, t);
+          spatialSys.moveEntity_tween(this._playerId, 0, BLOCK_SZ, t);
           break;
         case Direction.RIGHT:
-          spatialSys.moveEntity(this._playerId, BLOCK_SZ, 0, t);
+          spatialSys.moveEntity_tween(this._playerId, BLOCK_SZ, 0, t);
           break;
         case Direction.DOWN:
-          spatialSys.moveEntity(this._playerId, 0, -BLOCK_SZ, t);
+          spatialSys.moveEntity_tween(this._playerId, 0, -BLOCK_SZ, t);
           break;
         case Direction.LEFT:
-          spatialSys.moveEntity(this._playerId, -BLOCK_SZ, 0, t);
+          spatialSys.moveEntity_tween(this._playerId, -BLOCK_SZ, 0, t);
           break;
       }
 

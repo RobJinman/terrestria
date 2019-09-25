@@ -33,7 +33,8 @@ export class GameLogic {
         const ac = <MoveAction>action;
         console.log(ac);
         const v = directionToVector(ac.direction);
-        spatialSys.moveEntity(ac.playerId, v[0], v[1], 1.0 / PLAYER_SPEED);
+        const t = 1.0 / PLAYER_SPEED;
+        spatialSys.moveEntity_tween(ac.playerId, v[0], v[1], t);
       }
     }
   }
