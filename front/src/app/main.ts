@@ -43,6 +43,7 @@ class App {
   private _pixi: PIXI.Application;
   private _resources: ResourcesMap = {};
   private _ws: WebSocket;
+  private _responseQueue: GameResponse[] = [];
   private _em: EntityManager;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
@@ -76,6 +77,7 @@ class App {
   }
 
   private _tick(delta: number) {
+    this._handleServerMessages();
     this._keyboard();
     this._em.update();
   }
@@ -178,9 +180,7 @@ class App {
     });
   }
 
-  private _onServerMessage(event: MessageEvent) {
-    const msg = <GameResponse>JSON.parse(event.data);
-
+  private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
         constructEntities(this._em, <RNewEntities>msg);
@@ -199,6 +199,18 @@ class App {
         this._handleServerError(<RError>msg);
         break;
     }
+  }
+
+  private _handleServerMessages() {
+    while (this._responseQueue.length > 0) {
+      const msg = <GameResponse>this._responseQueue.shift();
+      this._handleServerMessage(msg);
+    }
+  }
+
+  private _onServerMessage(event: MessageEvent) {
+    const msg = <GameResponse>JSON.parse(event.data);
+    this._responseQueue.push(msg);
   }
 
   private _insertElement() {
