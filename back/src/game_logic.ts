@@ -1,9 +1,9 @@
 import { PlayerAction, ActionType, MoveAction,
          Direction } from "./common/action";
-import { EntityManager } from "./common/entity_manager";
+import { EntityManager, EntityId } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { SpatialSystem } from "./common/spatial_system";
-import { BLOCK_SZ, PLAYER_SPEED } from "./common/config";
+import { BLOCK_SZ, FRAMES_PER_BLOCK, SERVER_FRAME_RATE } from "./common/config";
 
 function directionToVector(dir: Direction) {
   switch (dir) {
@@ -17,32 +17,51 @@ function directionToVector(dir: Direction) {
 
 export class GameLogic {
   private _entityManager: EntityManager;
+  private _queuedAction: PlayerAction|null = null;
 
   constructor(entityManager: EntityManager) {
     this._entityManager = entityManager;
   }
 
   update(actions: PlayerAction[]) {
-    actions.forEach(action => this._handlePlayerAction(action));
+    if (this._queuedAction) {
+      if (this._handlePlayerAction(this._queuedAction)) {
+        this._queuedAction = null;
+      }
+    }
+
+    actions.forEach(action => {
+      if (!this._handlePlayerAction(action)) {
+        this._queuedAction = action;
+      }
+    });
   }
 
-  private _movePlayer(action: MoveAction) {
+  private _movePlayer(action: MoveAction): boolean {
     const spatialSys = <SpatialSystem>this._entityManager
                                           .getSystem(ComponentType.SPATIAL);
 
-    const v = directionToVector(action.direction);
-    const t = 1.0 / PLAYER_SPEED;
-    spatialSys.moveEntity_tween(action.playerId, v[0], v[1], t);
+    if (spatialSys.entityIsMoving(action.playerId)) {
+      this._queuedAction = action;
+      return false;
+    }
+    else {
+      const v = directionToVector(action.direction);
+      const t = FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+      spatialSys.moveEntity_tween(action.playerId, v[0], v[1], t);
+      return true;
+    }
   }
 
-  private _handlePlayerAction(action: PlayerAction) {
+  private _handlePlayerAction(action: PlayerAction): boolean {
     console.log("Game logic: Handling player action");
 
     switch (action.type) {
       case ActionType.MOVE: {
-        this._movePlayer(<MoveAction>action);
-        break;
+        return this._movePlayer(<MoveAction>action);
       }
     }
+
+    return false;
   }
 }

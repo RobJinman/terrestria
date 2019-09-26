@@ -1,14 +1,13 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, MoveAction, Direction } from "./common/action";
-import { GameResponse, GameResponseType, RGameState, RError,
-         RNewEntities, RLoginSuccess,
-         REntitiesDeleted } from "./common/response";
+import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
+         RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
 import { SpatialSystem } from './common/spatial_system';
-import { WORLD_W, WORLD_H, BLOCK_SZ, CLIENT_FRAME_RATE,
-         PLAYER_SPEED } from "./common/config";
+import { WORLD_W, WORLD_H, BLOCK_SZ, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
+         SERVER_FRAME_RATE} from "./common/config";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
@@ -73,6 +72,7 @@ class App {
 
     this._insertElement();
 
+    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
     this._pixi.ticker.add(delta => this._tick(delta));
   }
 
@@ -105,8 +105,12 @@ class App {
     const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
     const c = spatialSys.getComponent(this._playerId);
 
-    if (direction !== null && !c.moving()) {
-      const t = 1.0 / PLAYER_SPEED;
+    // TODO: Debounce instead
+    const halfBlock = BLOCK_SZ / 2;
+    const isSemiGridAligned = c.x % halfBlock == 0 && c.y % halfBlock == 0;
+
+    if (direction !== null && isSemiGridAligned) {
+      const t = FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
 
       switch (direction) {
         case Direction.UP:

@@ -4,16 +4,12 @@ import { EntityId, System, Component,
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent, EEntityMoved, GameEventType } from "./event";
-import { SERVER_FRAME_DURATION_MS } from "./config";
+import { SERVER_FRAME_RATE } from "./config";
 
 type Vec2 = {
   x: number;
   y: number;
 };
-
-function sqMagnitude(v: Vec2) {
-  return v.x * v.x + v.y * v.y;
-}
 
 interface SpatialComponentPacket extends ComponentPacket {
   x: number;
@@ -32,7 +28,15 @@ export class SpatialComponent extends Component {
   }
 
   moving() {
-    return sqMagnitude(this.velocity) > 0.1;
+    return this.movingInX() || this.movingInY();
+  }
+
+  movingInX() {
+    return Math.abs(this.velocity.x) > 0.5;
+  }
+
+  movingInY() {
+    return Math.abs(this.velocity.y) > 0.5;
   }
 
   get x() {
@@ -86,7 +90,7 @@ export class SpatialSystem extends System {
     this.positionEntity_tween(c.entityId,
                               packet.x,
                               packet.y,
-                              SERVER_FRAME_DURATION_MS / 1000);
+                              1.0 / SERVER_FRAME_RATE);
   }
 
   private _updateEntityPos(c: SpatialComponent) {
@@ -94,18 +98,13 @@ export class SpatialSystem extends System {
     const dy = c.velocity.y / this._frameRate;
     c.x += dx;
     c.y += dy;
-/*
-    console.log(`c.pos = ${c.x}, ${c.y}`);
-    console.log(`dx = ${dx}, dy = ${dy}`);
-    console.log(`velocity = ${c.velocity.x}, ${c.velocity.y}`);
-    console.log(`dest = ${c.dest.x}, ${c.dest.y}`);
-    console.log(`sqDistance = ${sqDistance(c.pos, c.dest)}`);
-    console.log(`abs delta = ${dx * dx + dy * dy}`);
-*/
+
     const xDir = dx < 0 ? -1 : 1;
     const yDir = dy < 0 ? -1 : 1;
+    const reachedDestX = xDir * (c.x - c.dest.x) > -0.5;
+    const reachedDestY = yDir * (c.y - c.dest.y) > -0.5;
 
-    if (xDir * (c.x - c.dest.x) > 0 || yDir * (c.y - c.dest.y) > 0) {
+    if (reachedDestX && reachedDestY) {
       c.x = c.dest.x;
       c.y = c.dest.y;
       c.velocity.x = 0;
@@ -157,8 +156,6 @@ export class SpatialSystem extends System {
         c.velocity.y = (y - c.y) / t;
         c.dest.x = x;
         c.dest.y = y;
-
-        this._updateEntityPos(c);
       }
       else {
         this.positionEntity(id, x, y);

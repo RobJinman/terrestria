@@ -33,6 +33,7 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
+  private _frame: number = 0;
 
   constructor() {
     this._id = Game.nextGameId++;
@@ -68,11 +69,14 @@ export class Game {
     if (dirties.length > 0) {
       const response: RGameState = {
         type: GameResponseType.GAME_STATE,
-        packets: dirties
+        packets: dirties,
+        frameNumber: this._frame
       };
 
       this._pipe.sendToAll(response);
     }
+
+    this._frame++;
   }
 
   private _populate() {
@@ -129,7 +133,8 @@ export class Game {
 
     const stateUpdateResp: RGameState = {
       type: GameResponseType.GAME_STATE,
-      packets: this._em.getState()
+      packets: this._em.getState(),
+      frameNumber: this._frame
     }
 
     const newPlayerResp: RNewEntities = {
