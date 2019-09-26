@@ -110,7 +110,9 @@ class App {
     const isSemiGridAligned = c.x % halfBlock == 0 && c.y % halfBlock == 0;
 
     if (direction !== null && isSemiGridAligned) {
-      const t = FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+      // Start moving at half speed
+
+      const t = 2.0 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
 
       switch (direction) {
         case Direction.UP:

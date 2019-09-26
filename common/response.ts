@@ -24,7 +24,6 @@ export interface RLoginSuccess extends GameResponse {
 
 export interface RGameState extends GameResponse {
   packets: ComponentPacket[];
-  frameNumber: number;
 }
 
 export interface RNewEntities extends GameResponse {

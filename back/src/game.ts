@@ -69,8 +69,7 @@ export class Game {
     if (dirties.length > 0) {
       const response: RGameState = {
         type: GameResponseType.GAME_STATE,
-        packets: dirties,
-        frameNumber: this._frame
+        packets: dirties
       };
 
       this._pipe.sendToAll(response);
@@ -133,8 +132,7 @@ export class Game {
 
     const stateUpdateResp: RGameState = {
       type: GameResponseType.GAME_STATE,
-      packets: this._em.getState(),
-      frameNumber: this._frame
+      packets: this._em.getState()
     }
 
     const newPlayerResp: RNewEntities = {
