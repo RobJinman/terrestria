@@ -70,7 +70,7 @@ class App {
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
-    const t = 0.5 * 1000 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+    const t = 1000 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
     this._movePlayerFn = debounce(this, this._movePlayer, t);
 
     this._userInput = new UserInput();
