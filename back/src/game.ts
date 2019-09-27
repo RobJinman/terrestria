@@ -33,7 +33,6 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
-  private _frame: number = 0;
 
   constructor() {
     this._id = Game.nextGameId++;
@@ -74,8 +73,6 @@ export class Game {
 
       this._pipe.sendToAll(response);
     }
-
-    this._frame++;
   }
 
   private _populate() {

@@ -12,6 +12,7 @@ import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
+import { debounce } from './common/utils';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
@@ -46,6 +47,7 @@ class App {
   private _em: EntityManager;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
+  private _movePlayerFn: (direction: Direction) => void|null;
 
   constructor() {
     this._pixi = new PIXI.Application();
@@ -67,6 +69,9 @@ class App {
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
+
+    const t = 0.5 * 1000 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+    this._movePlayerFn = debounce(this, this._movePlayer, t);
 
     this._userInput = new UserInput();
 
@@ -102,42 +107,42 @@ class App {
       direction = Direction.LEFT;
     }
 
-    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-    const c = spatialSys.getComponent(this._playerId);
-
-    // TODO: Debounce instead
-    const halfBlock = BLOCK_SZ / 2;
-    const isSemiGridAligned = c.x % halfBlock == 0 && c.y % halfBlock == 0;
-
-    if (direction !== null && isSemiGridAligned) {
-      // Start moving at half speed
-
-      const t = 2.0 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
-
-      switch (direction) {
-        case Direction.UP:
-          spatialSys.moveEntity_tween(this._playerId, 0, BLOCK_SZ, t);
-          break;
-        case Direction.RIGHT:
-          spatialSys.moveEntity_tween(this._playerId, BLOCK_SZ, 0, t);
-          break;
-        case Direction.DOWN:
-          spatialSys.moveEntity_tween(this._playerId, 0, -BLOCK_SZ, t);
-          break;
-        case Direction.LEFT:
-          spatialSys.moveEntity_tween(this._playerId, -BLOCK_SZ, 0, t);
-          break;
-      }
-
-      const data: MoveAction = {
-        type: ActionType.MOVE,
-        playerId: this._playerId,
-        direction
-      };
-
-      const dataString = JSON.stringify(data);
-      this._ws.send(dataString);
+    if (direction !== null) {
+      this._movePlayerFn(direction);
     }
+  }
+
+  _movePlayer(direction: Direction) {
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+
+    // Start moving at half speed
+    //
+
+    const t = 2.0 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+
+    switch (direction) {
+      case Direction.UP:
+        spatialSys.moveEntity_tween(this._playerId, 0, BLOCK_SZ, t);
+        break;
+      case Direction.RIGHT:
+        spatialSys.moveEntity_tween(this._playerId, BLOCK_SZ, 0, t);
+        break;
+      case Direction.DOWN:
+        spatialSys.moveEntity_tween(this._playerId, 0, -BLOCK_SZ, t);
+        break;
+      case Direction.LEFT:
+        spatialSys.moveEntity_tween(this._playerId, -BLOCK_SZ, 0, t);
+        break;
+    }
+
+    const data: MoveAction = {
+      type: ActionType.MOVE,
+      playerId: this._playerId,
+      direction
+    };
+
+    const dataString = JSON.stringify(data);
+    this._ws.send(dataString);
   }
 
   _logIn() {
