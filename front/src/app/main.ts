@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction, Direction } from "./common/action";
+import { ActionType, MoveAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { EntityManager, EntityId } from './common/entity_manager';
@@ -13,6 +13,7 @@ import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
 import { debounce } from './common/utils';
+import { Direction } from './common/definitions';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 

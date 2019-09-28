@@ -1,5 +1,6 @@
 import { GameError, ErrorCode } from "./error";
 import { EntityId } from "./entity_manager";
+import { Direction } from "./definitions";
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
@@ -31,13 +32,6 @@ export function isLogInAction(obj: any): obj is LogInAction {
 // =======================================================
 // MoveAction
 //
-export enum Direction {
-  UP = "UP",
-  RIGHT = "RIGHT",
-  DOWN = "DOWN",
-  LEFT = "LEFT"
-}
-
 export interface MoveAction extends PlayerAction {
   direction: Direction;
 }

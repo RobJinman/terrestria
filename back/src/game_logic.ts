@@ -1,9 +1,9 @@
-import { PlayerAction, ActionType, MoveAction,
-         Direction } from "./common/action";
-import { EntityManager, EntityId } from "./common/entity_manager";
+import { PlayerAction, ActionType, MoveAction } from "./common/action";
+import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { SpatialSystem } from "./common/spatial_system";
 import { BLOCK_SZ, FRAMES_PER_BLOCK, SERVER_FRAME_RATE } from "./common/config";
+import { Direction } from "./common/definitions";
 
 function directionToVector(dir: Direction) {
   switch (dir) {

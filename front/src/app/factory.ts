@@ -7,28 +7,28 @@ import { AgentComponent } from "./common/agent_system";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const renderComp = new RenderComponent(id, "gem");
-  const spatialComp = new SpatialComponent(id);
+  const spatialComp = new SpatialComponent(id, true);
 
   em.addEntity(id, EntityType.GEM, [ spatialComp, renderComp ]);
 }
 
 function constructRock(em: EntityManager, id: EntityId) {
   const renderComp = new RenderComponent(id, "rock");
-  const spatialComp = new SpatialComponent(id);
+  const spatialComp = new SpatialComponent(id, true);
 
   em.addEntity(id, EntityType.ROCK, [ spatialComp, renderComp ]);
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
   const renderComp = new RenderComponent(id, "soil");
-  const spatialComp = new SpatialComponent(id);
+  const spatialComp = new SpatialComponent(id, false);
 
   em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp ]);
 }
 
 function constructPlayer(em: EntityManager, id: EntityId) {
   const renderComp = new RenderComponent(id, "man");
-  const spatialComp = new SpatialComponent(id);
+  const spatialComp = new SpatialComponent(id, true);
   const agentComp = new AgentComponent(id, "", "");
 
   em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp, renderComp ]);
