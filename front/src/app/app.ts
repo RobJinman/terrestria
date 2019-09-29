@@ -13,7 +13,6 @@ import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
 import { debounce } from './common/utils';
 import { Direction } from './common/definitions';
-import { PhysicsSystem } from './common/physics_system';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 
@@ -67,11 +66,9 @@ export class App {
                                             WORLD_W,
                                             WORLD_H,
                                             CLIENT_FRAME_RATE);
-    const physicsSystem = new PhysicsSystem(this._em, WORLD_W, WORLD_H);
     const renderSystem = new RenderSystem(this._em, this._pixi);
     const agentSystem = new AgentSystem();
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
-    this._em.addSystem(ComponentType.PHYSICS, physicsSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
@@ -118,9 +115,9 @@ export class App {
   }
 
   _movePlayer(direction: Direction) {
-    const physicsSys = <PhysicsSystem>this._em.getSystem(ComponentType.PHYSICS);
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    physicsSys.moveEntity(this._playerId, direction, 0.5);
+    spatialSys.moveAgent(this._playerId, direction, 0.5);
 
     const data: MoveAction = {
       type: ActionType.MOVE,

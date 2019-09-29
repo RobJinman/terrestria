@@ -12,7 +12,6 @@ import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SERVER_FRAME_RATE} from "./common/config";
 import { EntityType } from "./common/game_objects";
-import { PhysicsSystem } from "./common/physics_system";
 import { BehaviourSystem } from "./behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
@@ -45,12 +44,10 @@ export class Game {
                                             WORLD_W,
                                             WORLD_H,
                                             SERVER_FRAME_RATE);
-    const physicsSystem = new PhysicsSystem(this._em, WORLD_W, WORLD_H);
     const agentSystem = new AgentSystem();
     const behaviourSystem = new BehaviourSystem();
 
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
-    this._em.addSystem(ComponentType.PHYSICS, physicsSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
 
@@ -82,7 +79,7 @@ export class Game {
   }
 
   private _populate() {
-    const physicsSys = <PhysicsSystem>this._em.getSystem(ComponentType.PHYSICS);
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     const numRocks = 5;
     const numGems = 5;
@@ -105,17 +102,17 @@ export class Game {
 
     rockCoords.forEach(([c, r]) => {
       const id = constructRock(this._em);
-      physicsSys.setEntityPosition(id, c, r);
+      spatialSys.positionEntity(id, c, r);
     });
 
     gemCoords.forEach(([c, r]) => {
       const id = constructGem(this._em);
-      physicsSys.setEntityPosition(id, c, r);
+      spatialSys.positionEntity(id, c, r);
     });
 
     soilCoords.forEach(([c, r]) => {
       const id = constructSoil(this._em);
-      physicsSys.setEntityPosition(id, c, r);
+      spatialSys.positionEntity(id, c, r);
     });
   }
 

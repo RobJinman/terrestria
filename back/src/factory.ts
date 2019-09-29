@@ -1,7 +1,6 @@
 import { getNextEntityId, EntityManager } from "./common/entity_manager";
 import { AgentComponent } from "./common/agent_system";
 import { SpatialComponent } from "./common/spatial_system";
-import { PhysicsComponent } from "./common/physics_system";
 import { EntityType } from "./common/game_objects";
 import { GameEventType } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./behaviour_system";
@@ -10,8 +9,7 @@ import { EntityId } from "./common/system";
 export function constructSoil(em: EntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id);
-  const physicsComp = new PhysicsComponent(id, spatialComp, {
+  const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
     heavy: false,
@@ -24,9 +22,7 @@ export function constructSoil(em: EntityManager): EntityId {
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
-  em.addEntity(id, EntityType.SOIL, [ spatialComp,
-                                      physicsComp,
-                                      behaviourComp ]);
+  em.addEntity(id, EntityType.SOIL, [ spatialComp, behaviourComp ]);
 
   return id;
 }
@@ -34,8 +30,7 @@ export function constructSoil(em: EntityManager): EntityId {
 export function constructRock(em: EntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id);
-  const physicsComp = new PhysicsComponent(id, spatialComp, {
+  const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: true,
     heavy: true,
@@ -43,7 +38,7 @@ export function constructRock(em: EntityManager): EntityId {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.ROCK, [ spatialComp, physicsComp ]);
+  em.addEntity(id, EntityType.ROCK, [ spatialComp ]);
 
   return id;
 }
@@ -51,8 +46,7 @@ export function constructRock(em: EntityManager): EntityId {
 export function constructGem(em: EntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id);
-  const physicsComp = new PhysicsComponent(id, spatialComp, {
+  const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
     heavy: true,
@@ -60,7 +54,7 @@ export function constructGem(em: EntityManager): EntityId {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.GEM, [ spatialComp, physicsComp ]);
+  em.addEntity(id, EntityType.GEM, [ spatialComp ]);
 
   return id;
 }
@@ -71,8 +65,7 @@ export function constructPlayer(em: EntityManager,
   const id = getNextEntityId();
 
   const agentComp = new AgentComponent(id, pinataId, pinataToken);
-  const spatialComp = new SpatialComponent(id);
-  const physicsComp = new PhysicsComponent(id, spatialComp, {
+  const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
     heavy: false,
@@ -80,7 +73,7 @@ export function constructPlayer(em: EntityManager,
     isAgent: true
   });
 
-  em.addEntity(id, EntityType.PLAYER, [ spatialComp, physicsComp, agentComp ]);
+  em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp ]);
 
   return id;
 }

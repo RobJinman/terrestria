@@ -1,11 +1,22 @@
 import { EntityManager } from "./entity_manager";
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
-import { GameEvent, EEntityMoved, GameEventType } from "./event";
-import { SERVER_FRAME_RATE, BLOCK_SZ } from "./config";
+import { GameEvent, EEntityMoved, GameEventType, EAgentBeginMove } from "./event";
+import { SERVER_FRAME_RATE, BLOCK_SZ, FRAMES_PER_BLOCK } from "./config";
 import { ClientSystem } from "./client_system";
 import { ServerSystem } from "./server_system";
 import { ComponentPacket, Component, EntityId } from "./system";
+import { Direction } from "./definitions";
+
+function directionToVector(dir: Direction) {
+  switch (dir) {
+    case Direction.UP: return [0, BLOCK_SZ];
+    case Direction.RIGHT: return [BLOCK_SZ, 0];
+    case Direction.DOWN: return [0, -BLOCK_SZ];
+    case Direction.LEFT: return [-BLOCK_SZ, 0];
+    default: return [0, 0];
+  }
+}
 
 type Vec2 = {
   x: number;
@@ -17,15 +28,40 @@ interface SpatialComponentPacket extends ComponentPacket {
   y: number;
 }
 
+export interface PhysicalProperties {
+  // If it blocks other objects (except agents) from occupying the same space
+  solid: boolean;
+  // If it blocks agents from occupying the same space
+  blocking: boolean;
+  // If it falls due to gravity (when there's no solid object supporting it)
+  heavy: boolean;
+  // If an agent can move it
+  moveable: boolean;
+  // If a playable agent
+  isAgent: boolean;
+}
+
 export class SpatialComponent extends Component {
   dirty = true;
   private _pos: Vec2 = { x: 0, y: 0 };
 
+  private _solid: boolean;
+  private _blocking: boolean;
+  private _heavy: boolean;
+  private _moveable: boolean;
+  private _isAgent: boolean;
+
   velocity: Vec2 = { x: 0, y: 0 };
   dest: Vec2 = { x: 0, y: 0 };
 
-  constructor(entityId: EntityId) {
+  constructor(entityId: EntityId, properties: PhysicalProperties) {
     super(entityId, ComponentType.SPATIAL);
+
+    this._solid = properties.solid;
+    this._blocking = properties.blocking;
+    this._heavy = properties.heavy;
+    this._moveable = properties.moveable;
+    this._isAgent = properties.isAgent;
   }
 
   moving() {
@@ -61,6 +97,122 @@ export class SpatialComponent extends Component {
   get pos() {
     return this._pos;
   }
+
+  get solid() {
+    return this._solid;
+  }
+
+  get blocking() {
+    return this._blocking;
+  }
+
+  get heavy() {
+    return this._heavy;
+  }
+
+  get moveable() {
+    return this._moveable;
+  }
+
+  get isAgent() {
+    return this._isAgent;
+  }
+}
+
+class Grid {
+  _blockW: number;
+  _blockH: number;
+  _w: number;
+  _h: number;
+  _grid: Set<SpatialComponent>[][];
+
+  constructor(blockW: number,
+              blockH: number,
+              numBlocksX: number,
+              numBlocksY: number) {
+    this._blockW = blockW;
+    this._blockH = blockH;
+    this._w = numBlocksX;
+    this._h = numBlocksY;
+    this._grid = (new Array(numBlocksX));
+    for (let col = 0; col < this._w; ++col) {
+      this._grid[col] = (new Array(this._h));
+      for (let row = 0; row < this._h; ++row) {
+        this._grid[col][row] = new Set<SpatialComponent>();
+      }
+    }
+  }
+
+  outOfRange(x: number, y: number): boolean {
+    const col = Math.floor(x / this._blockW);
+    const row = Math.floor(y / this._blockH);
+    return col < 0 || col > this._w - 1 ||
+           row < 0 || row > this._h - 1;
+  }
+
+  addItem(item: SpatialComponent) {
+    const col = Math.floor(item.x / this._blockW);
+    const row = Math.floor(item.y / this._blockH);
+    this._grid[col][row].add(item);
+  }
+
+  onItemMoved(item: SpatialComponent, oldX: number, oldY: number) {
+    const oldCol = Math.floor(oldX / this._blockW);
+    const oldRow = Math.floor(oldY / this._blockH);
+
+    const newCol = Math.floor(item.x / this._blockW);
+    const newRow = Math.floor(item.y / this._blockH);
+
+    if (oldCol == newCol && oldRow == newRow) {
+      return;
+    }
+
+    if (!this.inCell(oldCol, oldRow).delete(item)) {
+      throw new GameError(`No such entity at position ${oldX}, ${oldY}`);
+    }
+  
+    this._grid[newCol][newRow].add(item);
+  }
+
+  removeItem(item: SpatialComponent): boolean {
+    for (const col of this._grid) {
+      for (const cell of col) {
+        return cell.delete(item);
+      }
+    }
+    return false;
+  }
+
+  inCell(col: number, row: number): Set<SpatialComponent> {
+    return this._grid[col][row];
+  }
+
+  atPos(x: number, y: number): Set<SpatialComponent> {
+    const col = Math.floor(x / this._blockW);
+    const row = Math.floor(y / this._blockH);
+    return this.inCell(col, row);
+  }
+
+  dbg_print() {
+    for (let i = 0; i < this._w; ++i) {
+      let msg = "";
+      for (let j = 0; j < this._h; ++j) {
+        msg += this._grid[i][j].size + " ";
+      }
+      console.log(msg);
+    }
+  }
+
+  blockingItemAtPos(x: number, y: number): boolean {
+    const items = this.atPos(x, y);
+
+    for (const c of items) {
+      if (c.blocking) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 export class SpatialSystem implements ClientSystem, ServerSystem {
@@ -68,6 +220,7 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
   private _em: EntityManager;
   private _w = 0;
   private _h = 0;
+  private _grid: Grid;
   private _frameRate: number;
 
   constructor(entityManager: EntityManager,
@@ -80,6 +233,8 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
 
     this._w = w;
     this._h = h;
+
+    this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
 
     this._frameRate = frameRate;
   }
@@ -94,8 +249,13 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
   }
 
   private _setEntityPos(c: SpatialComponent, x: number, y: number) {
+    const oldX = c.x;
+    const oldY = c.y;
+
     c.x = x;
     c.y = y;
+
+    this._grid.onItemMoved(c, oldX, oldY);
   }
 
   private _updateEntityPos(c: SpatialComponent) {
@@ -181,6 +341,40 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
     return false;
   }
 
+  moveAgent(id: EntityId, direction: Direction, speedMultiplier: number = 1) {
+    const c = this.getComponent(id);
+    if (!c.isAgent) {
+      throw new GameError("Entity is not agent");
+    }
+
+    const delta = directionToVector(direction);
+
+    const destX = c.x + delta[0];
+    const destY = c.y + delta[1];
+
+    if (this._grid.outOfRange(destX, destY)) {
+      return;
+    }
+
+    if (!this._grid.blockingItemAtPos(destX, destY)) {
+      const t = FRAMES_PER_BLOCK / (SERVER_FRAME_RATE * speedMultiplier);
+      this.moveEntity_tween(id, delta[0], delta[1], t);
+
+      const items = [...this._grid.atPos(destX, destY)].map(c => c.entityId);
+
+      const event: EAgentBeginMove = {
+        type: GameEventType.AGENT_BEGIN_MOVE,
+        entities: new Set(items),
+        entityId: id,
+        direction: direction,
+        gridX: Math.round(destX / BLOCK_SZ),
+        gridY: Math.round(destY / BLOCK_SZ)
+      };
+
+      this._em.postEvent(event);
+    }
+  }
+
   stopEntity(id: EntityId) {
     const c = this.getComponent(id);
     c.velocity.x = 0;
@@ -200,6 +394,7 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
 
   addComponent(component: SpatialComponent) {
     this._components.set(component.entityId, component);
+    this._grid.addItem(component);
   }
 
   hasComponent(id: EntityId) {
@@ -215,6 +410,10 @@ export class SpatialSystem implements ClientSystem, ServerSystem {
   }
 
   removeComponent(id: EntityId) {
+    const c = this._components.get(id);
+    if (c) {
+      this._grid.removeItem(c);
+    }
     this._components.delete(id);
   }
 

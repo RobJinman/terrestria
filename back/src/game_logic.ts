@@ -2,7 +2,6 @@ import { PlayerAction, ActionType, MoveAction } from "./common/action";
 import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { SpatialSystem } from "./common/spatial_system";
-import { PhysicsSystem } from "./common/physics_system";
 
 export class GameLogic {
   private _entityManager: EntityManager;
@@ -27,8 +26,6 @@ export class GameLogic {
   }
 
   private _movePlayer(action: MoveAction): boolean {
-    const physicsSys = <PhysicsSystem>this._entityManager
-                                          .getSystem(ComponentType.PHYSICS);
     const spatialSys = <SpatialSystem>this._entityManager
                                           .getSystem(ComponentType.SPATIAL);
 
@@ -37,7 +34,7 @@ export class GameLogic {
       return false;
     }
     else {
-      physicsSys.moveEntity(action.playerId, action.direction);
+      spatialSys.moveAgent(action.playerId, action.direction);
       return true;
     }
   }
