@@ -1,5 +1,6 @@
-import { ComponentPacket, EntityId, Entity } from "./entity_manager";
+import { Entity } from "./entity_manager";
 import { ErrorCode } from "./error";
+import { EntityId, ComponentPacket } from "./system";
 
 export enum GameResponseType {
   ERROR = "ERROR",

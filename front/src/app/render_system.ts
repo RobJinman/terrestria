@@ -1,11 +1,12 @@
 import * as PIXI from 'pixi.js';
-import { EntityId, System, Component, ComponentPacket, 
-         EntityManager} from "./common/entity_manager";
+import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ResourcesMap } from "./definitions";
 import { ComponentType } from "./common/component_types";
 import { SpatialComponent } from "./common/spatial_system";
+import { ClientSystem } from './common/client_system';
+import { Component, EntityId, ComponentPacket } from './common/system';
 
 export class RenderComponent extends Component {
   imageResourceName: string = "";
@@ -17,14 +18,13 @@ export class RenderComponent extends Component {
   }
 }
 
-export class RenderSystem extends System {
+export class RenderSystem implements ClientSystem {
   private _components: Map<number, RenderComponent>;
   private _em: EntityManager;
   private _pixi: PIXI.Application;
   private _resources: ResourcesMap = {};
 
   constructor(entityManager: EntityManager, pixi: PIXI.Application) {
-    super();
     this._em = entityManager;
     this._pixi = pixi;
     this._components = new Map<number, RenderComponent>();
@@ -97,14 +97,6 @@ export class RenderSystem extends System {
 
   update() {
     // TODO
-  }
-
-  getDirties() {
-    return [];
-  }
-
-  getState() {
-    return [];
   }
 
   private _getResource(name: string) {

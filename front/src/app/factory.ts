@@ -1,10 +1,11 @@
-import { EntityManager, EntityId } from "./common/entity_manager";
+import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { SpatialComponent } from "./common/spatial_system";
 import { RenderComponent } from "./render_system";
 import { AgentComponent } from "./common/agent_system";
 import { PhysicsComponent } from "./common/physics_system";
+import { EntityId } from "./common/system";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const renderComp = new RenderComponent(id, "gem");

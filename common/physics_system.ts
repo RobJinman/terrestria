@@ -1,11 +1,13 @@
-import { System, EntityId, Component, ComponentPacket,
-         EntityManager } from "./entity_manager";
+import { EntityManager } from "./entity_manager";
 import { GameError } from "./error";
 import { GameEvent, EAgentBeginMove, GameEventType } from "./event";
 import { SpatialComponent, SpatialSystem } from "./spatial_system";
 import { BLOCK_SZ, FRAMES_PER_BLOCK, SERVER_FRAME_RATE } from "./config";
 import { ComponentType } from "./component_types";
 import { Direction } from "./definitions";
+import { ClientSystem } from "./client_system";
+import { ServerSystem } from "./server_system";
+import { ComponentPacket, Component, EntityId } from "./system";
 
 export interface PhysicalProperties {
   // If it blocks other objects (except agents) from occupying the same space
@@ -177,14 +179,12 @@ function directionToVector(dir: Direction) {
   }
 }
 
-export class PhysicsSystem extends System {
+export class PhysicsSystem implements ClientSystem, ServerSystem {
   private _em: EntityManager;
   private _components: Map<EntityId, PhysicsComponent>;
   private _grid: Grid;
 
   constructor(em: EntityManager, w: number, h: number) {
-    super();
-
     this._em = em;
     this._components = new Map<EntityId, PhysicsComponent>();
     this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);

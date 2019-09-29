@@ -3,7 +3,6 @@ import _ from "underscore";
 import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
          constructPlayer } from "./factory";
-import { EntityManager, EntityId } from "./common/entity_manager";
 import { SpatialSystem } from "./common/spatial_system";
 import { AgentSystem } from "./common/agent_system";
 import { ComponentType } from "./common/component_types";
@@ -16,6 +15,8 @@ import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS,
 import { EntityType } from "./common/game_objects";
 import { PhysicsSystem } from "./common/physics_system";
 import { BehaviourSystem } from "./behaviour_system";
+import { ServerEntityManager } from "./server_entity_manager";
+import { EntityId } from "./common/system";
 
 function noThrow(fn: () => any) {
   try {
@@ -31,7 +32,7 @@ export class Game {
 
   private _id: number;
   private _pipe: Pipe;
-  private _em: EntityManager;
+  private _em: ServerEntityManager;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
@@ -39,7 +40,7 @@ export class Game {
   constructor() {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
-    this._em = new EntityManager();
+    this._em = new ServerEntityManager();
 
     const spatialSystem = new SpatialSystem(this._em,
                                             WORLD_W,

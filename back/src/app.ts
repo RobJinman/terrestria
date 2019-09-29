@@ -5,7 +5,7 @@ import { ActionType, LogInAction, deserialiseMessage } from "./common/action";
 import { GameResponse, GameResponseType, RError,
          RLoginSuccess } from "./common/response";
 import { pinataAuth } from "./pinata";
-import { EntityId } from "./common/entity_manager";
+import { EntityId } from "./common/system";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;

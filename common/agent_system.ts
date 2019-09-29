@@ -1,8 +1,9 @@
-import { Component, EntityId, System,
-         ComponentPacket } from "./entity_manager";
+import { Component, EntityId, ComponentPacket } from "./system";
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent } from "./event";
+import { ClientSystem } from "./client_system";
+import { ServerSystem } from "./server_system";
 
 export class AgentComponent extends Component {
   dirty: boolean = true;
@@ -25,12 +26,10 @@ export class AgentComponent extends Component {
   }
 }
 
-export class AgentSystem extends System {
+export class AgentSystem implements ClientSystem, ServerSystem {
   private _components: Map<number, AgentComponent>;
 
   constructor() {
-    super();
-
     this._components = new Map<number, AgentComponent>();
   }
 

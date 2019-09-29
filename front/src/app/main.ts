@@ -3,7 +3,6 @@ import "../styles/styles.scss";
 import { ActionType, MoveAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
-import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
 import { SpatialSystem } from './common/spatial_system';
 import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
@@ -15,6 +14,8 @@ import { ResourcesMap } from './definitions';
 import { debounce } from './common/utils';
 import { Direction } from './common/definitions';
 import { PhysicsSystem } from './common/physics_system';
+import { ClientEntityManager } from './client_entity_manager';
+import { EntityId } from './common/system';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
@@ -46,7 +47,7 @@ class App {
   private _resources: ResourcesMap = {};
   private _ws: WebSocket;
   private _responseQueue: GameResponse[] = [];
-  private _em: EntityManager;
+  private _em: ClientEntityManager;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
   private _movePlayerFn: (direction: Direction) => void|null;
@@ -61,7 +62,7 @@ class App {
 
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
-    this._em = new EntityManager();
+    this._em = new ClientEntityManager();
     const spatialSystem = new SpatialSystem(this._em,
                                             WORLD_W,
                                             WORLD_H,

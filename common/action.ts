@@ -1,5 +1,5 @@
 import { GameError, ErrorCode } from "./error";
-import { EntityId } from "./entity_manager";
+import { EntityId } from "./system";
 import { Direction } from "./definitions";
 
 export enum ActionType {

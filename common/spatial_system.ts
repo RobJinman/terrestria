@@ -1,9 +1,11 @@
-import { EntityId, System, Component, ComponentPacket,
-         EntityManager} from "./entity_manager";
+import { EntityManager } from "./entity_manager";
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent, EEntityMoved, GameEventType } from "./event";
 import { SERVER_FRAME_RATE, BLOCK_SZ } from "./config";
+import { ClientSystem } from "./client_system";
+import { ServerSystem } from "./server_system";
+import { ComponentPacket, Component, EntityId } from "./system";
 
 type Vec2 = {
   x: number;
@@ -61,7 +63,7 @@ export class SpatialComponent extends Component {
   }
 }
 
-export class SpatialSystem extends System {
+export class SpatialSystem implements ClientSystem, ServerSystem {
   private _components: Map<number, SpatialComponent>;
   private _em: EntityManager;
   private _w = 0;
@@ -72,7 +74,6 @@ export class SpatialSystem extends System {
               w: number,
               h: number,
               frameRate: number) {
-    super();
 
     this._em = entityManager;
     this._components = new Map<number, SpatialComponent>();

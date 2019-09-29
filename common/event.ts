@@ -1,4 +1,4 @@
-import { EntityId } from "./entity_manager";
+import { EntityId } from "./system";
 import { Direction } from "./definitions";
 
 export enum GameEventType {

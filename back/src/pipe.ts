@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { EntityId } from "./common/entity_manager";
+import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
 
 export class Pipe {
