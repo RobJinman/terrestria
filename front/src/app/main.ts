@@ -119,9 +119,7 @@ class App {
   _movePlayer(direction: Direction) {
     const physicsSys = <PhysicsSystem>this._em.getSystem(ComponentType.PHYSICS);
 
-    // TODO: Half-speed
-
-    physicsSys.moveEntity(this._playerId, direction);
+    physicsSys.moveEntity(this._playerId, direction, 0.5);
 
     const data: MoveAction = {
       type: ActionType.MOVE,

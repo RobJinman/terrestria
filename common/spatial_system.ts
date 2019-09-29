@@ -115,6 +115,7 @@ export class SpatialSystem extends System {
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
+      entities: new Set([c.entityId]),
       entityId: c.entityId,
       x: c.x,
       y: c.y
@@ -136,6 +137,7 @@ export class SpatialSystem extends System {
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
+      entities: new Set([c.entityId]),
       entityId: c.entityId,
       x: c.x,
       y: c.y
@@ -212,13 +214,10 @@ export class SpatialSystem extends System {
   }
 
   removeComponent(id: EntityId) {
-    const c = this.getComponent(id);
     this._components.delete(id);
   }
 
-  handleEvent(event: GameEvent) {
-    // TODO
-  }
+  handleEvent(event: GameEvent) {}
 
   update() {
     this._components.forEach(c => {

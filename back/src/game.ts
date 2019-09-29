@@ -15,6 +15,7 @@ import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SERVER_FRAME_RATE} from "./common/config";
 import { EntityType } from "./common/game_objects";
 import { PhysicsSystem } from "./common/physics_system";
+import { BehaviourSystem } from "./behaviour_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -46,10 +47,12 @@ export class Game {
                                             SERVER_FRAME_RATE);
     const physicsSystem = new PhysicsSystem(this._em, WORLD_W, WORLD_H);
     const agentSystem = new AgentSystem();
+    const behaviourSystem = new BehaviourSystem();
 
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.PHYSICS, physicsSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
+    this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
 
     this._gameLogic = new GameLogic(this._em);
 

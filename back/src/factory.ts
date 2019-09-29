@@ -4,6 +4,8 @@ import { AgentComponent } from "./common/agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { PhysicsComponent } from "./common/physics_system";
 import { EntityType } from "./common/game_objects";
+import { GameEventType } from "./common/event";
+import { BehaviourComponent, EventHandlerFn } from "./behaviour_system";
 
 export function constructSoil(em: EntityManager): EntityId {
   const id = getNextEntityId();
@@ -17,7 +19,14 @@ export function constructSoil(em: EntityManager): EntityId {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.SOIL, [ spatialComp, physicsComp ]);
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.AGENT_BEGIN_MOVE, e => em.removeEntity(id));
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.SOIL, [ spatialComp,
+                                      physicsComp,
+                                      behaviourComp ]);
 
   return id;
 }

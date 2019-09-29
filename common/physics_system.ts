@@ -1,7 +1,7 @@
 import { System, EntityId, Component, ComponentPacket,
          EntityManager } from "./entity_manager";
 import { GameError } from "./error";
-import { GameEvent } from "./event";
+import { GameEvent, EAgentBeginMove, GameEventType } from "./event";
 import { SpatialComponent, SpatialSystem } from "./spatial_system";
 import { BLOCK_SZ, FRAMES_PER_BLOCK, SERVER_FRAME_RATE } from "./config";
 import { ComponentType } from "./component_types";
@@ -203,7 +203,7 @@ export class PhysicsSystem extends System {
     this._grid.addItem(c);
   }
 
-  moveEntity(id: EntityId, direction: Direction) {
+  moveEntity(id: EntityId, direction: Direction, speedMultiplier: number = 1) {
     const c = this.getComponent(id);
     if (!c.isAgent) {
       throw new GameError("Only agents can be moved");
@@ -213,23 +213,32 @@ export class PhysicsSystem extends System {
 
     const destX = c.spatial.x + delta[0];
     const destY = c.spatial.y + delta[1];
-    
-    console.log(`Physics: moving entity ${id} to ${destX}, ${destY}`);
 
     if (this._grid.outOfRange(destX, destY)) {
       return;
     }
 
     if (!this._grid.blockingItemAtPos(destX, destY)) {
-      console.log("Nothing in way");
-
       const spatialSys = <SpatialSystem>this._em
                                             .getSystem(ComponentType.SPATIAL);
-      const t = FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+      const t = FRAMES_PER_BLOCK / (SERVER_FRAME_RATE * speedMultiplier);
       spatialSys.moveEntity_tween(id, delta[0], delta[1], t);
+
+      const items = [...this._grid.atPos(destX, destY)].map(c => c.entityId);
+
+      const event: EAgentBeginMove = {
+        type: GameEventType.AGENT_BEGIN_MOVE,
+        entities: new Set(items),
+        entityId: id,
+        direction: direction,
+        gridX: Math.round(destX / BLOCK_SZ),
+        gridY: Math.round(destY / BLOCK_SZ)
+      };
+
+      this._em.postEvent(event);
     }
   }
-
+  
   numComponents() {
     return this._components.size;
   }
@@ -246,20 +255,20 @@ export class PhysicsSystem extends System {
   getComponent(id: EntityId) {
     const c = this._components.get(id);
     if (!c) {
-      throw new GameError(`No spatial component for entity ${id}`);
+      throw new GameError(`No physics component for entity ${id}`);
     }
     return c;
   }
 
   removeComponent(id: EntityId) {
-    const c = this.getComponent(id);
-    this._grid.removeItem(c);
+    const c = this._components.get(id);
+    if (c) {
+      this._grid.removeItem(c);
+    }
     this._components.delete(id);
   }
 
-  handleEvent(event: GameEvent) {
-    // TODO
-  }
+  handleEvent(event: GameEvent) {}
 
   update() {
     // TODO: gravity

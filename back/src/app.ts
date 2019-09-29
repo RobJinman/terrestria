@@ -113,6 +113,7 @@ export class App {
           message: err.toString()
         };
 
+        console.error(response.message);
         this._sendResponse(ws, response);
       }
     }

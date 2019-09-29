@@ -40,10 +40,10 @@ export abstract class System {
   abstract addComponent(component: Component): void;
   abstract removeComponent(entityId: EntityId): void;
   abstract numComponents(): number;
+  abstract handleEvent(event: GameEvent): void;
 
   // Server
   abstract update(): void;
-  abstract handleEvent(event: GameEvent): void;
   abstract getDirties(): ComponentPacket[];
   abstract getState(): ComponentPacket[];
 
@@ -59,10 +59,12 @@ export interface Entity {
 export class EntityManager {
   private _systems: Map<ComponentType, System>;
   private _entities: Map<EntityId, Entity>;
+  private _pendingDeletion: Set<EntityId>;
 
   constructor() {
     this._systems = new Map<ComponentType, System>();
     this._entities = new Map<EntityId, Entity>();
+    this._pendingDeletion = new Set<EntityId>();
   }
 
   addEntity(id: EntityId, type: EntityType, components: Component[]) {
@@ -95,9 +97,8 @@ export class EntityManager {
   }
 
   removeEntity(entityId: EntityId) {
-    console.log(`Deleting entity ${entityId}`);
-    this._systems.forEach(sys => sys.removeComponent(entityId));
-    this._entities.delete(entityId);
+    console.log(`Entity ${entityId} pending removal`);
+    this._pendingDeletion.add(entityId);
   }
 
   postEvent(event: GameEvent) {
@@ -106,6 +107,8 @@ export class EntityManager {
 
   update() {
     this._systems.forEach(sys => sys.update());
+    this._pendingDeletion.forEach(id => this._deleteEntity(id));
+    this._pendingDeletion.clear();
   }
 
   updateComponent(packet: ComponentPacket) {
@@ -125,5 +128,11 @@ export class EntityManager {
     this._systems.forEach(sys => packets.push(...sys.getState()));
 
     return packets;
+  }
+
+  private _deleteEntity(id: EntityId) {
+    console.log(`Deleting entity ${id}`);
+    this._systems.forEach(sys => sys.removeComponent(id));
+    this._entities.delete(id);
   }
 }

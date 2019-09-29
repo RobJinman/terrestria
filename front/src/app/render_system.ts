@@ -65,14 +65,12 @@ export class RenderSystem extends System {
   }
 
   removeComponent(id: EntityId) {
-    if (this.hasComponent(id)) {
-      const c = this.getComponent(id);
-      if (c.sprite) {
-        this._pixi.stage.removeChild(c.sprite);
-      }
-
-      this._components.delete(id);
+    const c = this._components.get(id);
+    if (c && c.sprite) {
+      this._pixi.stage.removeChild(c.sprite);
     }
+
+    this._components.delete(id);
   }
 
   private _onEntityMoved(id: EntityId) {
