@@ -17,17 +17,17 @@ export interface Entity {
 
 export class EntityManager {
   protected systems: Map<ComponentType, System>;
-  protected _entities: Map<EntityId, Entity>;
+  protected entities: Map<EntityId, Entity>;
   private _pendingDeletion: Set<EntityId>;
 
   constructor() {
     this.systems = new Map<ComponentType, System>();
-    this._entities = new Map<EntityId, Entity>();
+    this.entities = new Map<EntityId, Entity>();
     this._pendingDeletion = new Set<EntityId>();
   }
 
   addEntity(id: EntityId, type: EntityType, components: Component[]) {
-    this._entities.set(id, { id, type });
+    this.entities.set(id, { id, type });
     components.forEach(c => {
       const sys = this.getSystem(c.type);
       sys.addComponent(c);
@@ -51,8 +51,8 @@ export class EntityManager {
     return sys.getComponent(entityId);
   }
 
-  entities(): Entity[] {
-    return Array.from(this._entities.values());
+  getEntities(): Entity[] {
+    return Array.from(this.entities.values());
   }
 
   removeEntity(entityId: EntityId) {
@@ -73,6 +73,6 @@ export class EntityManager {
   private _deleteEntity(id: EntityId) {
     console.log(`Deleting entity ${id}`);
     this.systems.forEach(sys => sys.removeComponent(id));
-    this._entities.delete(id);
+    this.entities.delete(id);
   }
 }

@@ -7,8 +7,7 @@ import { SpatialSystem } from "./common/spatial_system";
 import { AgentSystem } from "./common/agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponseType, RGameState, RNewEntities,
-         REntitiesDeleted } from "./common/response";
+import { GameResponseType, RGameState, RNewEntities } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SERVER_FRAME_RATE} from "./common/config";
@@ -40,7 +39,7 @@ export class Game {
   constructor() {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
-    this._em = new ServerEntityManager();
+    this._em = new ServerEntityManager(this._pipe);
 
     const spatialSystem = new SpatialSystem(this._em,
                                             WORLD_W,
@@ -121,7 +120,7 @@ export class Game {
   }
 
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
-    const entities = this._em.entities();
+    const entities = this._em.getEntities();
   
     const id = constructPlayer(this._em, pinataId, pinataToken);
 
@@ -156,18 +155,8 @@ export class Game {
 
   removePlayer(id: EntityId) {
     console.log(`Removing player ${id}`);
-    this._em.removeEntity(id);
     this._pipe.removeSocket(id);
-
-    const response: REntitiesDeleted = {
-      type: GameResponseType.ENTITIES_DELETED,
-      entities: [{
-        id,
-        type: EntityType.PLAYER
-      }]
-    };
-
-    this._pipe.sendToAll(response);
+    this._em.removeEntity(id);
   }
 
   get numPlayers() {
