@@ -6,14 +6,15 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
 import { EntityManager, EntityId } from './common/entity_manager';
 import { constructEntities } from './factory';
 import { SpatialSystem } from './common/spatial_system';
-import { WORLD_W, WORLD_H, BLOCK_SZ, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
-         SERVER_FRAME_RATE} from "./common/config";
+import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
+         SERVER_FRAME_RATE } from "./common/config";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
 import { debounce } from './common/utils';
 import { Direction } from './common/definitions';
+import { PhysicsSystem } from './common/physics_system';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
@@ -65,9 +66,11 @@ class App {
                                             WORLD_W,
                                             WORLD_H,
                                             CLIENT_FRAME_RATE);
+    const physicsSystem = new PhysicsSystem(this._em, WORLD_W, WORLD_H);
     const renderSystem = new RenderSystem(this._em, this._pixi);
     const agentSystem = new AgentSystem();
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
+    this._em.addSystem(ComponentType.PHYSICS, physicsSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
@@ -114,27 +117,11 @@ class App {
   }
 
   _movePlayer(direction: Direction) {
-    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const physicsSys = <PhysicsSystem>this._em.getSystem(ComponentType.PHYSICS);
 
-    // Start moving at half speed
-    //
+    // TODO: Half-speed
 
-    const t = 2.0 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
-
-    switch (direction) {
-      case Direction.UP:
-        spatialSys.moveEntity_tween(this._playerId, 0, BLOCK_SZ, t);
-        break;
-      case Direction.RIGHT:
-        spatialSys.moveEntity_tween(this._playerId, BLOCK_SZ, 0, t);
-        break;
-      case Direction.DOWN:
-        spatialSys.moveEntity_tween(this._playerId, 0, -BLOCK_SZ, t);
-        break;
-      case Direction.LEFT:
-        spatialSys.moveEntity_tween(this._playerId, -BLOCK_SZ, 0, t);
-        break;
-    }
+    physicsSys.moveEntity(this._playerId, direction);
 
     const data: MoveAction = {
       type: ActionType.MOVE,
