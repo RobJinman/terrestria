@@ -66,7 +66,9 @@ export class App {
       user.game.removePlayer(id);
       user.ws.terminate();
 
-      if (user.game.numPlayers === 0) {
+      // 1 (not 0) because the player isn't actually removed until
+      // EntityManager.update() is run.
+      if (user.game.numPlayers == 1) {
         console.log("Deleting game " + user.game.id);
         user.game.terminate();
         this._games.delete(user.game);
@@ -125,7 +127,11 @@ export class App {
   private _chooseAvailableGame(): Game {
     const games: Game[] = Array.from(this._games);
 
+    console.log("Number of games: " + games.length);
+
     for (let game of games) {
+      console.log("game.numPlayers = " + game.numPlayers);
+
       if (game.numPlayers < MAX_PLAYERS_PER_GAME) {
         return game;
       }

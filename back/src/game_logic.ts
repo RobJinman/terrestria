@@ -1,7 +1,7 @@
 import { PlayerAction, ActionType, MoveAction } from "./common/action";
 import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
-import { SpatialSystem } from "./common/spatial_system";
+import { ServerSpatialSystem } from "./server_spatial_system";
 
 export class GameLogic {
   private _entityManager: EntityManager;
@@ -26,8 +26,8 @@ export class GameLogic {
   }
 
   private _movePlayer(action: MoveAction): boolean {
-    const spatialSys = <SpatialSystem>this._entityManager
-                                          .getSystem(ComponentType.SPATIAL);
+    const spatialSys =
+      <ServerSpatialSystem>this._entityManager.getSystem(ComponentType.SPATIAL);
 
     if (spatialSys.entityIsMoving(action.playerId)) {
       this._queuedAction = action;

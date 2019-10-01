@@ -3,7 +3,6 @@ import _ from "underscore";
 import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
          constructPlayer } from "./factory";
-import { SpatialSystem } from "./common/spatial_system";
 import { AgentSystem } from "./common/agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
@@ -15,6 +14,7 @@ import { EntityType } from "./common/game_objects";
 import { BehaviourSystem } from "./behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
+import { ServerSpatialSystem } from "./server_spatial_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -40,10 +40,10 @@ export class Game {
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
 
-    const spatialSystem = new SpatialSystem(this._em,
-                                            WORLD_W,
-                                            WORLD_H,
-                                            SERVER_FRAME_RATE);
+    const spatialSystem = new ServerSpatialSystem(this._em,
+                                                  WORLD_W,
+                                                  WORLD_H,
+                                                  SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem();
     const behaviourSystem = new BehaviourSystem();
 
@@ -79,7 +79,7 @@ export class Game {
   }
 
   private _populate() {
-    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialSys = <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     const numRocks = 5;
     const numGems = 5;

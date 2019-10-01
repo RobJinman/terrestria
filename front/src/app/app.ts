@@ -4,7 +4,6 @@ import { ActionType, MoveAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { constructEntities } from './factory';
-import { SpatialSystem } from './common/spatial_system';
 import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
          SERVER_FRAME_RATE } from "./common/config";
 import { RenderSystem } from './render_system';
@@ -15,6 +14,8 @@ import { debounce } from './common/utils';
 import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
+import { ClientSpatialSystem } from './client_spatial_system';
+import { directionToVector } from './common/spatial_system';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
@@ -62,7 +63,7 @@ export class App {
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
     this._em = new ClientEntityManager();
-    const spatialSystem = new SpatialSystem(this._em,
+    const spatialSystem = new ClientSpatialSystem(this._em,
                                             WORLD_W,
                                             WORLD_H,
                                             CLIENT_FRAME_RATE);
@@ -115,9 +116,12 @@ export class App {
   }
 
   _movePlayer(direction: Direction) {
-    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialSys =
+      <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    spatialSys.moveAgent(this._playerId, direction, 0.5);
+    const t = 0.2; // TODO
+    const v = directionToVector(direction);
+    spatialSys.moveEntity_tween(this._playerId, v[0], v[1], t);
 
     const data: MoveAction = {
       type: ActionType.MOVE,
