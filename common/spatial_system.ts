@@ -3,6 +3,7 @@ import { BLOCK_SZ } from "./config";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";
+import { GameEvent } from "./event";
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
@@ -236,5 +237,144 @@ export class Grid {
       }
     }
     return false;
+  }
+}
+
+export class SpatialSystem {
+  protected components: Map<number, SpatialComponent>;
+  protected w = 0;
+  protected h = 0;
+  protected frameRate: number;
+  protected grid: Grid;
+
+  constructor(w: number, h: number, frameRate: number) {
+    this.components = new Map<number, SpatialComponent>();
+
+    this.w = w;
+    this.h = h;
+    this.frameRate = frameRate;
+
+    this.grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
+  }
+
+  update() {
+    this.components.forEach(c => {
+      if (c.moving()) {
+        this.updateEntityPos(c);
+      }
+    });
+  }
+
+  positionEntity(id: EntityId, x: number, y: number) {
+    this.stopEntity(id);
+    const c = this.getComponent(id);
+
+    this.setEntityPos(c, x, y);
+  }
+  
+  entityIsMoving(id: EntityId) {
+    const c = this.getComponent(id);
+    return c.moving();
+  }
+
+  addComponent(component: SpatialComponent) {
+    this.components.set(component.entityId, component);
+    this.grid.addItem(component);
+  }
+
+  hasComponent(id: EntityId) {
+    return this.components.has(id);
+  }
+
+  getComponent(id: EntityId) {
+    const c = this.components.get(id);
+    if (!c) {
+      throw new GameError(`No spatial component for entity ${id}`);
+    }
+    return c;
+  }
+
+  removeComponent(id: EntityId) {
+    const c = this.components.get(id);
+    if (c) {
+      this.grid.removeItem(c);
+    }
+    this.components.delete(id);
+  }
+
+  stopEntity(id: EntityId) {
+    const c = this.getComponent(id);
+    c.velocity.x = 0;
+    c.velocity.y = 0;
+  }
+
+  finishTween(id: EntityId) {
+    const c = this.getComponent(id);
+    this.setEntityPos(c, c.dest.x, c.dest.y);
+    c.velocity.x = 0;
+    c.velocity.y = 0;
+  }
+
+  numComponents() {
+    return this.components.size;
+  }
+
+  handleEvent(event: GameEvent) {}
+
+  get width() {
+    return this.w;
+  }
+
+  get height() {
+    return this.h;
+  }
+
+  moveEntity(id: EntityId, dx: number, dy: number) {
+    const c = this.getComponent(id);
+    this.positionEntity(id, c.x + dx, c.y + dy);
+  }
+
+  positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
+    const c = this.getComponent(id);
+    if (!c.moving()) {
+      c.velocity.x = (x - c.x) / t;
+      c.velocity.y = (y - c.y) / t;
+      c.dest.x = x;
+      c.dest.y = y;
+      return true;
+    }
+    return false;
+  }
+
+  moveEntity_tween(id: EntityId, dx: number, dy: number, t: number): boolean {
+    const c = this.getComponent(id);
+    return this.positionEntity_tween(id, c.x + dx, c.y + dy, t);
+  }
+
+  protected updateEntityPos(c: SpatialComponent) {
+    const dx = c.velocity.x / this.frameRate;
+    const dy = c.velocity.y / this.frameRate;
+    this.setEntityPos(c, c.x + dx, c.y + dy);
+
+    const xDir = dx < 0 ? -1 : 1;
+    const yDir = dy < 0 ? -1 : 1;
+    const reachedDestX = xDir * (c.x - c.dest.x) > -0.5;
+    const reachedDestY = yDir * (c.y - c.dest.y) > -0.5;
+
+    if (reachedDestX && reachedDestY) {
+      c.velocity.x = 0;
+      c.velocity.y = 0;
+      this.setEntityPos(c, c.dest.x, c.dest.y);
+    }
+  }
+
+  protected setEntityPos(c: SpatialComponent, x: number, y: number) {
+    const oldX = c.x;
+    const oldY = c.y;
+
+    c.x = x;
+    c.y = y;
+
+    this.grid.onItemMoved(c, oldX, oldY);
   }
 }

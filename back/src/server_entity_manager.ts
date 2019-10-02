@@ -16,7 +16,7 @@ export class ServerEntityManager extends EntityManager {
     this._pipe = pipe;
   }
 
-  postEvent(event: GameEvent) {
+  submitEvent(event: GameEvent) {
     super.postEvent(event);
     this._eventsPendingTransmission.push(event);
   }

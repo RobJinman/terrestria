@@ -42,7 +42,8 @@ export class Game {
 
     const spatialSystem = new ServerSpatialSystem(this._em,
                                                   WORLD_W,
-                                                  WORLD_H);
+                                                  WORLD_H,
+                                                  SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem();
     const behaviourSystem = new BehaviourSystem();
 
