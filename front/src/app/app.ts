@@ -119,9 +119,10 @@ export class App {
     const spatialSys =
       <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    const t = 0.2; // TODO
-    const v = directionToVector(direction);
-    spatialSys.moveEntity_tween(this._playerId, v[0], v[1], t);
+    //const t = 0.2; // TODO
+    //const v = directionToVector(direction);
+    //spatialSys.moveEntity_tween(this._playerId, v[0], v[1], t);
+    spatialSys.moveAgent(this._playerId, direction);
 
     const data: MoveAction = {
       type: ActionType.MOVE,

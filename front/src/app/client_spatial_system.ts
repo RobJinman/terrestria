@@ -1,11 +1,12 @@
 import { ClientSystem } from "./common/client_system";
-import { SpatialComponent,
-         SpatialComponentPacket } from "./common/spatial_system";
+import { SpatialComponent, SpatialComponentPacket, directionToVector,
+         Grid } from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
-import { SERVER_FRAME_RATE } from "./common/config";
+import { SERVER_FRAME_RATE, BLOCK_SZ } from "./common/config";
 import { EEntityMoved, GameEventType, GameEvent } from "./common/event";
 import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
+import { Direction } from "./common/definitions";
 
 export class ClientSpatialSystem implements ClientSystem {
   private _components: Map<number, SpatialComponent>;
@@ -13,6 +14,7 @@ export class ClientSpatialSystem implements ClientSystem {
   private _w = 0;
   private _h = 0;
   private _frameRate: number;
+  private _grid: Grid;
 
   constructor(entityManager: EntityManager,
               w: number,
@@ -26,6 +28,8 @@ export class ClientSpatialSystem implements ClientSystem {
     this._h = h;
 
     this._frameRate = frameRate;
+
+    this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
   }
 
   updateComponent(packet: SpatialComponentPacket) {
@@ -41,8 +45,13 @@ export class ClientSpatialSystem implements ClientSystem {
   }
 
   private _setEntityPos(c: SpatialComponent, x: number, y: number) {
+    const oldX = c.x;
+    const oldY = c.y;
+
     c.x = x;
     c.y = y;
+
+    this._grid.onItemMoved(c, oldX, oldY);
   }
 
   private _updateEntityPos(c: SpatialComponent) {
@@ -118,6 +127,27 @@ export class ClientSpatialSystem implements ClientSystem {
     return this.positionEntity_tween(id, c.x + dx, c.y + dy, t);
   }
 
+  moveAgent(id: EntityId, direction: Direction) {
+    const c = this.getComponent(id);
+    if (!c.isAgent) {
+      throw new GameError("Entity is not agent");
+    }
+
+    const delta = directionToVector(direction);
+
+    const destX = c.x + delta[0];
+    const destY = c.y + delta[1];
+
+    if (this._grid.outOfRange(destX, destY)) {
+      return;
+    }
+
+    if (!this._grid.blockingItemAtPos(destX, destY)) {
+      const t = 0.2; // TODO
+      this.moveEntity_tween(id, delta[0], delta[1], t);
+    }
+  }
+
   stopEntity(id: EntityId) {
     const c = this.getComponent(id);
     c.velocity.x = 0;
@@ -137,6 +167,7 @@ export class ClientSpatialSystem implements ClientSystem {
 
   addComponent(component: SpatialComponent) {
     this._components.set(component.entityId, component);
+    this._grid.addItem(component);
   }
 
   hasComponent(id: EntityId) {
@@ -152,6 +183,10 @@ export class ClientSpatialSystem implements ClientSystem {
   }
 
   removeComponent(id: EntityId) {
+    const c = this._components.get(id);
+    if (c) {
+      this._grid.removeItem(c);
+    }
     this._components.delete(id);
   }
 
@@ -161,6 +196,10 @@ export class ClientSpatialSystem implements ClientSystem {
     this._components.forEach(c => {
       if (c.moving()) {
         this._updateEntityPos(c);
+      }
+
+      if (c.heavy) {
+        // TODO
       }
     });
   }
