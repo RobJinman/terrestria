@@ -83,10 +83,8 @@ export class App {
       const sock = <ExtWebSocket>ws;
       if (sock.isAlive === false) {
         console.log("Terminating connection, id = " + sock.userId);
-
-        sock.terminate();
         if (sock.userId) {
-          this._users.delete(sock.userId);
+          this._terminateUser(sock.userId);
         }
       }
       else {
