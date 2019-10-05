@@ -332,20 +332,24 @@ export class SpatialSystem {
       if (c.heavy) {
         const gridY = this.grid.toGridX(c.y);
 
-        if (gridY > 0 && !this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
-          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
-        }
-
-        if (!this.grid.stackableItemAtPos(c.x, c.y - BLOCK_SZ)) {
-          if (!this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y) &&
-            !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y - BLOCK_SZ)) {
-
-            this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+        if (gridY > 0) {
+          if (!this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
+            this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
           }
-          else if (!this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y) &&
-            !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y - BLOCK_SZ)) {
 
-            this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+          if (!this.grid.stackableItemAtPos(c.x, c.y - BLOCK_SZ)) {
+            if (!this.grid.outOfRange(c.x + BLOCK_SZ, c.y) &&
+              !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y) &&
+              !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y - BLOCK_SZ)) {
+
+              this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+            }
+            else if (!this.grid.outOfRange(c.x - BLOCK_SZ, c.y) &&
+              !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y) &&
+              !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y - BLOCK_SZ)) {
+
+              this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+            }
           }
         }
       }
