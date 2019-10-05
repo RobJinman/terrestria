@@ -52,6 +52,8 @@ export interface PhysicalProperties {
   moveable: boolean;
   // If a playable agent
   isAgent: boolean;
+  // If other items can be stacked on top without rolling off
+  stackable: boolean;
 }
 
 export class SpatialComponent extends Component {
@@ -64,6 +66,7 @@ export class SpatialComponent extends Component {
 
   private _solid: boolean;
   private _blocking: boolean;
+  private _stackable: boolean;
   private _heavy: boolean;
   private _moveable: boolean;
   private _isAgent: boolean;
@@ -73,6 +76,7 @@ export class SpatialComponent extends Component {
 
     this._solid = properties.solid;
     this._blocking = properties.blocking;
+    this._stackable = properties.stackable;
     this._heavy = properties.heavy;
     this._moveable = properties.moveable;
     this._isAgent = properties.isAgent;
@@ -144,6 +148,10 @@ export class SpatialComponent extends Component {
 
   get blocking() {
     return this._blocking;
+  }
+
+  get stackable() {
+    return this._stackable;
   }
 
   get heavy() {
@@ -283,6 +291,17 @@ export class Grid {
     }
     return false;
   }
+
+  stackableItemAtPos(x: number, y: number): boolean {
+    const items = this.atPos(x, y);
+
+    for (const c of items) {
+      if (c.stackable) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 export class SpatialSystem {
@@ -315,6 +334,19 @@ export class SpatialSystem {
 
         if (gridY > 0 && !this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
           this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
+        }
+
+        if (!this.grid.stackableItemAtPos(c.x, c.y - BLOCK_SZ)) {
+          if (!this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y) &&
+            !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y - BLOCK_SZ)) {
+
+            this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+          }
+          else if (!this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y) &&
+            !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y - BLOCK_SZ)) {
+
+            this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+          }
         }
       }
     });

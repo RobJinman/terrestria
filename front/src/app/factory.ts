@@ -11,6 +11,7 @@ function constructGem(em: EntityManager, id: EntityId) {
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
+    stackable: false,
     heavy: true,
     moveable: false,
     isAgent: false
@@ -24,6 +25,7 @@ function constructRock(em: EntityManager, id: EntityId) {
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: true,
+    stackable: false,
     heavy: true,
     moveable: true,
     isAgent: false
@@ -37,6 +39,7 @@ function constructSoil(em: EntityManager, id: EntityId) {
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
+    stackable: true,
     heavy: false,
     moveable: false,
     isAgent: false
@@ -50,6 +53,7 @@ function constructPlayer(em: EntityManager, id: EntityId) {
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
+    stackable: true,
     heavy: false,
     moveable: false,
     isAgent: true
