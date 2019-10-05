@@ -128,8 +128,6 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
-
-    console.log("Sending move command");
   }
 
   _logIn() {
@@ -179,8 +177,6 @@ export class App {
   }
 
   private _handleServerMessage(msg: GameResponse) {
-    console.log(msg);
-
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
         constructEntities(this._em, <RNewEntities>msg);

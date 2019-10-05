@@ -22,12 +22,15 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
     if (c.destX != packet.destX || c.destY != packet.destY) {
-      if (Math.abs(packet.velX) > 0.5 || Math.abs(packet.velY) > 0.5) {
+      if (packet.speed > 0.1) {
+        const dx = packet.x - c.x;
+        const dy = packet.y - c.y;
+        const s = Math.max(1.0, Math.sqrt(dx * dx + dy * dy) * 0.1);
+
         c.setDestination(this.grid,
                          packet.destX,
                          packet.destY,
-                         packet.velX,
-                         packet.velY);
+                         packet.speed * s);
       }
       else {
         this.stopEntity(packet.entityId);
@@ -65,8 +68,6 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   }
 
   moveAgent(id: EntityId, direction: Direction) {
-    this.grid.dbg_print();
-
     const c = this.getComponent(id);
     if (!c.isAgent) {
       throw new GameError("Entity is not agent");
@@ -83,7 +84,7 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
 
     if (!this.grid.blockingItemAtPos(destX, destY)) {
       const t = 1.0 / PLAYER_SPEED;
-      //this.moveEntity_tween(id, delta[0], delta[1], t);
+      this.moveEntity_tween(id, delta[0], delta[1], t);
     }
   }
 }

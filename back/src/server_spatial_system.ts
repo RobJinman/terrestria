@@ -66,8 +66,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
         y: c.y,
         destX: c.destX,
         destY: c.destY,
-        velX: c.velocityX,
-        velY: c.velocityY
+        speed: c.speed
       });
     });
 
@@ -84,8 +83,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
           componentType: ComponentType.SPATIAL,
           x: c.x,
           y: c.y,
-          velX: c.velocityX,
-          velY: c.velocityY,
+          speed: c.speed,
           destX: c.destX,
           destY: c.destY
         });

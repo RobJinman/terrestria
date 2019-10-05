@@ -1,5 +1,5 @@
 import { ComponentType } from "./component_types";
-import { BLOCK_SZ } from "./config";
+import { BLOCK_SZ, FALL_SPEED } from "./config";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";
@@ -21,13 +21,24 @@ export type Vec2 = {
   y: number;
 };
 
+export function normalise(v: Vec2) {
+  const s = Math.sqrt(v.x * v.x + v.y * v.y);
+  if (s !== 0) {
+    v.x /= s;
+    v.y /= s;
+  }
+  else {
+    v.x = 0.70710678118;
+    v.y = 0.70710678118;
+  }
+}
+
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
   y: number;
   destX: number;
   destY: number;
-  velX: number;
-  velY: number;
+  speed: number;
 }
 
 export interface PhysicalProperties {
@@ -47,8 +58,7 @@ export class SpatialComponent extends Component {
   dirty = true;
   private _posX: number = 0;
   private _posY: number = 0;
-  private _velocityX: number = 0;
-  private _velocityY: number = 0;
+  private _speed: number = 0; // Pixels per second
   private _destX: number = 0;
   private _destY: number = 0;
 
@@ -69,15 +79,7 @@ export class SpatialComponent extends Component {
   }
 
   moving() {
-    return this.movingInX() || this.movingInY();
-  }
-
-  movingInX() {
-    return Math.abs(this._velocityX) > 0.5;
-  }
-
-  movingInY() {
-    return Math.abs(this._velocityY) > 0.5;
+    return this._speed > 0.1;
   }
 
   get x() {
@@ -102,33 +104,27 @@ export class SpatialComponent extends Component {
     this._posY = y;
     this._destX = x;
     this._destY = y;
-    this._velocityX = 0;
-    this._velocityY = 0;
+    this._speed = 0;
     this.dirty = true;
 
     grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
   }
 
-  get velocityX() {
-    return this._velocityX;
-  }
-
-  get velocityY() {
-    return this._velocityY;
+  get speed() {
+    return this._speed;
   }
 
   setDestination(grid: Grid,
                  destX: number,
                  destY: number,
-                 velX: number,
-                 velY: number) {
+                 speed: number) {
+
     const oldDestX = this._destX;
     const oldDestY = this._destY;
 
     this._destX = destX;
     this._destY = destY;
-    this._velocityX = velX;
-    this._velocityY = velY;
+    this._speed = speed;
     this.dirty = true;
 
     grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
@@ -318,8 +314,7 @@ export class SpatialSystem {
         const gridY = this.grid.toGridX(c.y);
 
         if (gridY > 0 && !this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
-          console.log(`Falling entity ${c.entityId}`);
-          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 0.15); // TODO
+          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
         }
       }
     });
@@ -402,7 +397,10 @@ export class SpatialSystem {
   positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
     const c = this.getComponent(id);
     if (!c.moving()) {
-      c.setDestination(this.grid, x, y, (x - c.x) / t, (y - c.y) / t);
+      const dx = x - c.x;
+      const dy = y - c.y;
+      const s = Math.sqrt(dx * dx + dy * dy);
+      c.setDestination(this.grid, x, y, s / t);
       return true;
     }
     return false;
@@ -417,8 +415,14 @@ export class SpatialSystem {
     const oldX = c.x;
     const oldY = c.y;
 
-    const dx = c.velocityX / this.frameRate;
-    const dy = c.velocityY / this.frameRate;
+    const v: Vec2 = {
+      x: c.destX - c.x,
+      y: c.destY - c.y
+    };
+    normalise(v);
+
+    const dx = v.x * c.speed / this.frameRate;
+    const dy = v.y * c.speed / this.frameRate;
 
     c.updatePos(this.grid, c.x + dx, c.y + dy);
 
