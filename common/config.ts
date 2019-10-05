@@ -1,10 +1,11 @@
-export const WORLD_W = 10;
-export const WORLD_H = 10;
+export const WORLD_W = 25;
+export const WORLD_H = 19;
 export const BLOCK_SZ = 32;
-export const SERVER_FRAME_RATE = 8;
+export const SERVER_FRAME_RATE = 60;
 export const SERVER_FRAME_DURATION_MS = 1000 / SERVER_FRAME_RATE;
-export const CLIENT_FRAME_RATE = 40;
+export const SYNC_RATE = 10;
+export const SYNC_INTERVAL_MS = 1000 / SYNC_RATE;
+export const CLIENT_FRAME_RATE = 60;
 export const CLIENT_FRAME_DURATION_MS = 1000 / CLIENT_FRAME_RATE;
 
-// How many frames (at server frame rate) it takes to move 1 block
-export const FRAMES_PER_BLOCK = 2;
+export const PLAYER_SPEED = 4; // In blocks per second

@@ -2,7 +2,7 @@ import { ClientSystem } from "./common/client_system";
 import { SpatialComponent, SpatialComponentPacket, directionToVector,
          SpatialSystem } from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
-import { SERVER_FRAME_RATE } from "./common/config";
+import { PLAYER_SPEED } from "./common/config";
 import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
@@ -11,37 +11,40 @@ import { Direction } from "./common/definitions";
 export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   private _em: EntityManager;
 
-  constructor(entityManager: EntityManager,
+  constructor(em: EntityManager,
               w: number,
               h: number,
               frameRate: number) {
-    super(w, h, frameRate);
-    this._em = entityManager;
+    super(em, w, h, frameRate);
+    this._em = em;
   }
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    this.stopEntity(c.entityId);
-    //this.positionEntity(c.entityId,
-    //                    packet.x,
-    //                    packet.y);
-    this.positionEntity_tween(c.entityId,
-                              packet.x,
-                              packet.y,
-                              1.0 / SERVER_FRAME_RATE);
+    if (c.destX != packet.destX || c.destY != packet.destY) {
+      if (Math.abs(packet.velX) > 0.5 || Math.abs(packet.velY) > 0.5) {
+        c.setDestination(this.grid,
+                         packet.destX,
+                         packet.destY,
+                         packet.velX,
+                         packet.velY);
+      }
+      else {
+        this.stopEntity(packet.entityId);
+        this.positionEntity_tween(packet.entityId, packet.x, packet.y, 0.2);
+      }
+    }
   }
 
   positionEntity(id: EntityId, x: number, y: number) {
     super.positionEntity(id, x, y);
 
-    const c = this.getComponent(id);
-
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
-      entities: new Set([c.entityId]),
-      entityId: c.entityId,
-      x: c.x,
-      y: c.y
+      entities: new Set([id]),
+      entityId: id,
+      x: x,
+      y: y
     };
 
     this._em.postEvent(event);
@@ -62,6 +65,8 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   }
 
   moveAgent(id: EntityId, direction: Direction) {
+    this.grid.dbg_print();
+
     const c = this.getComponent(id);
     if (!c.isAgent) {
       throw new GameError("Entity is not agent");
@@ -77,8 +82,8 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
     }
 
     if (!this.grid.blockingItemAtPos(destX, destY)) {
-      const t = 0.2; // TODO
-      this.moveEntity_tween(id, delta[0], delta[1], t);
+      const t = 1.0 / PLAYER_SPEED;
+      //this.moveEntity_tween(id, delta[0], delta[1], t);
     }
   }
 }

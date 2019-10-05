@@ -1,7 +1,7 @@
 import { SpatialComponentPacket, directionToVector,
          SpatialSystem} from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
-import { BLOCK_SZ } from "./common/config";
+import { BLOCK_SZ, PLAYER_SPEED } from "./common/config";
 import { EntityId } from "./common/system";
 import { GameEventType, EAgentBeginMove } from "./common/event";
 import { ComponentType } from "./common/component_types";
@@ -12,13 +12,13 @@ import { ServerSystem } from "./common/server_system";
 export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   private _em: EntityManager;
 
-  constructor(entityManager: EntityManager,
+  constructor(em: EntityManager,
               w: number,
               h: number,
               frameRate: number) {
-    super(w, h, frameRate);
+    super(em, w, h, frameRate);
 
-    this._em = entityManager;
+    this._em = em;
   }
 
   moveAgent(id: EntityId, direction: Direction) {
@@ -37,7 +37,8 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     }
 
     if (!this.grid.blockingItemAtPos(destX, destY)) {
-      this.moveEntity(id, delta[0], delta[1]);
+      const t = 1.0 / PLAYER_SPEED;
+      this.moveEntity_tween(id, delta[0], delta[1], t);
 
       const items = [...this.grid.atPos(destX, destY)].map(c => c.entityId);
 
@@ -54,25 +55,6 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     }
   }
 
-  update() {
-    super.update();
-
-    this.components.forEach(c => {
-      if (c.heavy) {
-        const gridY = this.grid.toGridX(c.y);
-
-        if (gridY > 0 && !this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
-          console.log(`Falling entity ${c.entityId}`);
-          this.moveEntity(c.entityId, 0, -BLOCK_SZ);
-          c.falling = true;
-        }
-        else {
-          c.falling = false;
-        }
-      }
-    });
-  }
-
   getState() {
     const packets: SpatialComponentPacket[] = [];
 
@@ -81,7 +63,11 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
         componentType: ComponentType.SPATIAL,
         entityId: c.entityId,
         x: c.x,
-        y: c.y
+        y: c.y,
+        destX: c.destX,
+        destY: c.destY,
+        velX: c.velocityX,
+        velY: c.velocityY
       });
     });
 
@@ -97,7 +83,11 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
           entityId: c.entityId,
           componentType: ComponentType.SPATIAL,
           x: c.x,
-          y: c.y
+          y: c.y,
+          velX: c.velocityX,
+          velY: c.velocityY,
+          destX: c.destX,
+          destY: c.destY
         });
         c.dirty = false;
       }

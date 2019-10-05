@@ -21,9 +21,7 @@ export class ServerEntityManager extends EntityManager {
     this._eventsPendingTransmission.push(event);
   }
 
-  update() {
-    super.update();
-
+  transmitEvents() {
     this._eventsPendingTransmission.forEach(e => {
       const response: REvent = {
         type: GameResponseType.EVENT,

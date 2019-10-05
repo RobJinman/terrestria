@@ -3,7 +3,8 @@ import { BLOCK_SZ } from "./config";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";
-import { GameEvent } from "./event";
+import { GameEvent, EAgentEnterCell, GameEventType } from "./event";
+import { EntityManager } from "./entity_manager";
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
@@ -23,6 +24,10 @@ export type Vec2 = {
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
   y: number;
+  destX: number;
+  destY: number;
+  velX: number;
+  velY: number;
 }
 
 export interface PhysicalProperties {
@@ -40,18 +45,18 @@ export interface PhysicalProperties {
 
 export class SpatialComponent extends Component {
   dirty = true;
-  private _pos: Vec2 = { x: 0, y: 0 };
+  private _posX: number = 0;
+  private _posY: number = 0;
+  private _velocityX: number = 0;
+  private _velocityY: number = 0;
+  private _destX: number = 0;
+  private _destY: number = 0;
 
   private _solid: boolean;
   private _blocking: boolean;
   private _heavy: boolean;
   private _moveable: boolean;
   private _isAgent: boolean;
-
-  velocity: Vec2 = { x: 0, y: 0 };
-  dest: Vec2 = { x: 0, y: 0 };
-
-  falling = false;
 
   constructor(entityId: EntityId, properties: PhysicalProperties) {
     super(entityId, ComponentType.SPATIAL);
@@ -68,35 +73,75 @@ export class SpatialComponent extends Component {
   }
 
   movingInX() {
-    return Math.abs(this.velocity.x) > 0.5;
+    return Math.abs(this._velocityX) > 0.5;
   }
 
   movingInY() {
-    return Math.abs(this.velocity.y) > 0.5;
+    return Math.abs(this._velocityY) > 0.5;
   }
 
   get x() {
-    return this._pos.x;
-  }
-
-  set x(value: number) {
-    this._pos.x = value;
-    this.dirty = true;
+    return this._posX;
   }
 
   get y() {
-    return this._pos.y;
+    return this._posY;
   }
 
-  set y(value: number) {
-    this._pos.y = value;
+  updatePos(grid: Grid, x: number, y: number) {
+    this._posX = x;
+    this._posY = y;
     this.dirty = true;
   }
 
-  get pos() {
-    return this._pos;
+  setPos(grid: Grid, x: number, y: number) {
+    const oldDestX = this._destX;
+    const oldDestY = this._destY;
+
+    this._posX = x;
+    this._posY = y;
+    this._destX = x;
+    this._destY = y;
+    this._velocityX = 0;
+    this._velocityY = 0;
+    this.dirty = true;
+
+    grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
   }
 
+  get velocityX() {
+    return this._velocityX;
+  }
+
+  get velocityY() {
+    return this._velocityY;
+  }
+
+  setDestination(grid: Grid,
+                 destX: number,
+                 destY: number,
+                 velX: number,
+                 velY: number) {
+    const oldDestX = this._destX;
+    const oldDestY = this._destY;
+
+    this._destX = destX;
+    this._destY = destY;
+    this._velocityX = velX;
+    this._velocityY = velY;
+    this.dirty = true;
+
+    grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
+  }
+
+  get destX() {
+    return this._destX;
+  }
+
+  get destY() {
+    return this._destY;
+  }
+  
   get solid() {
     return this._solid;
   }
@@ -163,12 +208,16 @@ export class Grid {
     this.inCell(col, row).add(item);
   }
 
-  onItemMoved(item: SpatialComponent, oldX: number, oldY: number) {
+  onItemMoved(item: SpatialComponent,
+              oldX: number,
+              oldY: number,
+              newX: number,
+              newY: number) {
     const oldCol = this.toGridX(oldX);
     const oldRow = this.toGridY(oldY);
 
-    const newCol = this.toGridX(item.x);
-    const newRow = this.toGridY(item.y);
+    const newCol = this.toGridX(newX);
+    const newRow = this.toGridY(newY);
 
     if (oldCol == newCol && oldRow == newRow) {
       return;
@@ -241,13 +290,15 @@ export class Grid {
 }
 
 export class SpatialSystem {
+  protected em: EntityManager;
   protected components: Map<number, SpatialComponent>;
   protected w = 0;
   protected h = 0;
   protected frameRate: number;
   protected grid: Grid;
 
-  constructor(w: number, h: number, frameRate: number) {
+  constructor(em: EntityManager, w: number, h: number, frameRate: number) {
+    this.em = em;
     this.components = new Map<number, SpatialComponent>();
 
     this.w = w;
@@ -262,14 +313,29 @@ export class SpatialSystem {
       if (c.moving()) {
         this.updateEntityPos(c);
       }
+
+      if (c.heavy) {
+        const gridY = this.grid.toGridX(c.y);
+
+        if (gridY > 0 && !this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
+          console.log(`Falling entity ${c.entityId}`);
+          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 0.15); // TODO
+        }
+      }
     });
   }
 
   positionEntity(id: EntityId, x: number, y: number) {
-    this.stopEntity(id);
     const c = this.getComponent(id);
 
-    this.setEntityPos(c, x, y);
+    const oldX = c.x;
+    const oldY = c.y;
+
+    c.setPos(this.grid, x, y);
+  
+    if (c.isAgent) {
+      this._postAgentMoved(c, oldX, oldY, c.x, c.y);
+    }
   }
   
   entityIsMoving(id: EntityId) {
@@ -302,17 +368,11 @@ export class SpatialSystem {
     this.components.delete(id);
   }
 
-  stopEntity(id: EntityId) {
-    const c = this.getComponent(id);
-    c.velocity.x = 0;
-    c.velocity.y = 0;
-  }
-
   finishTween(id: EntityId) {
-    const c = this.getComponent(id);
-    this.setEntityPos(c, c.dest.x, c.dest.y);
-    c.velocity.x = 0;
-    c.velocity.y = 0;
+    const c = this.components.get(id);
+    if (c) {
+      this.positionEntity(id, c.destX, c.destY);
+    }
   }
 
   numComponents() {
@@ -329,6 +389,11 @@ export class SpatialSystem {
     return this.h;
   }
 
+  stopEntity(id: EntityId) {
+    const c = this.getComponent(id);
+    c.setPos(this.grid, c.x, c.y);
+  }
+
   moveEntity(id: EntityId, dx: number, dy: number) {
     const c = this.getComponent(id);
     this.positionEntity(id, c.x + dx, c.y + dy);
@@ -337,10 +402,7 @@ export class SpatialSystem {
   positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
     const c = this.getComponent(id);
     if (!c.moving()) {
-      c.velocity.x = (x - c.x) / t;
-      c.velocity.y = (y - c.y) / t;
-      c.dest.x = x;
-      c.dest.y = y;
+      c.setDestination(this.grid, x, y, (x - c.x) / t, (y - c.y) / t);
       return true;
     }
     return false;
@@ -352,29 +414,53 @@ export class SpatialSystem {
   }
 
   protected updateEntityPos(c: SpatialComponent) {
-    const dx = c.velocity.x / this.frameRate;
-    const dy = c.velocity.y / this.frameRate;
-    this.setEntityPos(c, c.x + dx, c.y + dy);
-
-    const xDir = dx < 0 ? -1 : 1;
-    const yDir = dy < 0 ? -1 : 1;
-    const reachedDestX = xDir * (c.x - c.dest.x) > -0.5;
-    const reachedDestY = yDir * (c.y - c.dest.y) > -0.5;
-
-    if (reachedDestX && reachedDestY) {
-      c.velocity.x = 0;
-      c.velocity.y = 0;
-      this.setEntityPos(c, c.dest.x, c.dest.y);
-    }
-  }
-
-  protected setEntityPos(c: SpatialComponent, x: number, y: number) {
     const oldX = c.x;
     const oldY = c.y;
 
-    c.x = x;
-    c.y = y;
+    const dx = c.velocityX / this.frameRate;
+    const dy = c.velocityY / this.frameRate;
 
-    this.grid.onItemMoved(c, oldX, oldY);
+    c.updatePos(this.grid, c.x + dx, c.y + dy);
+
+    const xDir = dx < 0 ? -1 : 1;
+    const yDir = dy < 0 ? -1 : 1;
+    const reachedDestX = xDir * (c.x - c.destX) > -0.5;
+    const reachedDestY = yDir * (c.y - c.destY) > -0.5;
+
+    if (reachedDestX && reachedDestY) { 
+      c.setPos(this.grid, c.destX, c.destY);
+    }
+
+    if (c.isAgent) {
+      this._postAgentMoved(c, oldX, oldY, c.x, c.y);
+    }
+  }
+
+  private _postAgentMoved(c: SpatialComponent,
+                          oldX: number,
+                          oldY: number,
+                          newX: number,
+                          newY: number) {
+    const oldGridX = this.grid.toGridX(oldX);
+    const oldGridY = this.grid.toGridY(oldY);
+
+    const gridX = this.grid.toGridX(newX);
+    const gridY = this.grid.toGridY(newY);
+
+    const items = [...this.grid.inCell(gridX, gridY)].map(c => c.entityId);
+    
+    if (oldGridX != gridX || oldGridY != gridY) {
+      const event: EAgentEnterCell = {
+        type: GameEventType.AGENT_ENTER_CELL,
+        entityId: c.entityId,
+        entities: new Set(items),
+        prevGridX: oldGridX,
+        prevGridY: oldGridY,
+        gridX,
+        gridY
+      };
+
+      this.em.postEvent(event);
+    }
   }
 }

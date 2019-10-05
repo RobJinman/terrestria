@@ -18,7 +18,7 @@ export function constructSoil(em: EntityManager): EntityId {
   });
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.AGENT_BEGIN_MOVE, e => em.removeEntity(id));
+  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => em.removeEntity(id));
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 

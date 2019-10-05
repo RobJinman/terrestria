@@ -4,8 +4,8 @@ import { ActionType, MoveAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { constructEntities } from './factory';
-import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE, FRAMES_PER_BLOCK,
-         SERVER_FRAME_RATE } from "./common/config";
+import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
+         PLAYER_SPEED } from "./common/config";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
@@ -15,7 +15,6 @@ import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
-import { directionToVector } from './common/spatial_system';
 
 const WEBSOCKET_URL = "ws://localhost:3001";
 
@@ -73,7 +72,7 @@ export class App {
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
-    const t = 1000 * FRAMES_PER_BLOCK / SERVER_FRAME_RATE;
+    const t = 0.85 * 1000 / PLAYER_SPEED;
     this._movePlayerFn = debounce(this, this._movePlayer, t);
 
     this._userInput = new UserInput();
@@ -119,9 +118,6 @@ export class App {
     const spatialSys =
       <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    //const t = 0.2; // TODO
-    //const v = directionToVector(direction);
-    //spatialSys.moveEntity_tween(this._playerId, v[0], v[1], t);
     spatialSys.moveAgent(this._playerId, direction);
 
     const data: MoveAction = {
@@ -132,6 +128,8 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
+
+    console.log("Sending move command");
   }
 
   _logIn() {
@@ -181,6 +179,8 @@ export class App {
   }
 
   private _handleServerMessage(msg: GameResponse) {
+    console.log(msg);
+
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
         constructEntities(this._em, <RNewEntities>msg);

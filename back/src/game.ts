@@ -9,12 +9,13 @@ import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
-         SERVER_FRAME_RATE} from "./common/config";
+         SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/config";
 import { EntityType } from "./common/game_objects";
 import { BehaviourSystem } from "./behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
+import { debounce } from "./common/utils";
 
 function noThrow(fn: () => any) {
   try {
@@ -34,6 +35,7 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
+  private _doSyncFn: () => void;
 
   constructor() {
     this._id = Game.nextGameId++;
@@ -59,13 +61,11 @@ export class Game {
 
     this._loopTimeout = setInterval(() => noThrow(this._tick.bind(this)),
                                     SERVER_FRAME_DURATION_MS);
+
+    this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
   }
 
-  private _tick() {
-    this._gameLogic.update(this._actionQueue);
-    this._actionQueue = [];
-
-    this._em.update();
+  private _doSync() {
     const dirties = this._em.getDirties();
 
     if (dirties.length > 0) {
@@ -76,12 +76,24 @@ export class Game {
 
       this._pipe.sendToAll(response);
     }
+
+    this._em.transmitEvents();
+  }
+
+  private _tick() {
+    this._gameLogic.update(this._actionQueue);
+    this._actionQueue = [];
+
+    this._em.update();
+
+    this._doSyncFn();
   }
 
   private _populate() {
-    const spatialSys = <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialSys =
+      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    const numRocks = 5;
+    const numRocks = 10;
     const numGems = 5;
 
     let coords: [number, number][] = [];
