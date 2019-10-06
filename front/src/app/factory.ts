@@ -13,7 +13,7 @@ function constructGem(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: false,
     heavy: true,
-    moveable: false,
+    movable: false,
     isAgent: false
   });
 
@@ -27,7 +27,7 @@ function constructRock(em: EntityManager, id: EntityId) {
     blocking: true,
     stackable: false,
     heavy: true,
-    moveable: true,
+    movable: true,
     isAgent: false
   });
 
@@ -41,7 +41,7 @@ function constructSoil(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: true,
     heavy: false,
-    moveable: false,
+    movable: false,
     isAgent: false
   });
 
@@ -55,7 +55,7 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: true,
     heavy: false,
-    moveable: false,
+    movable: false,
     isAgent: true
   });
   const agentComp = new AgentComponent(id, "", "");

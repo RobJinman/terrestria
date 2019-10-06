@@ -1,9 +1,10 @@
 import { ComponentType } from "./component_types";
-import { BLOCK_SZ, FALL_SPEED } from "./config";
+import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./config";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";
-import { GameEvent, EAgentEnterCell, GameEventType } from "./event";
+import { GameEvent, EAgentEnterCell, GameEventType,
+         EAgentBeginMove } from "./event";
 import { EntityManager } from "./entity_manager";
 
 export function directionToVector(dir: Direction) {
@@ -49,7 +50,7 @@ export interface PhysicalProperties {
   // If it falls due to gravity (when there's no solid object supporting it)
   heavy: boolean;
   // If an agent can move it
-  moveable: boolean;
+  movable: boolean;
   // If a playable agent
   isAgent: boolean;
   // If other items can be stacked on top without rolling off
@@ -68,7 +69,7 @@ export class SpatialComponent extends Component {
   private _blocking: boolean;
   private _stackable: boolean;
   private _heavy: boolean;
-  private _moveable: boolean;
+  private _movable: boolean;
   private _isAgent: boolean;
 
   constructor(entityId: EntityId, properties: PhysicalProperties) {
@@ -78,7 +79,7 @@ export class SpatialComponent extends Component {
     this._blocking = properties.blocking;
     this._stackable = properties.stackable;
     this._heavy = properties.heavy;
-    this._moveable = properties.moveable;
+    this._movable = properties.movable;
     this._isAgent = properties.isAgent;
   }
 
@@ -158,8 +159,8 @@ export class SpatialComponent extends Component {
     return this._heavy;
   }
 
-  get moveable() {
-    return this._moveable;
+  get movable() {
+    return this._movable;
   }
 
   get isAgent() {
@@ -270,37 +271,45 @@ export class Grid {
     }
   }
 
-  blockingItemAtPos(x: number, y: number): boolean {
-    const items = this.atPos(x, y);
+  itemsWithPropAtPos(x: number, y: number, prop: string) {
+    const allItems = this.atPos(x, y);
+    const itemsWithProp = new Set<SpatialComponent>();
 
-    for (const c of items) {
-      if (c.blocking) {
-        return true;
+    for (const item of allItems) {
+      const c = <any>item;
+      if (c[prop]) {
+        itemsWithProp.add(item);
       }
     }
-    return false;
+
+    return itemsWithProp;
   }
 
-  solidItemAtPos(x: number, y: number): boolean {
-    const items = this.atPos(x, y);
-
-    for (const c of items) {
-      if (c.solid) {
-        return true;
-      }
-    }
-    return false;
+  blockingItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "blocking");
   }
 
-  stackableItemAtPos(x: number, y: number): boolean {
-    const items = this.atPos(x, y);
+  solidItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "solid");
+  }
 
-    for (const c of items) {
-      if (c.stackable) {
-        return true;
-      }
+  stackableItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "stackable");
+  }
+
+  movableItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "movable");
+  }
+
+  spaceFreeAtPos(x: number, y: number): boolean {
+    return !this.outOfRange(x, y) && this.solidItemsAtPos(x, y).size === 0;
+  }
+
+  stackableSpaceAtPos(x: number, y: number): boolean {
+    if (this.toGridY(y) == -1) {
+      return true;
     }
-    return false;
+    return this.stackableItemsAtPos(x, y).size > 0;
   }
 }
 
@@ -330,23 +339,22 @@ export class SpatialSystem {
       }
 
       if (c.heavy) {
-        const gridY = this.grid.toGridX(c.y);
+        const yDown = c.y - BLOCK_SZ;
+        const xRight = c.x + BLOCK_SZ;
+        const xLeft = c.x - BLOCK_SZ;
 
-        if (gridY > 0) {
-          if (!this.grid.solidItemAtPos(c.x, c.y - BLOCK_SZ)) {
-            this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
-          }
-
-          if (!this.grid.stackableItemAtPos(c.x, c.y - BLOCK_SZ)) {
-            if (!this.grid.outOfRange(c.x + BLOCK_SZ, c.y) &&
-              !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y) &&
-              !this.grid.solidItemAtPos(c.x + BLOCK_SZ, c.y - BLOCK_SZ)) {
+        if (this.grid.spaceFreeAtPos(c.x, yDown)) {
+          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
+        }
+        else {
+          if (!this.grid.stackableSpaceAtPos(c.x, yDown)) {
+            if (this.grid.spaceFreeAtPos(xRight, c.y) &&
+              this.grid.spaceFreeAtPos(xRight, yDown)) {
 
               this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, 1.0 / FALL_SPEED);
             }
-            else if (!this.grid.outOfRange(c.x - BLOCK_SZ, c.y) &&
-              !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y) &&
-              !this.grid.solidItemAtPos(c.x - BLOCK_SZ, c.y - BLOCK_SZ)) {
+            else if (this.grid.spaceFreeAtPos(xLeft, c.y) &&
+              this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
               this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, 1.0 / FALL_SPEED);
             }
@@ -445,6 +453,73 @@ export class SpatialSystem {
   moveEntity_tween(id: EntityId, dx: number, dy: number, t: number): boolean {
     const c = this.getComponent(id);
     return this.positionEntity_tween(id, c.x + dx, c.y + dy, t);
+  }
+
+  _moveAgent(id: EntityId,
+             x: number,
+             y: number,
+             direction: Direction,
+             t: number) {
+    this.positionEntity_tween(id, x, y, t);
+
+    const items = [...this.grid.atPos(x, y)].map(c => c.entityId);
+
+    const event: EAgentBeginMove = {
+      type: GameEventType.AGENT_BEGIN_MOVE,
+      entities: new Set(items),
+      entityId: id,
+      direction: direction,
+      gridX: Math.round(x / BLOCK_SZ),
+      gridY: Math.round(y / BLOCK_SZ)
+    };
+
+    this.em.postEvent(event);
+  }
+
+  moveAgent(id: EntityId, direction: Direction) {
+    const c = this.getComponent(id);
+    if (!c.isAgent) {
+      throw new GameError("Entity is not agent");
+    }
+
+    const delta = directionToVector(direction);
+
+    const destX = c.x + delta[0];
+    const destY = c.y + delta[1];
+
+    if (this.grid.outOfRange(destX, destY)) {
+      return;
+    }
+
+    const t = 1.0 / PLAYER_SPEED;
+
+    const items = this.grid.blockingItemsAtPos(destX, destY);
+    if (items.size === 0) {
+      this._moveAgent(c.entityId, destX, destY, direction, t);
+    }
+    else if (items.size === 1) {
+      const item: SpatialComponent = items.values().next().value;
+      if (item.movable) {
+        if (direction == Direction.LEFT) {
+          const xLeft = item.destX - BLOCK_SZ;
+          const y = item.destY;
+          if (this.grid.spaceFreeAtPos(xLeft, y)) {
+            this.stopEntity(item.entityId);
+            this.positionEntity_tween(item.entityId, xLeft, y, t);
+            this._moveAgent(c.entityId, destX, destY, direction, t);
+          }
+        }
+        else if (direction == Direction.RIGHT) {
+          const xRight = item.destX + BLOCK_SZ;
+          const y = item.destY;
+          if (this.grid.spaceFreeAtPos(xRight, y)) {
+            this.stopEntity(item.entityId);
+            this.positionEntity_tween(item.entityId, xRight, y, t);
+            this._moveAgent(c.entityId, destX, destY, direction, t);
+          }
+        }
+      }
+    }
   }
 
   protected updateEntityPos(c: SpatialComponent) {

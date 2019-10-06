@@ -14,7 +14,7 @@ export function constructSoil(em: EntityManager): EntityId {
     blocking: false,
     stackable: true,
     heavy: false,
-    moveable: false,
+    movable: false,
     isAgent: false
   });
 
@@ -36,7 +36,7 @@ export function constructRock(em: EntityManager): EntityId {
     blocking: true,
     stackable: false,
     heavy: true,
-    moveable: true,
+    movable: true,
     isAgent: false
   });
 
@@ -53,7 +53,7 @@ export function constructGem(em: EntityManager): EntityId {
     blocking: false,
     stackable: false,
     heavy: true,
-    moveable: false,
+    movable: false,
     isAgent: false
   });
 
@@ -73,7 +73,7 @@ export function constructPlayer(em: EntityManager,
     blocking: false,
     stackable: true,
     heavy: false,
-    moveable: false,
+    movable: false,
     isAgent: true
   });
 
