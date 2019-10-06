@@ -56,7 +56,6 @@ export class EntityManager {
   }
 
   removeEntity(entityId: EntityId) {
-    console.log(`Entity ${entityId} pending removal`);
     this._pendingDeletion.add(entityId);
   }
 
@@ -71,7 +70,6 @@ export class EntityManager {
   }
 
   private _deleteEntity(id: EntityId) {
-    console.log(`Deleting entity ${id}`);
     this.systems.forEach(sys => sys.removeComponent(id));
     this.entities.delete(id);
   }

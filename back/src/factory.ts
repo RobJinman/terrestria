@@ -2,9 +2,12 @@ import { getNextEntityId, EntityManager } from "./common/entity_manager";
 import { AgentComponent } from "./common/agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType } from "./common/event";
+import { GameEventType, EAgentEnterCell } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./behaviour_system";
 import { EntityId } from "./common/system";
+import { ComponentType } from "./common/component_types";
+import { InventorySystem, CCollector, CCollectable,
+         Bucket } from "./inventory_system";
 
 export function constructSoil(em: EntityManager): EntityId {
   const id = getNextEntityId();
@@ -57,7 +60,20 @@ export function constructGem(em: EntityManager): EntityId {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.GEM, [ spatialComp ]);
+  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+  const invComp = new CCollectable(id, "gems", 1);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
+    const event = <EAgentEnterCell>e;
+    inventorySys.collectItem(event.entityId, id);
+
+    em.removeEntity(id); // TODO: Play animation, then delete
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.GEM, [ spatialComp, invComp, behaviourComp ]);
 
   return id;
 }
@@ -76,8 +92,11 @@ export function constructPlayer(em: EntityManager,
     movable: false,
     isAgent: true
   });
+  
+  const invComp = new CCollector(id);
+  invComp.addBucket(new Bucket("gems", -1));
 
-  em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp ]);
+  em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp, invComp ]);
 
   return id;
 }

@@ -184,7 +184,6 @@ export class App {
   // When a message comes in from the client, pass it onto the game instance
   private async _handleClientMessage(sock: ExtWebSocket,
                                      msg: string) {
-    console.log("Handling client message");
     const action = deserialiseMessage(msg);
 
     if (action.type === ActionType.LOG_IN) {

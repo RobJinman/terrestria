@@ -40,8 +40,6 @@ export class GameLogic {
   }
 
   private _handlePlayerAction(action: PlayerAction): boolean {
-    console.log("Game logic: Handling player action");
-
     switch (action.type) {
       case ActionType.MOVE: {
         return this._movePlayer(<MoveAction>action);

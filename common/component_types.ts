@@ -3,5 +3,6 @@ export enum ComponentType {
   SPATIAL = "SPATIAL",
   PHYSICS = "PHYSICS",
   AGENT = "AGENT",
-  BEHAVIOUR = "BEHAVIOUR"
+  BEHAVIOUR = "BEHAVIOUR",
+  INVENTORY = "INVENTORY"
 }

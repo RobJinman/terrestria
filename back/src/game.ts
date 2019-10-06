@@ -16,6 +16,7 @@ import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { debounce } from "./common/utils";
+import { InventorySystem } from "./inventory_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -48,10 +49,12 @@ export class Game {
                                                   SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem();
     const behaviourSystem = new BehaviourSystem();
+    const inventorySystem = new InventorySystem();
 
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
+    this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
 
     this._gameLogic = new GameLogic(this._em);
 
@@ -177,9 +180,6 @@ export class Game {
   }
 
   onPlayerAction(action: PlayerAction) {
-    console.log(`Received ${action.type} action from player ` +
-                `${action.playerId}`);
-
     this._actionQueue.push(action);
   }
 
