@@ -96,8 +96,8 @@ export class Game {
     const spatialSys =
       <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    const numRocks = 10;
-    const numGems = 5;
+    const numRocks = 20;
+    const numGems = 10;
 
     let coords: [number, number][] = [];
     for (let c = 0; c < WORLD_W; ++c) {

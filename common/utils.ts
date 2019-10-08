@@ -21,3 +21,19 @@ export function debounce<R, ARGS extends any[]>(context: any,
     return null;
   };
 }
+
+export function timeout(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export async function waitForCondition(predicate: () => boolean,
+                                       interval: number,
+                                       attempts: number): Promise<boolean> {
+  for (let i = 0; i < attempts; ++i) {
+    await timeout(interval);
+    if (predicate()) {
+      return true;
+    }
+  }
+  return false;
+}

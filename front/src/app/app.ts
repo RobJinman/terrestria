@@ -10,7 +10,7 @@ import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
 import { ResourcesMap } from './definitions';
-import { debounce } from './common/utils';
+import { debounce, waitForCondition } from './common/utils';
 import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
@@ -141,6 +141,7 @@ export class App {
     };
 
     const dataString = JSON.stringify(data);
+
     this._ws.send(dataString);
   }
 
@@ -148,6 +149,10 @@ export class App {
     this._resources = await this._loadAssets();
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     renderSys.setResources(this._resources);
+
+    await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
+                           500,
+                           10);
 
     // TODO
     this._logIn();
