@@ -48,13 +48,6 @@ export class ServerEntityManager extends EntityManager {
     }
   }
 
-  getDirties(): ComponentPacket[] {
-    let dirties: ComponentPacket[] = [];
-    this._systems().forEach(sys => dirties.push(...sys.getDirties()));
-
-    return dirties;
-  }
-
   getState(): ComponentPacket[] {
     let packets: ComponentPacket[] = [];
     this._systems().forEach(sys => packets.push(...sys.getState()));

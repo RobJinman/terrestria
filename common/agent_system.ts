@@ -82,6 +82,17 @@ export class AgentSystem implements ClientSystem, ServerSystem {
     return packets;
   }
 
+  getComponentState(entityId: EntityId) {
+    const packet: ComponentPacket = {
+      entityId: entityId,
+      componentType: ComponentType.AGENT
+    };
+
+    // TODO
+
+    return packet;
+  }
+
   getDirties() {
     const dirties: ComponentPacket[] = [];
 

@@ -151,6 +151,17 @@ export class InventorySystem implements ServerSystem {
     return [];
   }
 
+  getComponentState(entityId: EntityId) {
+    const packet: ComponentPacket = {
+      entityId: entityId,
+      componentType: ComponentType.INVENTORY
+    };
+
+    // TODO
+
+    return packet;
+  }
+
   getDirties() {
     return [];
   }

@@ -3,7 +3,8 @@ import { SpatialComponent, SpatialComponentPacket,
          SpatialSystem } from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
 import { EEntityMoved, GameEventType } from "./common/event";
-import { EntityId } from "./common/system";
+import { EntityId, ComponentPacket } from "./common/system";
+import { ComponentType } from "./common/component_types";
 
 export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   constructor(em: EntityManager,
@@ -33,6 +34,20 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
         this.positionEntity_tween(packet.entityId, packet.x, packet.y, 0.2);
       }
     }
+    c.dirty = false;
+  }
+
+  getUnverified() {
+    const unverified: ComponentPacket[] = [];
+    for (let [id, c] of this.components) {
+      if (c.dirty) {
+        unverified.push({
+          entityId: id,
+          componentType: ComponentType.SPATIAL
+        });
+      }
+    }
+    return unverified;
   }
 
   positionEntity(id: EntityId, x: number, y: number) {

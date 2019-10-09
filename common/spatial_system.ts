@@ -98,7 +98,7 @@ export class SpatialComponent extends Component {
   updatePos(grid: Grid, x: number, y: number) {
     this._posX = x;
     this._posY = y;
-    this.dirty = true;
+    //this.dirty = true;
   }
 
   setPos(grid: Grid, x: number, y: number) {
@@ -110,9 +110,11 @@ export class SpatialComponent extends Component {
     this._destX = x;
     this._destY = y;
     this._speed = 0;
-    this.dirty = true;
 
-    grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
+    if (oldDestX != x || oldDestY != y) {
+      this.dirty = true;
+      grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
+    }
   }
 
   get speed() {
@@ -520,6 +522,27 @@ export class SpatialSystem {
         }
       }
     }
+  }
+
+  getDirties() {
+    const dirties: SpatialComponentPacket[] = [];
+
+    this.components.forEach((c, id) => {
+      if (c.dirty) {
+        dirties.push({
+          entityId: c.entityId,
+          componentType: ComponentType.SPATIAL,
+          x: c.x,
+          y: c.y,
+          speed: c.speed,
+          destX: c.destX,
+          destY: c.destY
+        });
+        c.dirty = false;
+      }
+    });
+
+    return dirties;
   }
 
   protected updateEntityPos(c: SpatialComponent) {

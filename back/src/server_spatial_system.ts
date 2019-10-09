@@ -2,6 +2,7 @@ import { SpatialComponentPacket, SpatialSystem} from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
+import { EntityId } from "./common/system";
 
 export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   constructor(em: EntityManager,
@@ -29,24 +30,19 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     return packets;
   }
 
-  getDirties() {
-    const dirties: SpatialComponentPacket[] = [];
+  getComponentState(entityId: EntityId) {
+    const c = this.getComponent(entityId);
 
-    this.components.forEach((c, id) => {
-      if (c.dirty) {
-        dirties.push({
-          entityId: c.entityId,
-          componentType: ComponentType.SPATIAL,
-          x: c.x,
-          y: c.y,
-          speed: c.speed,
-          destX: c.destX,
-          destY: c.destY
-        });
-        c.dirty = false;
-      }
-    });
+    const packet: SpatialComponentPacket = {
+      componentType: ComponentType.SPATIAL,
+      entityId: c.entityId,
+      x: c.x,
+      y: c.y,
+      destX: c.destX,
+      destY: c.destY,
+      speed: c.speed
+    };
 
-    return dirties;
+    return packet;
   }
 }

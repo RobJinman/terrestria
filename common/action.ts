@@ -1,11 +1,12 @@
 import { GameError, ErrorCode } from "./error";
-import { EntityId } from "./system";
+import { EntityId, ComponentPacket } from "./system";
 import { Direction } from "./definitions";
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
   MOVE = "MOVE",
   JUMP = "JUMP",
+  REQ_STATE_UPDATE = "REQ_STATE_UPDATE"
   // ...
 }
 
@@ -13,6 +14,7 @@ const VALIDATORS: ValidatorFnMap = {
   LOG_IN: isLogInAction,
   MOVE: isMoveAction,
   JUMP: isJumpAction,
+  REQ_STATE_UPDATE: isReqStateUpdateAction
   // ...
 };
 
@@ -50,6 +52,17 @@ export interface JumpAction extends PlayerAction {
 
 export function isJumpAction(obj: any): obj is JumpAction {
   return true; // TODO
+}
+
+// =======================================================
+// ReqStateUpdateAction
+//
+export interface ReqStateUpdateAction extends PlayerAction {
+  components: ComponentPacket[]
+}
+
+export function isReqStateUpdateAction(obj: any): obj is ReqStateUpdateAction {
+  return obj.components instanceof Array;
 }
 
 // =======================================================

@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction } from "./common/action";
+import { ActionType, MoveAction, ReqStateUpdateAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { constructEntities } from './factory';
@@ -78,15 +78,31 @@ export class App {
     this._userInput = new UserInput();
 
     this._insertElement();
-
-    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
-    this._pixi.ticker.add(delta => this._tick(delta));
   }
 
   private _tick(delta: number) {
     this._handleServerMessages();
     this._keyboard();
     this._em.update();
+
+    const dirties = this._em.getDirties();
+    if (dirties.length > 0) {
+      const data: ReqStateUpdateAction = {
+        playerId: -1,
+        type: ActionType.REQ_STATE_UPDATE,
+        components: dirties.map(p => {
+          return {
+            entityId: p.entityId,
+            componentType: p.componentType
+          };
+        })
+      };
+
+      const dataString = JSON.stringify(data);
+      this._ws.send(dataString);
+
+      console.log(data);
+    }
   }
 
   private _keyboard() {
@@ -120,9 +136,8 @@ export class App {
 
     spatialSys.moveAgent(this._playerId, direction);
 
-    const data: MoveAction = {
+    const data = {
       type: ActionType.MOVE,
-      playerId: this._playerId,
       direction
     };
 
@@ -156,6 +171,9 @@ export class App {
 
     // TODO
     this._logIn();
+
+    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
+    this._pixi.ticker.add(delta => this._tick(delta));
   }
 
   private _startGame(playerId: EntityId) {

@@ -2,7 +2,7 @@ import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent } from "./event";
 import { EntityType } from "./game_objects";
-import { EntityId, System, Component } from "./system";
+import { EntityId, System, Component, ComponentPacket } from "./system";
 
 let nextEntityId = 0;
 
@@ -67,6 +67,13 @@ export class EntityManager {
     this.systems.forEach(sys => sys.update());
     this._pendingDeletion.forEach(id => this._deleteEntity(id));
     this._pendingDeletion.clear();
+  }
+
+  getDirties(): ComponentPacket[] {
+    let dirties: ComponentPacket[] = [];
+    this.systems.forEach(sys => dirties.push(...sys.getDirties()));
+
+    return dirties;
   }
 
   private _deleteEntity(id: EntityId) {
