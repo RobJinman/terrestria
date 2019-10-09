@@ -76,7 +76,10 @@ export class Game {
       const updates: ComponentPacket[] = [];
       req.components.forEach(c => {
         const sys = <ServerSystem>this._em.getSystem(c.componentType);
-        updates.push(sys.getComponentState(c.entityId));
+        const packet = sys.getComponentState(c.entityId);
+        if (packet) {
+          updates.push(packet);
+        }
       });
 
       const response: RGameState = {
