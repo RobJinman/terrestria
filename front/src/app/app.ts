@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction, ReqStateUpdateAction } from "./common/action";
+import { ActionType, ReqStateUpdateAction, MoveAction,
+         LogInAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { constructEntities } from './factory';
@@ -80,11 +81,7 @@ export class App {
     this._insertElement();
   }
 
-  private _tick(delta: number) {
-    this._handleServerMessages();
-    this._keyboard();
-    this._em.update();
-
+  private _doStateUpdateRequests() {
     const dirties = this._em.getDirties();
     if (dirties.length > 0) {
       const data: ReqStateUpdateAction = {
@@ -100,9 +97,14 @@ export class App {
 
       const dataString = JSON.stringify(data);
       this._ws.send(dataString);
-
-      console.log(data);
     }
+  }
+
+  private _tick(delta: number) {
+    this._handleServerMessages();
+    this._keyboard();
+    this._em.update();
+    this._doStateUpdateRequests();
   }
 
   private _keyboard() {
@@ -136,7 +138,8 @@ export class App {
 
     spatialSys.moveAgent(this._playerId, direction);
 
-    const data = {
+    const data: MoveAction = {
+      playerId: -1,
       type: ActionType.MOVE,
       direction
     };
@@ -149,7 +152,8 @@ export class App {
     const email = "gamer1@email.com";
     const password = "password";
 
-    const data = {
+    const data: LogInAction = {
+      playerId: -1,
       type: ActionType.LOG_IN,
       email,
       password
