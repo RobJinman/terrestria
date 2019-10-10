@@ -42,6 +42,27 @@ class UserInput {
   }
 }
 
+class ActionDelegate<T extends any[]> {
+  private _fn: (...args: T) => boolean;
+  private _t: number;
+  private _lastSuccess: number = 0;
+
+  constructor(fn: (...args: T) => boolean, t: number) {
+    this._fn = fn;
+    this._t = t;
+  }
+
+  execute(...args: T) {
+    const now = (new Date()).getTime();
+    const elapsed = now - this._lastSuccess;
+    const ready = elapsed >= this._t;
+
+    if (ready && this._fn(...args)) {
+      this._lastSuccess = now;
+    }
+  }
+}
+
 export class App {
   private _pixi: PIXI.Application;
   private _resources: ResourcesMap = {};
@@ -50,7 +71,8 @@ export class App {
   private _em: ClientEntityManager;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
-  private _movePlayerFn: (direction: Direction) => void|null;
+  private _moveLocalDelegate: ActionDelegate<[Direction]>;
+  private _moveRemoteFn: (direction: Direction) => void;
 
   constructor() {
     this._pixi = new PIXI.Application();
@@ -74,11 +96,35 @@ export class App {
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
     const t = 0.85 * 1000 / PLAYER_SPEED;
-    this._movePlayerFn = debounce(this, this._movePlayer, t);
+    
+    this._moveLocalDelegate = new ActionDelegate((direction: Direction) => {
+      return this._movePlayerLocal(direction);
+    }, t);
+
+    this._moveRemoteFn = debounce(this, this._movePlayerRemote, t);
 
     this._userInput = new UserInput();
 
     this._insertElement();
+  }
+
+  private _movePlayerLocal(direction: Direction): boolean {
+    const spatialSys =
+      <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    return spatialSys.moveAgent(this._playerId, direction);
+  }
+
+  private _movePlayerRemote(direction: Direction) {
+    const action: MoveAction = {
+      playerId: -1,
+      type: ActionType.MOVE,
+      direction
+    };
+
+    const dataString = JSON.stringify(action);
+    this._ws.send(dataString);
+
+    return true;
   }
 
   private _doStateUpdateRequests() {
@@ -128,24 +174,9 @@ export class App {
     }
 
     if (direction !== null) {
-      this._movePlayerFn(direction);
+      this._moveLocalDelegate.execute(direction);
+      this._moveRemoteFn(direction);
     }
-  }
-
-  _movePlayer(direction: Direction) {
-    const spatialSys =
-      <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-
-    spatialSys.moveAgent(this._playerId, direction);
-
-    const data: MoveAction = {
-      playerId: -1,
-      type: ActionType.MOVE,
-      direction
-    };
-
-    const dataString = JSON.stringify(data);
-    this._ws.send(dataString);
   }
 
   _logIn() {

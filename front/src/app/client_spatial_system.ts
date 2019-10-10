@@ -5,6 +5,7 @@ import { EntityManager } from "./common/entity_manager";
 import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityId, ComponentPacket } from "./common/system";
 import { ComponentType } from "./common/component_types";
+import { Direction } from "./common/definitions";
 
 export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   constructor(em: EntityManager,
@@ -48,6 +49,16 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
       }
     }
     return unverified;
+  }
+
+  moveAgent(playerId: EntityId, direction: Direction) {
+    const moved = super.moveAgent(playerId, direction);
+
+    // Keep the player component non-dirty
+    const c = this.getComponent(playerId);
+    c.dirty = false;
+
+    return moved;
   }
 
   positionEntity(id: EntityId, x: number, y: number) {

@@ -453,24 +453,29 @@ export class SpatialSystem {
              x: number,
              y: number,
              direction: Direction,
-             t: number) {
-    this.positionEntity_tween(id, x, y, t);
+             t: number): boolean {
 
-    const items = [...this.grid.atPos(x, y)].map(c => c.entityId);
+    if (this.positionEntity_tween(id, x, y, t)) {
+      const items = [...this.grid.atPos(x, y)].map(c => c.entityId);
 
-    const event: EAgentBeginMove = {
-      type: GameEventType.AGENT_BEGIN_MOVE,
-      entities: new Set(items),
-      entityId: id,
-      direction: direction,
-      gridX: Math.round(x / BLOCK_SZ),
-      gridY: Math.round(y / BLOCK_SZ)
-    };
+      const event: EAgentBeginMove = {
+        type: GameEventType.AGENT_BEGIN_MOVE,
+        entities: new Set(items),
+        entityId: id,
+        direction: direction,
+        gridX: Math.round(x / BLOCK_SZ),
+        gridY: Math.round(y / BLOCK_SZ)
+      };
 
-    this.em.postEvent(event);
+      this.em.postEvent(event);
+
+      return true;
+    }
+
+    return false;
   }
 
-  moveAgent(id: EntityId, direction: Direction) {
+  moveAgent(id: EntityId, direction: Direction): boolean {
     const c = this.getComponent(id);
     if (!c.isAgent) {
       throw new GameError("Entity is not agent");
@@ -482,17 +487,18 @@ export class SpatialSystem {
     const destY = c.y + delta[1];
 
     if (this.grid.outOfRange(destX, destY)) {
-      return;
+      return false;
     }
 
     const oldDestGridX = this.grid.toGridX(c.destX);
     const oldDestGridY = this.grid.toGridY(c.destY);
 
     const t = 1.0 / PLAYER_SPEED;
+    let moved = false;
 
     const blocking = this.grid.blockingItemsAtPos(destX, destY);
     if (blocking.size === 0) {
-      this._moveAgent(c.entityId, destX, destY, direction, t);
+      moved = this._moveAgent(c.entityId, destX, destY, direction, t);
     }
     else if (blocking.size === 1) {
       const item: SpatialComponent = blocking.values().next().value;
@@ -503,7 +509,7 @@ export class SpatialSystem {
           if (this.grid.spaceFreeAtPos(xLeft, y)) {
             this.stopEntity(item.entityId);
             this.positionEntity_tween(item.entityId, xLeft, y, t);
-            this._moveAgent(c.entityId, destX, destY, direction, t);
+            moved = this._moveAgent(c.entityId, destX, destY, direction, t);
           }
         }
         else if (direction == Direction.RIGHT) {
@@ -512,31 +518,35 @@ export class SpatialSystem {
           if (this.grid.spaceFreeAtPos(xRight, y)) {
             this.stopEntity(item.entityId);
             this.positionEntity_tween(item.entityId, xRight, y, t);
-            this._moveAgent(c.entityId, destX, destY, direction, t);
+            moved = this._moveAgent(c.entityId, destX, destY, direction, t);
           }
         }
       }
     }
 
-    const newDestGridX = this.grid.toGridX(c.destX);
-    const newDestGridY = this.grid.toGridY(c.destY);
-    
-    if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
-      const items = [...this.grid.inCell(newDestGridX, newDestGridY)]
-      .map(c => c.entityId);
+    if (moved) {
+      const newDestGridX = this.grid.toGridX(c.destX);
+      const newDestGridY = this.grid.toGridY(c.destY);
+      
+      if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
+        const items = [...this.grid.inCell(newDestGridX, newDestGridY)]
+        .map(c => c.entityId);
 
-      const event: EAgentEnterCell = {
-        type: GameEventType.AGENT_ENTER_CELL,
-        entityId: c.entityId,
-        entities: new Set(items),
-        prevGridX: oldDestGridX,
-        prevGridY: oldDestGridY,
-        gridX: newDestGridX,
-        gridY: newDestGridY
-      };
+        const event: EAgentEnterCell = {
+          type: GameEventType.AGENT_ENTER_CELL,
+          entityId: c.entityId,
+          entities: new Set(items),
+          prevGridX: oldDestGridX,
+          prevGridY: oldDestGridY,
+          gridX: newDestGridX,
+          gridY: newDestGridY
+        };
 
-      this.em.postEvent(event);
+        this.em.postEvent(event);
+      }
     }
+
+    return moved;
   }
 
   getDirties() {
