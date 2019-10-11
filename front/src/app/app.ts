@@ -71,7 +71,6 @@ export class App {
   private _em: ClientEntityManager;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
-  private _moveLocalDelegate: ActionDelegate<[Direction]>;
   private _moveRemoteFn: (direction: Direction) => void;
 
   constructor() {
@@ -96,22 +95,11 @@ export class App {
     this._em.addSystem(ComponentType.AGENT, agentSystem);
 
     const t = 0.85 * 1000 / PLAYER_SPEED;
-    
-    this._moveLocalDelegate = new ActionDelegate((direction: Direction) => {
-      return this._movePlayerLocal(direction);
-    }, t);
-
     this._moveRemoteFn = debounce(this, this._movePlayerRemote, t);
 
     this._userInput = new UserInput();
 
     this._insertElement();
-  }
-
-  private _movePlayerLocal(direction: Direction): boolean {
-    const spatialSys =
-      <ClientSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-    return spatialSys.moveAgent(this._playerId, direction);
   }
 
   private _movePlayerRemote(direction: Direction) {
@@ -174,7 +162,6 @@ export class App {
     }
 
     if (direction !== null) {
-      this._moveLocalDelegate.execute(direction);
       this._moveRemoteFn(direction);
     }
   }
