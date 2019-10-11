@@ -1,7 +1,6 @@
 import WebSocket from "ws";
 import _ from "underscore";
-import { PlayerAction, ActionType,
-         ReqStateUpdateAction } from "./common/action";
+import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
          constructPlayer } from "./factory";
 import { AgentSystem } from "./common/agent_system";
@@ -37,7 +36,6 @@ export class Game {
   private _em: ServerEntityManager;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
-  private _stateUpdateReqs: ReqStateUpdateAction[] = [];
   private _gameLogic: GameLogic;
   private _doSyncFn: () => void;
 
@@ -72,27 +70,6 @@ export class Game {
   }
 
   private _doSync() {
-    this._stateUpdateReqs.forEach(req => {
-      const updates: ComponentPacket[] = [];
-      req.components.forEach(c => {
-        const sys = <ServerSystem>this._em.getSystem(c.componentType);
-        const packet = sys.getComponentState(c.entityId);
-        if (packet) {
-          updates.push(packet);
-        }
-      });
-
-      const response: RGameState = {
-        type: GameResponseType.GAME_STATE,
-        packets: updates
-      };
-
-      if (updates.length > 0) {
-        this._pipe.send(req.playerId, response);
-      }
-    });
-    this._stateUpdateReqs = [];
-
     const dirties = this._em.getDirties();
 
     if (dirties.length > 0) {
@@ -204,12 +181,7 @@ export class Game {
   }
 
   onPlayerAction(action: PlayerAction) {
-    if (action.type == ActionType.REQ_STATE_UPDATE) {
-      this._stateUpdateReqs.push(<ReqStateUpdateAction>action);
-    }
-    else {
-      this._actionQueue.push(action);
-    }
+    this._actionQueue.push(action);
   }
 
   terminate() {

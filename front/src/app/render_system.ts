@@ -73,10 +73,6 @@ export class RenderSystem implements ClientSystem {
     this._components.delete(id);
   }
 
-  getUnverified() {
-    return [];
-  }
-
   private _onEntityMoved(id: EntityId) {
     if (this.hasComponent(id)) {
       const spatialComp =

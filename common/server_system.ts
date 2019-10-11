@@ -1,6 +1,6 @@
-import { System, ComponentPacket, EntityId } from "./system";
+import { System, ComponentPacket } from "./system";
 
 export abstract class ServerSystem extends System {
   abstract getState(): ComponentPacket[];
-  abstract getComponentState(entityId: EntityId): ComponentPacket|null;
+  abstract getDirties(): ComponentPacket[];
 }

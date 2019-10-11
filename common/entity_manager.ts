@@ -69,13 +69,6 @@ export class EntityManager {
     this._pendingDeletion.clear();
   }
 
-  getDirties(): ComponentPacket[] {
-    let dirties: ComponentPacket[] = [];
-    this.systems.forEach(sys => dirties.push(...sys.getDirties()));
-
-    return dirties;
-  }
-
   private _deleteEntity(id: EntityId) {
     this.systems.forEach(sys => sys.removeComponent(id));
     this.entities.delete(id);

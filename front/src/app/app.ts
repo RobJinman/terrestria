@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, ReqStateUpdateAction, MoveAction,
-         LogInAction } from "./common/action";
+import { ActionType, MoveAction, LogInAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted } from "./common/response";
 import { constructEntities } from './factory';
@@ -39,27 +38,6 @@ class UserInput {
 
   private _onKeyUp(event: KeyboardEvent) {
     this._keyStates.set(event.key, false);
-  }
-}
-
-class ActionDelegate<T extends any[]> {
-  private _fn: (...args: T) => boolean;
-  private _t: number;
-  private _lastSuccess: number = 0;
-
-  constructor(fn: (...args: T) => boolean, t: number) {
-    this._fn = fn;
-    this._t = t;
-  }
-
-  execute(...args: T) {
-    const now = (new Date()).getTime();
-    const elapsed = now - this._lastSuccess;
-    const ready = elapsed >= this._t;
-
-    if (ready && this._fn(...args)) {
-      this._lastSuccess = now;
-    }
   }
 }
 
@@ -115,30 +93,10 @@ export class App {
     return true;
   }
 
-  private _doStateUpdateRequests() {
-    const dirties = this._em.getDirties();
-    if (dirties.length > 0) {
-      const data: ReqStateUpdateAction = {
-        playerId: -1,
-        type: ActionType.REQ_STATE_UPDATE,
-        components: dirties.map(p => {
-          return {
-            entityId: p.entityId,
-            componentType: p.componentType
-          };
-        })
-      };
-
-      const dataString = JSON.stringify(data);
-      this._ws.send(dataString);
-    }
-  }
-
   private _tick(delta: number) {
     this._handleServerMessages();
     this._keyboard();
     this._em.update();
-    this._doStateUpdateRequests();
   }
 
   private _keyboard() {

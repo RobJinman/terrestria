@@ -36,25 +36,6 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     return packets;
   }
 
-  getComponentState(entityId: EntityId): SpatialComponentPacket|null {
-    const c = this.components.get(entityId);
-
-    if (c) {
-      const packet: SpatialComponentPacket = {
-        componentType: ComponentType.SPATIAL,
-        entityId: c.entityId,
-        x: c.x,
-        y: c.y,
-        destX: c.destX,
-        destY: c.destY,
-        speed: c.speed
-      };
-      return packet;
-    }
-
-    return null;
-  }
-
   private _gravity() {
     this.components.forEach(c => {
       if (c.heavy) {

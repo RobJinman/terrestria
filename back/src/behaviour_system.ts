@@ -135,17 +135,6 @@ export class BehaviourSystem implements ServerSystem {
     return [];
   }
 
-  getComponentState(entityId: EntityId) {
-    const packet: ComponentPacket = {
-      entityId: entityId,
-      componentType: ComponentType.BEHAVIOUR
-    };
-
-    // TODO
-
-    return packet;
-  }
-
   getDirties() {
     return [];
   }
