@@ -5,8 +5,8 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/config";
-import { EAgentBeginMove, GameEventType,
-         EAgentEnterCell } from "./common/event";
+import { EAgentBeginMove, GameEventType, EAgentEnterCell, 
+         EEntitySquashed } from "./common/event";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 
@@ -39,24 +39,45 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   private _gravity() {
     this.components.forEach(c => {
       if (c.heavy) {
-        const yDown = c.y - BLOCK_SZ;
-        const xRight = c.x + BLOCK_SZ;
-        const xLeft = c.x - BLOCK_SZ;
+        const x = c.destX;
+        const y = c.destY;
+        const yDown = y - BLOCK_SZ;
+        const xRight = x + BLOCK_SZ;
+        const xLeft = x - BLOCK_SZ;
 
-        if (this.grid.spaceFreeAtPos(c.x, yDown)) {
-          this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, 1.0 / FALL_SPEED);
-        }
-        else {
-          if (!this.grid.stackableSpaceAtPos(c.x, yDown)) {
-            if (this.grid.spaceFreeAtPos(xRight, c.y) &&
-              this.grid.spaceFreeAtPos(xRight, yDown)) {
+        const t = 1.0 / FALL_SPEED;
 
-              this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+        if (!this.grid.outOfRange(x, yDown)) {
+          if (this.grid.spaceFreeAtPos(x, yDown)) {
+            this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, t);
+            c.falling = true;
+          }
+          else {
+            if (c.falling) {
+              const event: EEntitySquashed = {
+                type: GameEventType.ENTITY_SQUASHED,
+                entities: new Set(this.grid.idsAtPos(x, yDown)),
+                squasherId: c.entityId,
+                gridX: this.grid.toGridX(x),
+                gridY: this.grid.toGridY(yDown)
+              };
+
+              this.em.postEvent(event);
             }
-            else if (this.grid.spaceFreeAtPos(xLeft, c.y) &&
-              this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
-              this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, 1.0 / FALL_SPEED);
+            c.falling = false;
+
+            if (!this.grid.stackableSpaceAtPos(x, yDown)) {
+              if (this.grid.spaceFreeAtPos(xRight, y) &&
+                this.grid.spaceFreeAtPos(xRight, yDown)) {
+
+                this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, t);
+              }
+              else if (this.grid.spaceFreeAtPos(xLeft, y) &&
+                this.grid.spaceFreeAtPos(xLeft, yDown)) {
+
+                this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, t);
+              }
             }
           }
         }
@@ -76,7 +97,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
                      t: number): boolean {
 
     if (this.positionEntity_tween(id, x, y, t)) {
-      const items = [...this.grid.atPos(x, y)].map(c => c.entityId);
+      const items = this.grid.idsAtPos(x, y);
 
       const event: EAgentBeginMove = {
         type: GameEventType.AGENT_BEGIN_MOVE,
@@ -149,8 +170,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
       const newDestGridY = this.grid.toGridY(c.destY);
 
       if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
-        const items = [...this.grid.inCell(newDestGridX, newDestGridY)]
-        .map(c => c.entityId);
+        const items = this.grid.idsInCell(newDestGridX, newDestGridY);
 
         const event: EAgentEnterCell = {
           type: GameEventType.AGENT_ENTER_CELL,

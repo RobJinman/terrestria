@@ -2,7 +2,8 @@ import { getNextEntityId, EntityManager } from "./common/entity_manager";
 import { AgentComponent } from "./common/agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType, EAgentEnterCell } from "./common/event";
+import { GameEventType, EAgentEnterCell,
+         EEntitySquashed } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./behaviour_system";
 import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
@@ -96,7 +97,19 @@ export function constructPlayer(em: EntityManager,
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
 
-  em.addEntity(id, EntityType.PLAYER, [ spatialComp, agentComp, invComp ]);
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.ENTITY_SQUASHED, e => {
+    const event = <EEntitySquashed>e;
+
+    console.log("Ouch!");
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.PLAYER, [ spatialComp,
+                                        agentComp,
+                                        invComp,
+                                        behaviourComp ]);
 
   return id;
 }

@@ -16,7 +16,7 @@ import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
 
-const WEBSOCKET_URL = "ws://localhost:3001";
+const WEBSOCKET_URL = "ws://192.168.0.125:3001";
 
 class UserInput {
   _keyStates: Map<string, boolean>;

@@ -1,0 +1,10 @@
+* Fullscreen
+* Square rocks
+* Walls
+* Animations
+* Gravity regions
+* Display gems collected
+* User log-in
+* Display ads
+* Grant awards
+* Player death

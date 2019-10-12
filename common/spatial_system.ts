@@ -58,6 +58,8 @@ export interface PhysicalProperties {
 
 export class SpatialComponent extends Component {
   dirty = true;
+  falling = false;
+
   private _posX: number = 0;
   private _posY: number = 0;
   private _speed: number = 0; // Pixels per second
@@ -256,10 +258,18 @@ export class Grid {
     return this._grid[col][row];
   }
 
+  idsInCell(col: number, row: number): EntityId[] {
+    return [...this.inCell(col, row)].map(c => c.entityId);
+  }
+
   atPos(x: number, y: number): Set<SpatialComponent> {
     const col = this.toGridX(x);
     const row = this.toGridY(y);
     return this.inCell(col, row);
+  }
+
+  idsAtPos(x: number, y: number): EntityId[] {
+    return [...this.atPos(x, y)].map(c => c.entityId);
   }
 
   dbg_print() {

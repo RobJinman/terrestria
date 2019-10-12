@@ -3,6 +3,7 @@ import { Direction } from "./definitions";
 
 export enum GameEventType {
   ENTITY_MOVED,
+  ENTITY_SQUASHED,
   AGENT_ENTER_CELL,
   AGENT_BEGIN_MOVE
 }
@@ -33,4 +34,10 @@ export interface EAgentBeginMove extends GameEvent {
   gridX: number;
   gridY: number;
   direction: Direction;
+}
+
+export interface EEntitySquashed extends GameEvent {
+  squasherId: EntityId;
+  gridX: number;
+  gridY: number;
 }
