@@ -9,7 +9,6 @@ import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { AgentSystem } from './common/agent_system';
-import { ResourcesMap } from './definitions';
 import { debounce, waitForCondition } from './common/utils';
 import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
@@ -105,22 +104,30 @@ export class App {
     }
 
     let direction: Direction|null = null;
+    let animName = "";
 
     if (this._userInput.keyPressed("ArrowUp")) {
       direction = Direction.UP;
+      animName = "man_run_u";
     }
     else if (this._userInput.keyPressed("ArrowRight")) {
       direction = Direction.RIGHT;
+      animName = "man_dig_r";
     }
     else if (this._userInput.keyPressed("ArrowDown")) {
       direction = Direction.DOWN;
+      animName = "man_run_d";
     }
     else if (this._userInput.keyPressed("ArrowLeft")) {
       direction = Direction.LEFT;
+      animName = "man_dig_l";
     }
 
     if (direction !== null) {
       this._moveRemoteFn(direction);
+
+      const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+      renderSys.playAnimation(this._playerId, animName);
     }
   }
 
@@ -144,10 +151,11 @@ export class App {
     const resources = await this._loadAssets();
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
-    const sheet = resources["sprite_sheet"];
-    if (!sheet) {
+    const resource = resources["sprite_sheet"];
+    if (!resource || !resource.spritesheet) {
       throw new GameError("Sprite sheet not loaded");
     }
+    const sheet = resource.spritesheet;
     renderSys.setSpriteSheet(sheet);
 
     await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
@@ -225,7 +233,7 @@ export class App {
     parentElement.appendChild(this._pixi.view);
   }
 
-  private _loadAssets(): Promise<ResourcesMap> {
+  private _loadAssets(): Promise<Partial<Record<string, PIXI.LoaderResource>>> {
     return new Promise((resolve, reject) => {
       this._pixi.loader.add("sprite_sheet", "assets/sprite_sheet.json")
                        .load((loader, resources) => resolve(resources));

@@ -2,19 +2,48 @@ import * as PIXI from 'pixi.js';
 import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
-import { ResourcesMap } from "./definitions";
 import { ComponentType } from "./common/component_types";
 import { SpatialComponent } from "./common/spatial_system";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 
-export class RenderComponent extends Component {
-  imageResourceName: string = "";
-  sprite?: PIXI.Sprite;
+export interface Animation {
+  duration: number;
+  name: string;
+}
 
-  constructor(entityId: EntityId, imageResourceName: string) {
+export class RenderComponent extends Component {
+  _animDescs: Animation[];
+  _staticImages: string[];
+  _initialImage: string;
+  staticSprites: Map<string, PIXI.Sprite>;
+  animatedSprites: Map<string, PIXI.AnimatedSprite>;
+  activeSprite?: PIXI.Sprite;
+
+  constructor(entityId: EntityId,
+              images: string[],
+              animations: Animation[],
+              initialImage: string) {
     super(entityId, ComponentType.RENDER);
-    this.imageResourceName = imageResourceName;
+
+    this._staticImages = images;
+    this._initialImage = initialImage;
+    this._animDescs = animations;
+
+    this.staticSprites = new Map<string, PIXI.Sprite>();
+    this.animatedSprites = new Map<string, PIXI.AnimatedSprite>();
+  }
+
+  get staticImages() {
+    return this._staticImages;
+  }
+
+  get initialImage() {
+    return this._initialImage;
+  }
+
+  get animDescs() {
+    return this._animDescs;
   }
 }
 
@@ -22,7 +51,7 @@ export class RenderSystem implements ClientSystem {
   private _components: Map<number, RenderComponent>;
   private _em: EntityManager;
   private _pixi: PIXI.Application;
-  private _spriteSheet?: PIXI.LoaderResource;
+  private _spriteSheet?: PIXI.Spritesheet;
 
   constructor(entityManager: EntityManager,
               pixi: PIXI.Application) {
@@ -31,7 +60,7 @@ export class RenderSystem implements ClientSystem {
     this._components = new Map<number, RenderComponent>();
   }
 
-  setSpriteSheet(spriteSheet: PIXI.LoaderResource) {
+  setSpriteSheet(spriteSheet: PIXI.Spritesheet) {
     this._spriteSheet = spriteSheet;
   }
 
@@ -41,16 +70,82 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
+  playAnimation(entityId: EntityId, name: string) {
+    const c = this.getComponent(entityId);
+    if (c.activeSprite) {
+      this._pixi.stage.removeChild(c.activeSprite);
+    }
+
+    const sprite = c.animatedSprites.get(name); 
+    if (!sprite) {
+      throw new GameError(`Entity ${entityId} has no animation '${name}'`);
+    }
+
+    c.activeSprite = sprite;
+    this._onEntityMoved(entityId);
+
+    this._pixi.stage.addChild(sprite);
+    sprite.play();
+  }
+
+  setCurrentImage(entityId: EntityId, name: string) {
+    const c = this.getComponent(entityId);
+    if (c.activeSprite) {
+      this._pixi.stage.removeChild(c.activeSprite);
+    }
+    c.activeSprite = c.staticSprites.get(name);
+    if (!c.activeSprite) {
+      throw new GameError(`Entity ${c.entityId} has no image with name ` +
+                          `'${name}'`);
+    }
+
+    this._onEntityMoved(entityId);
+
+    this._pixi.stage.addChild(c.activeSprite);
+  }
+
   addComponent(component: RenderComponent) {
     this._components.set(component.entityId, component);
 
-    const texture = this._getTexture(component.imageResourceName);
+    const texture = this._getTexture(component.initialImage);
     texture.rotate = 8;
-    component.sprite = new PIXI.Sprite(texture);
+    component.activeSprite = new PIXI.Sprite(texture);
+
+    component.animDescs.forEach(anim => {
+      if (!this._spriteSheet) {
+        throw new GameError("Sprite sheet not set");
+      }
+
+      const textures = this._spriteSheet.animations[anim.name];
+      const sprite = new PIXI.AnimatedSprite(textures);
+      sprite.textures.forEach(t => t.rotate = 8);
+      sprite.animationSpeed = anim.duration;
+
+      component.animatedSprites.set(anim.name, sprite);
+    });
+
+    component.staticImages.forEach(name => {
+      if (!this._spriteSheet) {
+        throw new GameError("Sprite sheet not set");
+      }
+
+      const texture = this._spriteSheet.textures[name];
+      const sprite = new PIXI.Sprite(texture);
+
+      component.staticSprites.set(name, sprite);
+    });
 
     this._onEntityMoved(component.entityId);
 
-    this._pixi.stage.addChild(component.sprite);
+    component.activeSprite = component.staticSprites
+                                      .get(component.initialImage);
+
+    if (!component.activeSprite) {
+      throw new GameError(`Entity ${component.entityId} has no image with ` +
+                          `name '${component.initialImage}'`);
+    }
+
+    this._pixi.stage.addChild(component.activeSprite);
   }
 
   hasComponent(id: EntityId) {
@@ -67,8 +162,8 @@ export class RenderSystem implements ClientSystem {
 
   removeComponent(id: EntityId) {
     const c = this._components.get(id);
-    if (c && c.sprite) {
-      this._pixi.stage.removeChild(c.sprite);
+    if (c && c.activeSprite) {
+      this._pixi.stage.removeChild(c.activeSprite);
     }
 
     this._components.delete(id);
@@ -79,10 +174,10 @@ export class RenderSystem implements ClientSystem {
       const spatialComp =
         <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
 
-      const renderComp = this.getComponent(id);
-      if (renderComp.sprite) {
-        renderComp.sprite.x = spatialComp.x;
-        renderComp.sprite.y = spatialComp.y;
+      const c = this.getComponent(id);
+      if (c.activeSprite) {
+        c.activeSprite.x = spatialComp.x;
+        c.activeSprite.y = spatialComp.y;
       }
     }
   }

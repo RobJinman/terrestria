@@ -5,9 +5,10 @@ import { SpatialComponent } from "./common/spatial_system";
 import { RenderComponent } from "./render_system";
 import { AgentComponent } from "./common/agent_system";
 import { EntityId } from "./common/system";
+import { PLAYER_SPEED } from "./common/config";
 
 function constructGem(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "gem.png");
+  const renderComp = new RenderComponent(id, ["gem.png"], [], "gem.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -21,7 +22,7 @@ function constructGem(em: EntityManager, id: EntityId) {
 }
 
 function constructRock(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "rock.png");
+  const renderComp = new RenderComponent(id, ["rock.png"], [], "rock.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: true,
@@ -35,7 +36,7 @@ function constructRock(em: EntityManager, id: EntityId) {
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "soil.png");
+  const renderComp = new RenderComponent(id, ["soil.png"], [], "soil.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -49,7 +50,29 @@ function constructSoil(em: EntityManager, id: EntityId) {
 }
 
 function constructPlayer(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "man_run_d0.png");
+  const animations = [
+    {
+      name: "man_run_u",
+      duration: 1.0 / PLAYER_SPEED
+    },
+    {
+      name: "man_run_d",
+      duration: 1.0 / PLAYER_SPEED
+    },
+    {
+      name: "man_dig_r",
+      duration: 1.0 / PLAYER_SPEED
+    },
+    {
+     name: "man_dig_l",
+     duration: 1.0 / PLAYER_SPEED
+    }
+  ];
+
+  const renderComp = new RenderComponent(id,
+                                         ["man_run_d0.png"],
+                                         animations,
+                                         "man_run_d0.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
