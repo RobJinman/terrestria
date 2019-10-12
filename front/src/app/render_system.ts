@@ -22,16 +22,17 @@ export class RenderSystem implements ClientSystem {
   private _components: Map<number, RenderComponent>;
   private _em: EntityManager;
   private _pixi: PIXI.Application;
-  private _resources: ResourcesMap = {};
+  private _spriteSheet?: PIXI.LoaderResource;
 
-  constructor(entityManager: EntityManager, pixi: PIXI.Application) {
+  constructor(entityManager: EntityManager,
+              pixi: PIXI.Application) {
     this._em = entityManager;
     this._pixi = pixi;
     this._components = new Map<number, RenderComponent>();
   }
 
-  setResources(resources: ResourcesMap) {
-    this._resources = resources;
+  setSpriteSheet(spriteSheet: PIXI.LoaderResource) {
+    this._spriteSheet = spriteSheet;
   }
 
   updateComponent(packet: ComponentPacket) {}
@@ -43,9 +44,9 @@ export class RenderSystem implements ClientSystem {
   addComponent(component: RenderComponent) {
     this._components.set(component.entityId, component);
 
-    const resource = this._getResource(component.imageResourceName);
-    resource.texture.rotate = 8;
-    component.sprite = new PIXI.Sprite(resource.texture);
+    const texture = this._getTexture(component.imageResourceName);
+    texture.rotate = 8;
+    component.sprite = new PIXI.Sprite(texture);
 
     this._onEntityMoved(component.entityId);
 
@@ -103,10 +104,14 @@ export class RenderSystem implements ClientSystem {
     return [];
   }
 
-  private _getResource(name: string) {
-    const val = this._resources[name];
+  private _getTexture(name: string): PIXI.Texture {
+    if (!this._spriteSheet || !this._spriteSheet.textures) {
+      throw new GameError("Sprite sheet not set");
+    }
+
+    const val = this._spriteSheet.textures[name];
     if (!val) {
-      throw new Error(`No resource with name '${name}'`);
+      throw new Error(`No texture with name '${name}'`);
     }
     return val;
   }

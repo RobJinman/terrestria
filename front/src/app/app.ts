@@ -15,6 +15,7 @@ import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
+import { GameError } from './common/error';
 
 const WEBSOCKET_URL = "ws://192.168.0.125:3001";
 
@@ -43,7 +44,6 @@ class UserInput {
 
 export class App {
   private _pixi: PIXI.Application;
-  private _resources: ResourcesMap = {};
   private _ws: WebSocket;
   private _responseQueue: GameResponse[] = [];
   private _em: ClientEntityManager;
@@ -141,9 +141,14 @@ export class App {
   }
 
   async start() {
-    this._resources = await this._loadAssets();
+    const resources = await this._loadAssets();
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    renderSys.setResources(this._resources);
+
+    const sheet = resources["sprite_sheet"];
+    if (!sheet) {
+      throw new GameError("Sprite sheet not loaded");
+    }
+    renderSys.setSpriteSheet(sheet);
 
     await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
                            500,
@@ -222,10 +227,7 @@ export class App {
 
   private _loadAssets(): Promise<ResourcesMap> {
     return new Promise((resolve, reject) => {
-      this._pixi.loader.add("man", "assets/man.png")
-                       .add("gem", "assets/gem.png")
-                       .add("rock", "assets/rock.png")
-                       .add("soil", "assets/soil.png")
+      this._pixi.loader.add("sprite_sheet", "assets/sprite_sheet.json")
                        .load((loader, resources) => resolve(resources));
     });
   }

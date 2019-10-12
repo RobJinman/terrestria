@@ -9,8 +9,9 @@ import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { InventorySystem, CCollector, CCollectable,
          Bucket } from "./inventory_system";
+import { ServerEntityManager } from "./server_entity_manager";
 
-export function constructSoil(em: EntityManager): EntityId {
+export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
   const spatialComp = new SpatialComponent(id, {
@@ -23,7 +24,9 @@ export function constructSoil(em: EntityManager): EntityId {
   });
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => em.removeEntity(id));
+  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
+    em.removeEntity_onClients(id);
+  });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
@@ -49,7 +52,7 @@ export function constructRock(em: EntityManager): EntityId {
   return id;
 }
 
-export function constructGem(em: EntityManager): EntityId {
+export function constructGem(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
   const spatialComp = new SpatialComponent(id, {
@@ -69,7 +72,7 @@ export function constructGem(em: EntityManager): EntityId {
     const event = <EAgentEnterCell>e;
     inventorySys.collectItem(event.entityId, id);
 
-    em.removeEntity(id); // TODO: Play animation, then delete
+    em.removeEntity_onClients(id);
   });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
@@ -93,7 +96,7 @@ export function constructPlayer(em: EntityManager,
     movable: false,
     isAgent: true
   });
-  
+
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
 

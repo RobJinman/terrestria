@@ -5,7 +5,9 @@ export enum GameEventType {
   ENTITY_MOVED,
   ENTITY_SQUASHED,
   AGENT_ENTER_CELL,
-  AGENT_BEGIN_MOVE
+  AGENT_BEGIN_MOVE,
+  ENTITY_DESTROYED,
+  ENTITY_PUSHED
 }
 
 export interface GameEvent {
@@ -40,4 +42,14 @@ export interface EEntitySquashed extends GameEvent {
   squasherId: EntityId;
   gridX: number;
   gridY: number;
+}
+
+export enum DestructionCause {
+  MUNCHED,
+  BURNED
+}
+
+export interface EEntityDestroyed {
+  entityId: EntityId,
+  cause: DestructionCause
 }

@@ -31,7 +31,7 @@ export class ServerEntityManager extends EntityManager {
     });
   }
 
-  removeEntity(id: EntityId) {
+  removeEntity_onClients(id: EntityId) {
     const e = this.entities.get(id);
     if (e) {
       super.removeEntity(id);

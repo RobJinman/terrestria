@@ -7,7 +7,7 @@ import { AgentComponent } from "./common/agent_system";
 import { EntityId } from "./common/system";
 
 function constructGem(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "gem");
+  const renderComp = new RenderComponent(id, "gem.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -21,7 +21,7 @@ function constructGem(em: EntityManager, id: EntityId) {
 }
 
 function constructRock(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "rock");
+  const renderComp = new RenderComponent(id, "rock.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: true,
@@ -35,7 +35,7 @@ function constructRock(em: EntityManager, id: EntityId) {
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "soil");
+  const renderComp = new RenderComponent(id, "soil.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -49,7 +49,7 @@ function constructSoil(em: EntityManager, id: EntityId) {
 }
 
 function constructPlayer(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, "man");
+  const renderComp = new RenderComponent(id, "man_run_d0.png");
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
