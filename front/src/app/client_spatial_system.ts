@@ -41,7 +41,7 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
-      entities: new Set([id]),
+      entities: [id],
       entityId: id,
       x: x,
       y: y
@@ -55,7 +55,7 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,
-      entities: new Set([c.entityId]),
+      entities: [c.entityId],
       entityId: c.entityId,
       x: c.x,
       y: c.y

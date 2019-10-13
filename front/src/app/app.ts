@@ -2,19 +2,21 @@ import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, MoveAction, LogInAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
-         RLoginSuccess, REntitiesDeleted } from "./common/response";
+         RLoginSuccess, REntitiesDeleted, REvent } from "./common/response";
 import { constructEntities } from './factory';
 import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
          PLAYER_SPEED } from "./common/config";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
-import { AgentSystem } from './common/agent_system';
 import { debounce, waitForCondition } from './common/utils';
 import { Direction } from './common/definitions';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
 import { GameError } from './common/error';
+import { GameEventType, EAgentAction, AgentActionType } from './common/event';
+import { Scheduler } from './scheduler';
+import { BehaviourSystem } from './common/behaviour_system';
 
 const WEBSOCKET_URL = "ws://192.168.0.125:3001";
 
@@ -41,11 +43,22 @@ class UserInput {
   }
 }
 
+function directionToLetter(direction: Direction): string {
+  switch (direction) {
+    case Direction.UP: return "u";
+    case Direction.RIGHT: return "r";
+    case Direction.DOWN: return "d";
+    case Direction.LEFT: return "l";
+  }
+  return "";
+}
+
 export class App {
   private _pixi: PIXI.Application;
   private _ws: WebSocket;
   private _responseQueue: GameResponse[] = [];
   private _em: ClientEntityManager;
+  private _scheduler: Scheduler;
   private _userInput: UserInput;
   private _playerId: EntityId = -1;
   private _moveRemoteFn: (direction: Direction) => void;
@@ -60,16 +73,20 @@ export class App {
 
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
+    this._scheduler = new Scheduler();
+
     this._em = new ClientEntityManager();
     const spatialSystem = new ClientSpatialSystem(this._em,
                                             WORLD_W,
                                             WORLD_H,
                                             CLIENT_FRAME_RATE);
-    const renderSystem = new RenderSystem(this._em, this._pixi);
-    const agentSystem = new AgentSystem();
+    const renderSystem = new RenderSystem(this._em,
+                                          this._scheduler,
+                                          this._pixi);
+    const behaviourSystem = new BehaviourSystem();
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
-    this._em.addSystem(ComponentType.AGENT, agentSystem);
+    this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
 
     const t = 0.85 * 1000 / PLAYER_SPEED;
     this._moveRemoteFn = debounce(this, this._movePlayerRemote, t);
@@ -95,6 +112,7 @@ export class App {
   private _tick(delta: number) {
     this._handleServerMessages();
     this._keyboard();
+    this._scheduler.update();
     this._em.update();
   }
 
@@ -104,30 +122,22 @@ export class App {
     }
 
     let direction: Direction|null = null;
-    let animName = "";
 
     if (this._userInput.keyPressed("ArrowUp")) {
       direction = Direction.UP;
-      animName = "man_run_u";
     }
     else if (this._userInput.keyPressed("ArrowRight")) {
       direction = Direction.RIGHT;
-      animName = "man_dig_r";
     }
     else if (this._userInput.keyPressed("ArrowDown")) {
       direction = Direction.DOWN;
-      animName = "man_run_d";
     }
     else if (this._userInput.keyPressed("ArrowLeft")) {
       direction = Direction.LEFT;
-      animName = "man_dig_l";
     }
 
     if (direction !== null) {
       this._moveRemoteFn(direction);
-
-      const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-      renderSys.playAnimation(this._playerId, animName);
     }
   }
 
@@ -192,6 +202,37 @@ export class App {
     });
   }
 
+  private _handleAgentAction(event: EAgentAction) {
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+
+    const dirChar = directionToLetter(event.direction);
+
+    switch (event.actionType) {
+      case AgentActionType.PUSH:
+        renderSys.playAnimation(event.agentId, "man_push_" + dirChar);
+        break;
+      case AgentActionType.DIG:
+        renderSys.playAnimation(event.agentId, "man_dig_" + dirChar);
+        break;
+      case AgentActionType.RUN:
+        renderSys.playAnimation(event.agentId, "man_run_" + dirChar);
+        break;
+      // ...
+    }
+  }
+
+  private _handleGameEvent(response: REvent) {
+    const event = response.event;
+    switch (event.type) {
+      case GameEventType.AGENT_ACTION:
+        this._handleAgentAction(<EAgentAction>event);
+        break;
+      // ...
+    }
+
+    this._em.postEvent(event);
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
@@ -203,6 +244,9 @@ export class App {
       case GameResponseType.GAME_STATE:
         this._updateGameState(<RGameState>msg);
         break;
+      case GameResponseType.EVENT:
+        this._handleGameEvent(<REvent>msg);
+        break;
       case GameResponseType.LOGIN_SUCCESS:
         const m = <RLoginSuccess>msg;
         this._startGame(m.playerId);
@@ -210,6 +254,7 @@ export class App {
       case GameResponseType.ERROR:
         this._handleServerError(<RError>msg);
         break;
+      // ...
     }
   }
 

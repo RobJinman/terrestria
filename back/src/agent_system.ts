@@ -1,9 +1,9 @@
-import { Component, EntityId, ComponentPacket } from "./system";
-import { GameError } from "./error";
-import { ComponentType } from "./component_types";
-import { GameEvent } from "./event";
-import { ClientSystem } from "./client_system";
-import { ServerSystem } from "./server_system";
+import { Component, EntityId } from "./common/system";
+import { ComponentType } from "./common/component_types";
+import { ServerSystem } from "./common/server_system";
+import { GameError } from "./common/error";
+import { GameEvent } from "./common/event";
+import { ServerEntityManager } from "./server_entity_manager";
 
 export class AgentComponent extends Component {
   dirty: boolean = true;
@@ -26,11 +26,13 @@ export class AgentComponent extends Component {
   }
 }
 
-export class AgentSystem implements ClientSystem, ServerSystem {
+export class AgentSystem implements ServerSystem {
   private _components: Map<number, AgentComponent>;
+  private _em: ServerEntityManager;
 
-  constructor() {
+  constructor(em: ServerEntityManager) {
     this._components = new Map<number, AgentComponent>();
+    this._em = em;
   }
 
   numComponents() {
@@ -57,10 +59,6 @@ export class AgentSystem implements ClientSystem, ServerSystem {
     this._components.delete(id);
   }
 
-  updateComponent(packet: ComponentPacket) {
-    // TODO
-  }
-
   handleEvent(event: GameEvent) {
     // TODO
   }
@@ -70,31 +68,10 @@ export class AgentSystem implements ClientSystem, ServerSystem {
   }
 
   getState() {
-    const packets: ComponentPacket[] = [];
-
-    this._components.forEach((c, id) => {
-      packets.push({
-        componentType: ComponentType.AGENT,
-        entityId: c.entityId
-      });
-    });
-
-    return packets;
+    return [];
   }
 
   getDirties() {
-    const dirties: ComponentPacket[] = [];
-
-    this._components.forEach((c, id) => {
-      if (c.dirty) {
-        dirties.push({
-          componentType: ComponentType.AGENT,
-          entityId: c.entityId
-        });
-        c.dirty = false;
-      }
-    });
-
-    return dirties;
+    return [];
   }
 }

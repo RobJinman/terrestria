@@ -32,7 +32,7 @@
         <key>dpi</key>
         <uint>72</uint>
         <key>dataFormat</key>
-        <string>pixijs</string>
+        <string>pixijs4</string>
         <key>textureFileName</key>
         <filename></filename>
         <key>flipPVR</key>
@@ -56,7 +56,7 @@
         <key>jxrCompressionLevel</key>
         <uint>0</uint>
         <key>ditherType</key>
-        <enum type="SettingsBase::DitherType">NearestNeighbour</enum>
+        <enum type="SettingsBase::DitherType">PngQuantLow</enum>
         <key>backgroundColor</key>
         <uint>0</uint>
         <key>libGdx</key>
@@ -182,6 +182,10 @@
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
             <key type="filename">gem.png</key>
+            <key type="filename">man_dig_d0.png</key>
+            <key type="filename">man_dig_d1.png</key>
+            <key type="filename">man_dig_d2.png</key>
+            <key type="filename">man_dig_d3.png</key>
             <key type="filename">man_dig_l0.png</key>
             <key type="filename">man_dig_l1.png</key>
             <key type="filename">man_dig_l2.png</key>
@@ -190,6 +194,10 @@
             <key type="filename">man_dig_r1.png</key>
             <key type="filename">man_dig_r2.png</key>
             <key type="filename">man_dig_r3.png</key>
+            <key type="filename">man_dig_u0.png</key>
+            <key type="filename">man_dig_u1.png</key>
+            <key type="filename">man_dig_u2.png</key>
+            <key type="filename">man_dig_u3.png</key>
             <key type="filename">man_push_l0.png</key>
             <key type="filename">man_push_l1.png</key>
             <key type="filename">man_push_l2.png</key>
@@ -202,12 +210,24 @@
             <key type="filename">man_run_d1.png</key>
             <key type="filename">man_run_d2.png</key>
             <key type="filename">man_run_d3.png</key>
+            <key type="filename">man_run_l0.png</key>
+            <key type="filename">man_run_l1.png</key>
+            <key type="filename">man_run_l2.png</key>
+            <key type="filename">man_run_l3.png</key>
+            <key type="filename">man_run_r0.png</key>
+            <key type="filename">man_run_r1.png</key>
+            <key type="filename">man_run_r2.png</key>
+            <key type="filename">man_run_r3.png</key>
             <key type="filename">man_run_u0.png</key>
             <key type="filename">man_run_u1.png</key>
             <key type="filename">man_run_u2.png</key>
             <key type="filename">man_run_u3.png</key>
             <key type="filename">rock.png</key>
             <key type="filename">soil.png</key>
+            <key type="filename">soil_puff0.png</key>
+            <key type="filename">soil_puff1.png</key>
+            <key type="filename">soil_puff2.png</key>
+            <key type="filename">soil_puff3.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -224,8 +244,10 @@
         <key>fileList</key>
         <array>
             <filename>gem.png</filename>
-            <filename>rock.png</filename>
-            <filename>soil.png</filename>
+            <filename>man_dig_d0.png</filename>
+            <filename>man_dig_d1.png</filename>
+            <filename>man_dig_d2.png</filename>
+            <filename>man_dig_d3.png</filename>
             <filename>man_dig_l0.png</filename>
             <filename>man_dig_l1.png</filename>
             <filename>man_dig_l2.png</filename>
@@ -234,6 +256,10 @@
             <filename>man_dig_r1.png</filename>
             <filename>man_dig_r2.png</filename>
             <filename>man_dig_r3.png</filename>
+            <filename>man_dig_u0.png</filename>
+            <filename>man_dig_u1.png</filename>
+            <filename>man_dig_u2.png</filename>
+            <filename>man_dig_u3.png</filename>
             <filename>man_push_l0.png</filename>
             <filename>man_push_l1.png</filename>
             <filename>man_push_l2.png</filename>
@@ -246,19 +272,31 @@
             <filename>man_run_d1.png</filename>
             <filename>man_run_d2.png</filename>
             <filename>man_run_d3.png</filename>
+            <filename>man_run_l0.png</filename>
+            <filename>man_run_l1.png</filename>
+            <filename>man_run_l2.png</filename>
+            <filename>man_run_l3.png</filename>
+            <filename>man_run_r0.png</filename>
+            <filename>man_run_r1.png</filename>
+            <filename>man_run_r2.png</filename>
+            <filename>man_run_r3.png</filename>
             <filename>man_run_u0.png</filename>
             <filename>man_run_u1.png</filename>
             <filename>man_run_u2.png</filename>
             <filename>man_run_u3.png</filename>
+            <filename>rock.png</filename>
+            <filename>soil.png</filename>
+            <filename>soil_puff0.png</filename>
+            <filename>soil_puff1.png</filename>
+            <filename>soil_puff2.png</filename>
+            <filename>soil_puff3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
         <key>replaceList</key>
         <array/>
         <key>ignoredWarnings</key>
-        <array>
-            <string>try-pro-features</string>
-        </array>
+        <array/>
         <key>commonDivisorX</key>
         <uint>1</uint>
         <key>commonDivisorY</key>

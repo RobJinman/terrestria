@@ -3,7 +3,7 @@ import _ from "underscore";
 import { PlayerAction } from "./common/action";
 import { constructSoil, constructRock, constructGem,
          constructPlayer } from "./factory";
-import { AgentSystem } from "./common/agent_system";
+import { AgentSystem } from "./agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities } from "./common/response";
@@ -11,13 +11,12 @@ import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/config";
 import { EntityType } from "./common/game_objects";
-import { BehaviourSystem } from "./behaviour_system";
+import { BehaviourSystem } from "./common/behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
-import { EntityId, ComponentPacket } from "./common/system";
+import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { debounce } from "./common/utils";
 import { InventorySystem } from "./inventory_system";
-import { ServerSystem } from "./common/server_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -48,7 +47,7 @@ export class Game {
                                                   WORLD_W,
                                                   WORLD_H,
                                                   SERVER_FRAME_RATE);
-    const agentSystem = new AgentSystem();
+    const agentSystem = new AgentSystem(this._em);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
 
@@ -103,6 +102,9 @@ export class Game {
     let coords: [number, number][] = [];
     for (let c = 0; c < WORLD_W; ++c) {
       for (let r = 0; r < WORLD_H; ++r) {
+        if (c === 0 && r === 0) {
+          continue;
+        }
         coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
       }
     }

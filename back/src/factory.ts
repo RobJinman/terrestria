@@ -1,10 +1,10 @@
 import { getNextEntityId, EntityManager } from "./common/entity_manager";
-import { AgentComponent } from "./common/agent_system";
+import { AgentComponent } from "./agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType, EAgentEnterCell,
-         EEntitySquashed } from "./common/event";
-import { BehaviourComponent, EventHandlerFn } from "./behaviour_system";
+import { GameEventType, EAgentEnterCell, EEntitySquashed, EAgentAction,
+         AgentActionType } from "./common/event";
+import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { InventorySystem, CCollector, CCollectable,
@@ -25,7 +25,18 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
-    em.removeEntity_onClients(id);
+    const event = <EAgentEnterCell>e;
+
+    const action: EAgentAction = {
+      type: GameEventType.AGENT_ACTION,
+      actionType: AgentActionType.DIG,
+      entities: [id],
+      agentId: event.entityId,
+      direction: event.direction
+    };
+
+    em.submitEvent(action);
+    em.removeEntity(id);
   });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);

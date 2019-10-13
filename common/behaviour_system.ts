@@ -1,8 +1,9 @@
-import { Component, ComponentPacket, EntityId } from "./common/system";
-import { GameError } from "./common/error";
-import { GameEvent, GameEventType } from "./common/event";
-import { ComponentType } from "./common/component_types";
-import { ServerSystem } from "./common/server_system";
+import { Component, ComponentPacket, EntityId } from "./system";
+import { GameError } from "./error";
+import { GameEvent, GameEventType } from "./event";
+import { ComponentType } from "./component_types";
+import { ServerSystem } from "./server_system";
+import { ClientSystem } from "./client_system";
 
 export type EventHandlerFn = (event: GameEvent) => void;
 export type EventHandlerMap = Map<GameEventType, EventHandlerFn>;
@@ -58,7 +59,7 @@ function addToMapOfSets<K, V>(m: Map<K, Set<V>>, key: K, value: V) {
   set.add(value);
 }
 
-export class BehaviourSystem implements ServerSystem {
+export class BehaviourSystem implements ServerSystem, ClientSystem {
   private _components: Map<number, BehaviourComponent>;
   private _targetedEvents: Map<GameEventType, Set<EntityId>>;
   private _broadcastEvents: Map<GameEventType, Set<EntityId>>;

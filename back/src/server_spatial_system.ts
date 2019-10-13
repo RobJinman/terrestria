@@ -1,21 +1,27 @@
 import { SpatialComponentPacket, SpatialSystem, directionToVector,
          SpatialComponent} from "./common/spatial_system";
-import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/config";
 import { EAgentBeginMove, GameEventType, EAgentEnterCell, 
-         EEntitySquashed } from "./common/event";
+         EEntitySquashed, 
+         EAgentAction,
+         AgentActionType} from "./common/event";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
+import { ServerEntityManager } from "./server_entity_manager";
 
 export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
-  constructor(em: EntityManager,
+  constructor(em: ServerEntityManager,
               w: number,
               h: number,
               frameRate: number) {
     super(em, w, h, frameRate);
+  }
+
+  private _em() {
+    return <ServerEntityManager>(this.em);
   }
 
   getState() {
@@ -56,7 +62,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
             if (c.falling) {
               const event: EEntitySquashed = {
                 type: GameEventType.ENTITY_SQUASHED,
-                entities: new Set(this.grid.idsAtPos(x, yDown)),
+                entities: this.grid.idsAtPos(x, yDown),
                 squasherId: c.entityId,
                 gridX: this.grid.toGridX(x),
                 gridY: this.grid.toGridY(yDown)
@@ -101,7 +107,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
 
       const event: EAgentBeginMove = {
         type: GameEventType.AGENT_BEGIN_MOVE,
-        entities: new Set(items),
+        entities: items,
         entityId: id,
         direction: direction,
         gridX: Math.round(x / BLOCK_SZ),
@@ -162,6 +168,18 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
             moved = this._moveAgent(c.entityId, destX, destY, direction, t);
           }
         }
+
+        if (moved) {
+          const event: EAgentAction = {
+            type: GameEventType.AGENT_ACTION,
+            actionType: AgentActionType.PUSH,
+            agentId: c.entityId,
+            entities: [item.entityId],
+            direction
+          };
+
+          this._em().submitEvent(event);
+        }
       }
     }
 
@@ -175,11 +193,12 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
         const event: EAgentEnterCell = {
           type: GameEventType.AGENT_ENTER_CELL,
           entityId: c.entityId,
-          entities: new Set(items),
+          entities: items,
           prevGridX: oldDestGridX,
           prevGridY: oldDestGridY,
           gridX: newDestGridX,
-          gridY: newDestGridY
+          gridY: newDestGridY,
+          direction
         };
 
         this.em.postEvent(event);

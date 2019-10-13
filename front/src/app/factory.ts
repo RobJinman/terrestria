@@ -2,13 +2,24 @@ import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { SpatialComponent } from "./common/spatial_system";
-import { RenderComponent } from "./render_system";
-import { AgentComponent } from "./common/agent_system";
+import { RenderComponent, StaticImage, Animation,
+         RenderSystem } from "./render_system";
 import { EntityId } from "./common/system";
 import { PLAYER_SPEED } from "./common/config";
+import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
+import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
+import { ComponentType } from "./common/component_types";
 
 function constructGem(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, ["gem.png"], [], "gem.png");
+  const staticImages: StaticImage[] = [
+    {
+      name: "gem.png",
+      scaleFactor: 0.5
+    }
+  ];
+
+  const renderComp = new RenderComponent(id, staticImages, [], "gem.png");
+
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -22,7 +33,15 @@ function constructGem(em: EntityManager, id: EntityId) {
 }
 
 function constructRock(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, ["rock.png"], [], "rock.png");
+  const staticImages: StaticImage[] = [
+    {
+      name: "rock.png",
+      scaleFactor: 0.5
+    }
+  ];
+
+  const renderComp = new RenderComponent(id, staticImages, [], "rock.png");
+
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: true,
@@ -36,7 +55,26 @@ function constructRock(em: EntityManager, id: EntityId) {
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
-  const renderComp = new RenderComponent(id, ["soil.png"], [], "soil.png");
+  const staticImages: StaticImage[] = [
+    {
+      name: "soil.png",
+      scaleFactor: 0.5
+    }
+  ];
+
+  const animations: Animation[] = [
+    {
+      name: "soil_puff",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    }
+  ];
+
+  const renderComp = new RenderComponent(id,
+                                         staticImages,
+                                         animations,
+                                         "soil.png");
+
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -46,33 +84,89 @@ function constructSoil(em: EntityManager, id: EntityId) {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp ]);
+  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.AGENT_ACTION, e => {
+    const event = <EAgentAction>e;
+    if (event.actionType == AgentActionType.DIG) {
+      renderSys.playAnimation(id, "soil_puff", () => {
+        em.removeEntity(id);
+      });
+    }
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp, behaviourComp ]);
 }
 
 function constructPlayer(em: EntityManager, id: EntityId) {
-  const animations = [
+  const staticImages: StaticImage[] = [
+    {
+      name: "man_run_d0.png",
+      scaleFactor: 0.5
+    }
+  ]
+
+  const animations: Animation[] = [
     {
       name: "man_run_u",
-      duration: 1.0 / PLAYER_SPEED
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_run_r",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
     },
     {
       name: "man_run_d",
-      duration: 1.0 / PLAYER_SPEED
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_run_l",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_dig_u",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
     },
     {
       name: "man_dig_r",
-      duration: 1.0 / PLAYER_SPEED
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_dig_d",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
     },
     {
      name: "man_dig_l",
-     duration: 1.0 / PLAYER_SPEED
+     duration: 1.0 / PLAYER_SPEED,
+     scaleFactor: 0.5
+    },
+    {
+      name: "man_push_r",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    },
+    {
+     name: "man_push_l",
+     duration: 1.0 / PLAYER_SPEED,
+     scaleFactor: 0.5
     }
   ];
 
   const renderComp = new RenderComponent(id,
-                                         ["man_run_d0.png"],
+                                         staticImages,
                                          animations,
                                          "man_run_d0.png");
+
   const spatialComp = new SpatialComponent(id, {
     solid: true,
     blocking: false,
@@ -81,10 +175,8 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     movable: false,
     isAgent: true
   });
-  const agentComp = new AgentComponent(id, "", "");
 
   em.addEntity(id, EntityType.PLAYER, [ spatialComp,
-                                        agentComp,
                                         renderComp ]);
 }
 

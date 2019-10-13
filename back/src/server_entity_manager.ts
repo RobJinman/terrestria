@@ -29,6 +29,7 @@ export class ServerEntityManager extends EntityManager {
       };
       this._pipe.sendToAll(response);
     });
+    this._eventsPendingTransmission = [];
   }
 
   removeEntity_onClients(id: EntityId) {

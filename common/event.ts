@@ -1,20 +1,20 @@
 import { EntityId } from "./system";
 import { Direction } from "./definitions";
 
+// TODO: Remove strings
 export enum GameEventType {
-  ENTITY_MOVED,
-  ENTITY_SQUASHED,
-  AGENT_ENTER_CELL,
-  AGENT_BEGIN_MOVE,
-  ENTITY_DESTROYED,
-  ENTITY_PUSHED
+  ENTITY_MOVED = "ENTITY_MOVED",
+  ENTITY_SQUASHED = "ENTITY_SQUASHED",
+  AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
+  AGENT_BEGIN_MOVE = "AGENT_BEGIN_MOVE",
+  AGENT_ACTION = "AGENT_ACTION"
 }
 
 export interface GameEvent {
   type: GameEventType;
-  // Set of entities targeted by the event. The exact meaning of this field
+  // List of entities targeted by the event. The exact meaning of this field
   // depends on the event type.
-  entities: Set<EntityId>;
+  entities: EntityId[];
 }
 
 export interface EEntityMoved extends GameEvent {
@@ -29,6 +29,7 @@ export interface EAgentEnterCell extends GameEvent {
   prevGridY: number;
   gridX: number;
   gridY: number;
+  direction: Direction;
 }
 
 export interface EAgentBeginMove extends GameEvent {
@@ -44,12 +45,14 @@ export interface EEntitySquashed extends GameEvent {
   gridY: number;
 }
 
-export enum DestructionCause {
-  MUNCHED,
-  BURNED
+export enum AgentActionType {
+  PUSH = "PUSH",
+  RUN = "RUN",
+  DIG = "DIG"
 }
 
-export interface EEntityDestroyed {
-  entityId: EntityId,
-  cause: DestructionCause
+export interface EAgentAction extends GameEvent {
+  agentId: EntityId;
+  actionType: AgentActionType;
+  direction: Direction;
 }

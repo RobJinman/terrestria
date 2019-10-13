@@ -1,7 +1,6 @@
 * Fullscreen
 * Square rocks
 * Walls
-* Animations
 * Gravity regions
 * Display gems collected
 * User log-in

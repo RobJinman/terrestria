@@ -6,27 +6,34 @@ import { ComponentType } from "./common/component_types";
 import { SpatialComponent } from "./common/spatial_system";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
+import { Scheduler } from './scheduler';
 
 export interface Animation {
   duration: number;
   name: string;
+  scaleFactor: number;
+}
+
+export interface StaticImage {
+  name: string;
+  scaleFactor: number;
 }
 
 export class RenderComponent extends Component {
   _animDescs: Animation[];
-  _staticImages: string[];
+  _staticImages: StaticImage[];
   _initialImage: string;
   staticSprites: Map<string, PIXI.Sprite>;
   animatedSprites: Map<string, PIXI.AnimatedSprite>;
   activeSprite?: PIXI.Sprite;
 
   constructor(entityId: EntityId,
-              images: string[],
+              staticImages: StaticImage[],
               animations: Animation[],
               initialImage: string) {
     super(entityId, ComponentType.RENDER);
 
-    this._staticImages = images;
+    this._staticImages = staticImages;
     this._initialImage = initialImage;
     this._animDescs = animations;
 
@@ -50,12 +57,15 @@ export class RenderComponent extends Component {
 export class RenderSystem implements ClientSystem {
   private _components: Map<number, RenderComponent>;
   private _em: EntityManager;
+  private _scheduler: Scheduler;
   private _pixi: PIXI.Application;
   private _spriteSheet?: PIXI.Spritesheet;
 
   constructor(entityManager: EntityManager,
+              scheduler: Scheduler,
               pixi: PIXI.Application) {
     this._em = entityManager;
+    this._scheduler = scheduler;
     this._pixi = pixi;
     this._components = new Map<number, RenderComponent>();
   }
@@ -70,22 +80,32 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
-  playAnimation(entityId: EntityId, name: string) {
+  playAnimation(entityId: EntityId, name: string, onFinish?: () => void) {
     const c = this.getComponent(entityId);
-    if (c.activeSprite) {
-      this._pixi.stage.removeChild(c.activeSprite);
-    }
 
     const sprite = c.animatedSprites.get(name); 
     if (!sprite) {
       throw new GameError(`Entity ${entityId} has no animation '${name}'`);
     }
 
-    c.activeSprite = sprite;
-    this._onEntityMoved(entityId);
+    if (!sprite.playing) {
+      if (c.activeSprite) {
+        this._pixi.stage.removeChild(c.activeSprite);
+      }
 
-    this._pixi.stage.addChild(sprite);
-    sprite.play();
+      c.activeSprite = sprite;
+      this._onEntityMoved(entityId);
+
+      this._pixi.stage.addChild(sprite);
+      sprite.loop = false;
+      sprite.gotoAndPlay(0);
+
+      if (onFinish) {
+        sprite.onComplete = () => {
+          this._scheduler.addFunction(onFinish, -1);
+        }
+      }
+    }
   }
 
   setCurrentImage(entityId: EntityId, name: string) {
@@ -118,21 +138,28 @@ export class RenderSystem implements ClientSystem {
 
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
-      sprite.textures.forEach(t => t.rotate = 8);
+      sprite.textures.forEach(t => {
+        t.rotate = 8;
+      });
+      sprite.width *= anim.scaleFactor;
+      sprite.height *= anim.scaleFactor;
       sprite.animationSpeed = anim.duration;
 
       component.animatedSprites.set(anim.name, sprite);
     });
 
-    component.staticImages.forEach(name => {
+    component.staticImages.forEach(imgDesc => {
       if (!this._spriteSheet) {
         throw new GameError("Sprite sheet not set");
       }
 
-      const texture = this._spriteSheet.textures[name];
+      const texture = this._spriteSheet.textures[imgDesc.name];
       const sprite = new PIXI.Sprite(texture);
+      sprite.texture.rotate = 8;
+      sprite.width *= imgDesc.scaleFactor;
+      sprite.height *= imgDesc.scaleFactor;
 
-      component.staticSprites.set(name, sprite);
+      component.staticSprites.set(imgDesc.name, sprite);
     });
 
     this._onEntityMoved(component.entityId);
