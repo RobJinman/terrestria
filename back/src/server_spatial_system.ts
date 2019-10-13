@@ -4,10 +4,8 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/config";
-import { EAgentBeginMove, GameEventType, EAgentEnterCell, 
-         EEntitySquashed, 
-         EAgentAction,
-         AgentActionType} from "./common/event";
+import { EAgentBeginMove, GameEventType, EAgentEnterCell, EEntitySquashed, 
+         EAgentAction, AgentActionType} from "./common/event";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { ServerEntityManager } from "./server_entity_manager";
@@ -146,6 +144,32 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     const blocking = this.grid.blockingItemsAtPos(destX, destY);
     if (blocking.size === 0) {
       moved = this._moveAgent(c.entityId, destX, destY, direction, t);
+
+      if (moved) {
+        const solid = this.grid.solidItemsAtPos(destX, destY);
+        if (solid.size > 1) { // The player is solid
+          const event: EAgentAction = {
+            type: GameEventType.AGENT_ACTION,
+            actionType: AgentActionType.DIG,
+            agentId: c.entityId,
+            entities: [c.entityId].concat([...solid].map(c => c.entityId)),
+            direction
+          };
+
+          this._em().submitEvent(event);
+        }
+        else {
+          const event: EAgentAction = {
+            type: GameEventType.AGENT_ACTION,
+            actionType: AgentActionType.RUN,
+            agentId: c.entityId,
+            entities: [c.entityId],
+            direction
+          };
+
+          this._em().submitEvent(event);
+        }
+      }
     }
     else if (blocking.size === 1) {
       const item: SpatialComponent = blocking.values().next().value;
@@ -174,7 +198,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
             type: GameEventType.AGENT_ACTION,
             actionType: AgentActionType.PUSH,
             agentId: c.entityId,
-            entities: [item.entityId],
+            entities: [c.entityId, item.entityId],
             direction
           };
 

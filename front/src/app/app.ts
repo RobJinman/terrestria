@@ -14,7 +14,6 @@ import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
 import { GameError } from './common/error';
-import { GameEventType, EAgentAction, AgentActionType } from './common/event';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 
@@ -41,16 +40,6 @@ class UserInput {
   private _onKeyUp(event: KeyboardEvent) {
     this._keyStates.set(event.key, false);
   }
-}
-
-function directionToLetter(direction: Direction): string {
-  switch (direction) {
-    case Direction.UP: return "u";
-    case Direction.RIGHT: return "r";
-    case Direction.DOWN: return "d";
-    case Direction.LEFT: return "l";
-  }
-  return "";
 }
 
 export class App {
@@ -202,37 +191,6 @@ export class App {
     });
   }
 
-  private _handleAgentAction(event: EAgentAction) {
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-
-    const dirChar = directionToLetter(event.direction);
-
-    switch (event.actionType) {
-      case AgentActionType.PUSH:
-        renderSys.playAnimation(event.agentId, "man_push_" + dirChar);
-        break;
-      case AgentActionType.DIG:
-        renderSys.playAnimation(event.agentId, "man_dig_" + dirChar);
-        break;
-      case AgentActionType.RUN:
-        renderSys.playAnimation(event.agentId, "man_run_" + dirChar);
-        break;
-      // ...
-    }
-  }
-
-  private _handleGameEvent(response: REvent) {
-    const event = response.event;
-    switch (event.type) {
-      case GameEventType.AGENT_ACTION:
-        this._handleAgentAction(<EAgentAction>event);
-        break;
-      // ...
-    }
-
-    this._em.postEvent(event);
-  }
-
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
@@ -245,7 +203,7 @@ export class App {
         this._updateGameState(<RGameState>msg);
         break;
       case GameResponseType.EVENT:
-        this._handleGameEvent(<REvent>msg);
+        this._em.postEvent((<REvent>msg).event);
         break;
       case GameResponseType.LOGIN_SUCCESS:
         const m = <RLoginSuccess>msg;

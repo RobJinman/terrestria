@@ -330,7 +330,7 @@ export class SpatialSystem {
   protected w = 0;
   protected h = 0;
   protected frameRate: number;
-  protected grid: Grid;
+  grid: Grid;
 
   constructor(em: EntityManager, w: number, h: number, frameRate: number) {
     this.em = em;

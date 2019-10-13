@@ -1,14 +1,14 @@
 import { PlayerAction, ActionType, MoveAction } from "./common/action";
-import { EntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
-import { ServerSpatialSystem } from "./server_spatial_system";
+import { ServerSpatialSystem } from "./server_spatial_system";;
+import { ServerEntityManager } from "./server_entity_manager";
 
 export class GameLogic {
-  private _entityManager: EntityManager;
+  private _em: ServerEntityManager;
   private _queuedAction: PlayerAction|null = null;
 
-  constructor(entityManager: EntityManager) {
-    this._entityManager = entityManager;
+  constructor(em: ServerEntityManager) {
+    this._em = em;
   }
 
   update(actions: PlayerAction[]) {
@@ -27,7 +27,7 @@ export class GameLogic {
 
   private _movePlayer(action: MoveAction): boolean {
     const spatialSys =
-      <ServerSpatialSystem>this._entityManager.getSystem(ComponentType.SPATIAL);
+      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     if (spatialSys.entityIsMoving(action.playerId)) {
       this._queuedAction = action;

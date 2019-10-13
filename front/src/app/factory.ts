@@ -9,6 +9,7 @@ import { PLAYER_SPEED } from "./common/config";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
+import { Direction } from "./common/definitions";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
@@ -101,6 +102,16 @@ function constructSoil(em: EntityManager, id: EntityId) {
   em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp, behaviourComp ]);
 }
 
+function directionToLetter(direction: Direction): string {
+  switch (direction) {
+    case Direction.UP: return "u";
+    case Direction.RIGHT: return "r";
+    case Direction.DOWN: return "d";
+    case Direction.LEFT: return "l";
+  }
+  return "";
+}
+
 function constructPlayer(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
@@ -176,8 +187,31 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     isAgent: true
   });
 
+  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.AGENT_ACTION, e => {
+    const event = <EAgentAction>e;
+    const dirChar = directionToLetter(event.direction);
+
+    switch (event.actionType) {
+      case AgentActionType.DIG:
+        renderSys.playAnimation(id, "man_dig_" + dirChar);
+        break;
+      case AgentActionType.RUN:
+        renderSys.playAnimation(id, "man_run_" + dirChar);
+        break;
+      case AgentActionType.PUSH:
+        renderSys.playAnimation(id, "man_push_" + dirChar);
+        break;
+    }
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
   em.addEntity(id, EntityType.PLAYER, [ spatialComp,
-                                        renderComp ]);
+                                        renderComp,
+                                        behaviourComp ]);
 }
 
 export function constructEntities(entityManager: EntityManager,

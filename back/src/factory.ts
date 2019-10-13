@@ -1,9 +1,9 @@
-import { getNextEntityId, EntityManager } from "./common/entity_manager";
+import { getNextEntityId } from "./common/entity_manager";
 import { AgentComponent } from "./agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType, EAgentEnterCell, EEntitySquashed, EAgentAction,
-         AgentActionType } from "./common/event";
+import { GameEventType, EAgentEnterCell,
+         EEntitySquashed } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
@@ -25,17 +25,6 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
-    const event = <EAgentEnterCell>e;
-
-    const action: EAgentAction = {
-      type: GameEventType.AGENT_ACTION,
-      actionType: AgentActionType.DIG,
-      entities: [id],
-      agentId: event.entityId,
-      direction: event.direction
-    };
-
-    em.submitEvent(action);
     em.removeEntity(id);
   });
 
@@ -46,7 +35,7 @@ export function constructSoil(em: ServerEntityManager): EntityId {
   return id;
 }
 
-export function constructRock(em: EntityManager): EntityId {
+export function constructRock(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
   const spatialComp = new SpatialComponent(id, {
@@ -93,7 +82,7 @@ export function constructGem(em: ServerEntityManager): EntityId {
   return id;
 }
 
-export function constructPlayer(em: EntityManager,
+export function constructPlayer(em: ServerEntityManager,
                                 pinataId: string,
                                 pinataToken: string): EntityId {
   const id = getNextEntityId();
