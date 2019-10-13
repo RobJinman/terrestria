@@ -3,6 +3,7 @@ export type Predicate = () => boolean;
 export type ScheduledFnHandle = number;
 
 interface FunctionData {
+  id: ScheduledFnHandle;
   fn: ScheduledFn;
   delayMs: number;
   due: number;
@@ -12,12 +13,23 @@ interface FunctionData {
 export class Scheduler {
   private _nextId: ScheduledFnHandle = 0;
   private _functions: Map<ScheduledFnHandle, FunctionData>;
+  private _pendingAdd: FunctionData[] = [];
+  private _pendingDelete: ScheduledFnHandle[] = [];
 
   constructor() {
     this._functions = new Map<ScheduledFnHandle, FunctionData>();
   }
 
   update() {
+    this._pendingAdd.forEach(data => {
+      this._addFunction(data.id,
+                        data.fn,
+                        data.delayMs,
+                        data.due,
+                        data.repeatWhile);
+    });
+    this._pendingAdd = [];
+
     const toRemove: ScheduledFnHandle[] = [];
     const now = (new Date()).getTime();
 
@@ -37,6 +49,22 @@ export class Scheduler {
     });
 
     toRemove.forEach(id => this._functions.delete(id));
+    this._pendingDelete.forEach(id => this._functions.delete(id));
+    this._pendingDelete = [];
+  }
+
+  private _addFunction(id: ScheduledFnHandle,
+                       fn: ScheduledFn,
+                       delayMs: number,
+                       due: number,
+                       repeatWhile?: Predicate) {
+    this._functions.set(id, {
+      id,
+      fn,
+      delayMs,
+      due,
+      repeatWhile
+    });
   }
 
   addFunction(fn: ScheduledFn,
@@ -45,7 +73,8 @@ export class Scheduler {
     const id = this._nextId++;
     const now = (new Date()).getTime();
 
-    this._functions.set(id, {
+    this._pendingAdd.push({
+      id,
       fn,
       delayMs: msFromNow,
       due: now + msFromNow,
@@ -56,6 +85,6 @@ export class Scheduler {
   }
 
   removeFunction(handle: ScheduledFnHandle) {
-    this._functions.delete(handle);
+    this._pendingDelete.push(handle);
   }
 }

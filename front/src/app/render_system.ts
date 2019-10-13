@@ -6,12 +6,14 @@ import { ComponentType } from "./common/component_types";
 import { SpatialComponent } from "./common/spatial_system";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
-import { Scheduler } from './scheduler';
+import { Scheduler, ScheduledFnHandle } from './scheduler';
 
-export interface Animation {
+export interface AnimationDesc {
   duration: number;
   name: string;
   scaleFactor: number;
+  endFrame?: string;
+  endFrameDelayMs?: number;
 }
 
 export interface StaticImage {
@@ -19,17 +21,32 @@ export interface StaticImage {
   scaleFactor: number;
 }
 
+interface PlayAnimationCall {
+  entityId: EntityId;
+  name: string;
+  onFinish?: () => void;
+}
+
+interface Animation {
+  sprite: PIXI.AnimatedSprite;
+  endFrame?: string;
+  endFrameDelayMs?: number;
+  setEndFrameFnHandle: ScheduledFnHandle; // Set to -1 by default
+}
+
 export class RenderComponent extends Component {
-  _animDescs: Animation[];
+  _animDescs: AnimationDesc[];
   _staticImages: StaticImage[];
   _initialImage: string;
   staticSprites: Map<string, PIXI.Sprite>;
-  animatedSprites: Map<string, PIXI.AnimatedSprite>;
-  activeSprite?: PIXI.Sprite;
+  animatedSprites: Map<string, Animation>;
+  stagedSprite: PIXI.Sprite|null = null;
+  activeAnimation: Animation|null = null;
+  queuedAnimation: PlayAnimationCall|null = null;
 
   constructor(entityId: EntityId,
               staticImages: StaticImage[],
-              animations: Animation[],
+              animations: AnimationDesc[],
               initialImage: string) {
     super(entityId, ComponentType.RENDER);
 
@@ -38,7 +55,7 @@ export class RenderComponent extends Component {
     this._animDescs = animations;
 
     this.staticSprites = new Map<string, PIXI.Sprite>();
-    this.animatedSprites = new Map<string, PIXI.AnimatedSprite>();
+    this.animatedSprites = new Map<string, Animation>();
   }
 
   get staticImages() {
@@ -80,56 +97,86 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
-  playAnimation(entityId: EntityId, name: string, onFinish?: () => void) {
+  private _setActiveSprite(c: RenderComponent,
+                           name: string,
+                           animated: boolean) {
+    if (c.stagedSprite) {
+      this._pixi.stage.removeChild(c.stagedSprite);
+    }
+    if (c.activeAnimation) {
+      this._scheduler.removeFunction(c.activeAnimation.setEndFrameFnHandle);
+    }
+    if (animated) {
+      const anim = c.animatedSprites.get(name);
+      if (!anim) {
+        throw new GameError("Component has no sprite with name " + name);
+      }
+      this._pixi.stage.addChild(anim.sprite);
+      c.stagedSprite = anim.sprite;
+      c.activeAnimation = anim;
+    }
+    else {
+      const sprite = c.staticSprites.get(name);
+      if (!sprite) {
+        throw new GameError("Component has no sprite with name " + name);
+      }
+      this._pixi.stage.addChild(sprite);
+      c.stagedSprite = sprite;
+    }
+
+    this._onEntityMoved(c.entityId);
+  }
+
+  playAnimation(entityId: EntityId,
+                name: string,
+                onFinish?: () => void): boolean {
     const c = this.getComponent(entityId);
 
-    const sprite = c.animatedSprites.get(name); 
-    if (!sprite) {
+    const anim = c.animatedSprites.get(name); 
+    if (!anim) {
       throw new GameError(`Entity ${entityId} has no animation '${name}'`);
     }
 
-    if (!sprite.playing) {
-      if (c.activeSprite) {
-        this._pixi.stage.removeChild(c.activeSprite);
-      }
-
-      c.activeSprite = sprite;
-      this._onEntityMoved(entityId);
-
-      this._pixi.stage.addChild(sprite);
-      sprite.loop = false;
-      sprite.gotoAndPlay(0);
-
-      if (onFinish) {
-        sprite.onComplete = () => {
-          this._scheduler.addFunction(onFinish, -1);
-        }
+    if (c.activeAnimation) {
+      const active = c.activeAnimation.sprite;
+      if (active.playing) {
+        c.queuedAnimation = {
+          entityId,
+          name,
+          onFinish
+        };
+        return false;
       }
     }
+
+    this._setActiveSprite(c, name, true);
+
+    anim.sprite.loop = false;
+    anim.sprite.gotoAndPlay(0);
+
+    anim.sprite.onComplete = () => {
+      if (onFinish) {
+        this._scheduler.addFunction(onFinish, -1);
+      }
+      if (anim.endFrame) {
+        anim.setEndFrameFnHandle = this._scheduler.addFunction(() => {
+          if (this.hasComponent(entityId)) {
+            this.setCurrentImage(entityId, anim.endFrame || "");
+          }
+        }, anim.endFrameDelayMs || 100);
+      }
+    }
+
+    return true;
   }
 
   setCurrentImage(entityId: EntityId, name: string) {
     const c = this.getComponent(entityId);
-    if (c.activeSprite) {
-      this._pixi.stage.removeChild(c.activeSprite);
-    }
-    c.activeSprite = c.staticSprites.get(name);
-    if (!c.activeSprite) {
-      throw new GameError(`Entity ${c.entityId} has no image with name ` +
-                          `'${name}'`);
-    }
-
-    this._onEntityMoved(entityId);
-
-    this._pixi.stage.addChild(c.activeSprite);
+    this._setActiveSprite(c, name, false);
   }
 
   addComponent(component: RenderComponent) {
     this._components.set(component.entityId, component);
-
-    const texture = this._getTexture(component.initialImage);
-    texture.rotate = 8;
-    component.activeSprite = new PIXI.Sprite(texture);
 
     component.animDescs.forEach(anim => {
       if (!this._spriteSheet) {
@@ -145,7 +192,12 @@ export class RenderSystem implements ClientSystem {
       sprite.height *= anim.scaleFactor;
       sprite.animationSpeed = anim.duration;
 
-      component.animatedSprites.set(anim.name, sprite);
+      component.animatedSprites.set(anim.name, {
+        sprite,
+        endFrame: anim.endFrame,
+        endFrameDelayMs: anim.endFrameDelayMs,
+        setEndFrameFnHandle: -1
+      });
     });
 
     component.staticImages.forEach(imgDesc => {
@@ -162,17 +214,7 @@ export class RenderSystem implements ClientSystem {
       component.staticSprites.set(imgDesc.name, sprite);
     });
 
-    this._onEntityMoved(component.entityId);
-
-    component.activeSprite = component.staticSprites
-                                      .get(component.initialImage);
-
-    if (!component.activeSprite) {
-      throw new GameError(`Entity ${component.entityId} has no image with ` +
-                          `name '${component.initialImage}'`);
-    }
-
-    this._pixi.stage.addChild(component.activeSprite);
+    this._setActiveSprite(component, component.initialImage, false);
   }
 
   hasComponent(id: EntityId) {
@@ -189,8 +231,8 @@ export class RenderSystem implements ClientSystem {
 
   removeComponent(id: EntityId) {
     const c = this._components.get(id);
-    if (c && c.activeSprite) {
-      this._pixi.stage.removeChild(c.activeSprite);
+    if (c && c.stagedSprite) {
+      this._pixi.stage.removeChild(c.stagedSprite);
     }
 
     this._components.delete(id);
@@ -202,9 +244,9 @@ export class RenderSystem implements ClientSystem {
         <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
 
       const c = this.getComponent(id);
-      if (c.activeSprite) {
-        c.activeSprite.x = spatialComp.x;
-        c.activeSprite.y = spatialComp.y;
+      if (c.stagedSprite) {
+        c.stagedSprite.x = spatialComp.x;
+        c.stagedSprite.y = spatialComp.y;
       }
     }
   }
@@ -219,22 +261,18 @@ export class RenderSystem implements ClientSystem {
   }
 
   update() {
-    // TODO
+    this._components.forEach(c => {
+      if (c.queuedAnimation) {
+        if (this.playAnimation(c.queuedAnimation.entityId,
+                               c.queuedAnimation.name,
+                               c.queuedAnimation.onFinish)) {
+          c.queuedAnimation = null;
+        }
+      }
+    });
   }
 
   getDirties() {
     return [];
-  }
-
-  private _getTexture(name: string): PIXI.Texture {
-    if (!this._spriteSheet || !this._spriteSheet.textures) {
-      throw new GameError("Sprite sheet not set");
-    }
-
-    const val = this._spriteSheet.textures[name];
-    if (!val) {
-      throw new Error(`No texture with name '${name}'`);
-    }
-    return val;
   }
 }

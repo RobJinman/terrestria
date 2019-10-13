@@ -2,7 +2,7 @@ import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { SpatialComponent } from "./common/spatial_system";
-import { RenderComponent, StaticImage, Animation,
+import { RenderComponent, StaticImage, AnimationDesc,
          RenderSystem } from "./render_system";
 import { EntityId } from "./common/system";
 import { PLAYER_SPEED } from "./common/config";
@@ -63,7 +63,7 @@ function constructSoil(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const animations: Animation[] = [
+  const animations: AnimationDesc[] = [
     {
       name: "soil_puff",
       duration: 1.0 / PLAYER_SPEED,
@@ -115,61 +115,95 @@ function directionToLetter(direction: Direction): string {
 function constructPlayer(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
+      name: "man_run_u0.png",
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_run_r0.png",
+      scaleFactor: 0.5
+    },
+    {
       name: "man_run_d0.png",
+      scaleFactor: 0.5
+    },
+    {
+      name: "man_run_l0.png",
       scaleFactor: 0.5
     }
   ]
 
-  const animations: Animation[] = [
+  const endFrameDelayMs = 150;
+
+  const animations: AnimationDesc[] = [
     {
       name: "man_run_u",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_u0.png",
+      endFrameDelayMs
     },
     {
       name: "man_run_r",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_r0.png",
+      endFrameDelayMs
     },
     {
       name: "man_run_d",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_d0.png",
+      endFrameDelayMs
     },
     {
       name: "man_run_l",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_l0.png",
+      endFrameDelayMs
     },
     {
       name: "man_dig_u",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_u0.png",
+      endFrameDelayMs
     },
     {
       name: "man_dig_r",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_r0.png",
+      endFrameDelayMs
     },
     {
       name: "man_dig_d",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_d0.png",
+      endFrameDelayMs
     },
     {
      name: "man_dig_l",
      duration: 1.0 / PLAYER_SPEED,
-     scaleFactor: 0.5
+     scaleFactor: 0.5,
+     endFrame: "man_run_l0.png",
+     endFrameDelayMs
     },
     {
       name: "man_push_r",
       duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      scaleFactor: 0.5,
+      endFrame: "man_run_r0.png",
+      endFrameDelayMs
     },
     {
      name: "man_push_l",
      duration: 1.0 / PLAYER_SPEED,
-     scaleFactor: 0.5
+     scaleFactor: 0.5,
+     endFrame: "man_run_l0.png",
+     endFrameDelayMs
     }
   ];
 
