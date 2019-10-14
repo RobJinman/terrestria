@@ -42,7 +42,6 @@ export class RenderComponent extends Component {
   animatedSprites: Map<string, Animation>;
   stagedSprite: PIXI.Sprite|null = null;
   activeAnimation: Animation|null = null;
-  queuedAnimation: PlayAnimationCall|null = null;
 
   constructor(entityId: EntityId,
               staticImages: StaticImage[],
@@ -137,18 +136,6 @@ export class RenderSystem implements ClientSystem {
       throw new GameError(`Entity ${entityId} has no animation '${name}'`);
     }
 
-    if (c.activeAnimation) {
-      const active = c.activeAnimation.sprite;
-      if (active.playing) {
-        c.queuedAnimation = {
-          entityId,
-          name,
-          onFinish
-        };
-        return false;
-      }
-    }
-
     this._setActiveSprite(c, name, true);
 
     anim.sprite.loop = false;
@@ -190,7 +177,10 @@ export class RenderSystem implements ClientSystem {
       });
       sprite.width *= anim.scaleFactor;
       sprite.height *= anim.scaleFactor;
-      sprite.animationSpeed = anim.duration;
+
+      const defaultDuration = sprite.textures.length / 60;
+      const speedUp = defaultDuration / anim.duration;
+      sprite.animationSpeed = speedUp;
 
       component.animatedSprites.set(anim.name, {
         sprite,
@@ -260,17 +250,7 @@ export class RenderSystem implements ClientSystem {
     }
   }
 
-  update() {
-    this._components.forEach(c => {
-      if (c.queuedAnimation) {
-        if (this.playAnimation(c.queuedAnimation.entityId,
-                               c.queuedAnimation.name,
-                               c.queuedAnimation.onFinish)) {
-          c.queuedAnimation = null;
-        }
-      }
-    });
-  }
+  update() {}
 
   getDirties() {
     return [];

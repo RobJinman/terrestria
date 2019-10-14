@@ -133,74 +133,75 @@ function constructPlayer(em: EntityManager, id: EntityId) {
   ]
 
   const endFrameDelayMs = 150;
+  const duration = 1.0 / PLAYER_SPEED;
 
   const animations: AnimationDesc[] = [
     {
       name: "man_run_u",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_u0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_r",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_d",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_d0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_l",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_l0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_u",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_u0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_r",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_d",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_d0.png",
       endFrameDelayMs
     },
     {
      name: "man_dig_l",
-     duration: 1.0 / PLAYER_SPEED,
+     duration: duration,
      scaleFactor: 0.5,
      endFrame: "man_run_l0.png",
      endFrameDelayMs
     },
     {
       name: "man_push_r",
-      duration: 1.0 / PLAYER_SPEED,
+      duration: duration,
       scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
      name: "man_push_l",
-     duration: 1.0 / PLAYER_SPEED,
+     duration: duration,
      scaleFactor: 0.5,
      endFrame: "man_run_l0.png",
      endFrameDelayMs
