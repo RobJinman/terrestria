@@ -171,7 +171,7 @@ export class Game {
   removePlayer(id: EntityId) {
     console.log(`Removing player ${id}`);
     this._pipe.removeSocket(id);
-    this._em.removeEntity(id);
+    this._em.removeEntity_onClients(id);
   }
 
   get numPlayers() {
