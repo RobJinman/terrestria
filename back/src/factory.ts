@@ -2,14 +2,15 @@ import { getNextEntityId } from "./common/entity_manager";
 import { AgentComponent } from "./agent_system";
 import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType, EAgentEnterCell,
-         EEntitySquashed } from "./common/event";
+import { GameEventType, EAgentEnterCell, EEntityBurned, 
+         EPlayerKilled } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { InventorySystem, CCollector, CCollectable,
          Bucket } from "./inventory_system";
 import { ServerEntityManager } from "./server_entity_manager";
+import { ServerSpatialSystem } from "./server_spatial_system";
 
 export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
@@ -25,6 +26,9 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
+    em.removeEntity(id);
+  });
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
     em.removeEntity(id);
   });
 
@@ -47,7 +51,14 @@ export function constructRock(em: ServerEntityManager): EntityId {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.ROCK, [ spatialComp ]);
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    em.removeEntity(id);
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.ROCK, [ spatialComp, behaviourComp ]);
 
   return id;
 }
@@ -100,11 +111,31 @@ export function constructPlayer(em: ServerEntityManager,
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
 
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_SQUASHED, e => {
-    const event = <EEntitySquashed>e;
+    const gridX = spatialSys.grid.toGridX(spatialComp.x);
+    const gridY = spatialSys.grid.toGridY(spatialComp.y);
 
-    console.log("Ouch!");
+    const entities = spatialSys.grid.idsInCells(gridX - 1,
+                                                gridX + 1,
+                                                gridY - 1,
+                                                gridY + 1);
+
+    const burned: EEntityBurned = {
+      type: GameEventType.ENTITY_BURNED,
+      entities
+    };
+
+    const killed: EPlayerKilled = {
+      type: GameEventType.PLAYER_KILLED,
+      entities: [],
+      playerId: id
+    };
+
+    em.submitEvent(burned);
+    em.submitEvent(killed);
   });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);

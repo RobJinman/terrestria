@@ -37,3 +37,23 @@ export async function waitForCondition(predicate: () => boolean,
   }
   return false;
 }
+
+export function inRange(x: number, min: number, max: number) {
+  return x >= min && x <= max;
+}
+
+export function union<T>(A: Set<T>, B: Set<T>): Set<T> {
+  const C = new Set<T>(A);
+
+  for (let b of B) {
+    C.add(b);
+  }
+
+  return C;
+}
+
+export function addSetToSet<T>(src: Set<T>, dest: Set<T>) {
+  for (let x of src) {
+    dest.add(x);
+  }
+}

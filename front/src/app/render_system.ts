@@ -21,12 +21,6 @@ export interface StaticImage {
   scaleFactor: number;
 }
 
-interface PlayAnimationCall {
-  entityId: EntityId;
-  name: string;
-  onFinish?: () => void;
-}
-
 interface Animation {
   sprite: PIXI.AnimatedSprite;
   endFrame?: string;

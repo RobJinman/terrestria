@@ -5,6 +5,7 @@ import { Direction } from "./definitions";
 import { GameError } from "./error";
 import { GameEvent } from "./event";
 import { EntityManager } from "./entity_manager";
+import { inRange, addSetToSet } from "./utils";
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
@@ -96,10 +97,9 @@ export class SpatialComponent extends Component {
     return this._posY;
   }
 
-  updatePos(grid: Grid, x: number, y: number) {
+  updatePos(x: number, y: number) {
     this._posX = x;
     this._posY = y;
-    //this.dirty = true;
   }
 
   setPos(grid: Grid, x: number, y: number) {
@@ -256,6 +256,29 @@ export class Grid {
                           `Index out of range`);
     }
     return this._grid[col][row];
+  }
+
+  inCells(fromCol: number,
+          toCol: number,
+          fromRow: number,
+          toRow: number): Set<SpatialComponent> {
+    const items = new Set<SpatialComponent>();
+    for (let c = fromCol; c <= toCol; ++c) {
+      for (let r = fromRow; r <= toRow; ++r) {
+        if (inRange(c, 0, this._w - 1) && inRange(r, 0, this._h - 1)) {
+          addSetToSet(this.inCell(c, r), items);
+        }
+      }
+    }
+    return items;
+  }
+
+  idsInCells(fromCol: number,
+             toCol: number,
+             fromRow: number,
+             toRow: number): EntityId[] {
+    const items = this.inCells(fromCol, toCol, fromRow, toRow);
+    return [...items].map(c => c.entityId);
   }
 
   idsInCell(col: number, row: number): EntityId[] {
@@ -465,7 +488,7 @@ export class SpatialSystem {
     const dx = v.x * c.speed / this.frameRate;
     const dy = v.y * c.speed / this.frameRate;
 
-    c.updatePos(this.grid, c.x + dx, c.y + dy);
+    c.updatePos(c.x + dx, c.y + dy);
 
     const xDir = dx < 0 ? -1 : 1;
     const yDir = dy < 0 ? -1 : 1;

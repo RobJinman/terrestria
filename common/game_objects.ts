@@ -2,5 +2,6 @@ export enum EntityType {
   PLAYER = "PLAYER",
   GEM = "GEM",
   ROCK = "ROCK",
-  SOIL = "SOIL"
+  SOIL = "SOIL",
+  OTHER = "OTHER"
 }

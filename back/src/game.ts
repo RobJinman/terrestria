@@ -15,7 +15,7 @@ import { BehaviourSystem } from "./common/behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
-import { debounce } from "./common/utils";
+import { debounce, waitForCondition } from "./common/utils";
 import { InventorySystem } from "./inventory_system";
 
 function noThrow(fn: () => any) {
@@ -23,7 +23,7 @@ function noThrow(fn: () => any) {
     return fn();
   }
   catch (err) {
-    console.error("Error! " + err);
+    console.error(err);
   }
 }
 
@@ -84,7 +84,14 @@ export class Game {
   }
 
   private _tick() {
-    this._gameLogic.update(this._actionQueue);
+    try {
+      this._gameLogic.update(this._actionQueue);
+    }
+    catch (e) {
+      this._actionQueue = [];
+      throw e;
+    }
+
     this._actionQueue = [];
 
     this._em.update();

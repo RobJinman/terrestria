@@ -5,9 +5,11 @@ import { Direction } from "./definitions";
 export enum GameEventType {
   ENTITY_MOVED = "ENTITY_MOVED",
   ENTITY_SQUASHED = "ENTITY_SQUASHED",
+  ENTITY_BURNED = "ENTITY_BURNED",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
   AGENT_BEGIN_MOVE = "AGENT_BEGIN_MOVE",
-  AGENT_ACTION = "AGENT_ACTION"
+  AGENT_ACTION = "AGENT_ACTION",
+  PLAYER_KILLED = "PLAYER_KILLED"
 }
 
 export interface GameEvent {
@@ -45,6 +47,8 @@ export interface EEntitySquashed extends GameEvent {
   gridY: number;
 }
 
+export interface EEntityBurned extends GameEvent {}
+
 export enum AgentActionType {
   PUSH = "PUSH",
   RUN = "RUN",
@@ -55,4 +59,8 @@ export interface EAgentAction extends GameEvent {
   agentId: EntityId;
   actionType: AgentActionType;
   direction: Direction;
+}
+
+export interface EPlayerKilled extends GameEvent {
+  playerId: EntityId;
 }

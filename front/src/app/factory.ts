@@ -41,7 +41,18 @@ function constructRock(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id, staticImages, [], "rock.png");
+  const animations: AnimationDesc[] = [
+    {
+      name: "rock_burn",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    }
+  ];
+
+  const renderComp = new RenderComponent(id,
+                                         staticImages,
+                                         animations,
+                                         "rock.png");
 
   const spatialComp = new SpatialComponent(id, {
     solid: true,
@@ -52,7 +63,20 @@ function constructRock(em: EntityManager, id: EntityId) {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.ROCK, [ spatialComp, renderComp ]);
+  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    renderSys.playAnimation(id, "rock_burn", () => {
+      em.removeEntity(id);
+    });
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.ROCK, [ spatialComp,
+                                      renderComp,
+                                      behaviourComp ]);
 }
 
 function constructSoil(em: EntityManager, id: EntityId) {
@@ -96,6 +120,11 @@ function constructSoil(em: EntityManager, id: EntityId) {
       });
     }
   });
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    renderSys.playAnimation(id, "soil_puff", () => {
+      em.removeEntity(id);
+    });
+  });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
@@ -136,6 +165,12 @@ function constructPlayer(em: EntityManager, id: EntityId) {
   const duration = 1.0 / PLAYER_SPEED;
 
   const animations: AnimationDesc[] = [
+    {
+      name: "explosion",
+      duration: duration,
+      scaleFactor: 0.5,
+      endFrameDelayMs
+    },
     {
       name: "man_run_u",
       duration: duration,
@@ -225,6 +260,11 @@ function constructPlayer(em: EntityManager, id: EntityId) {
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    renderSys.playAnimation(id, "explosion", () => {
+      em.removeEntity(id);
+    });
+  });
   targetedEvents.set(GameEventType.AGENT_ACTION, e => {
     const event = <EAgentAction>e;
     const dirChar = directionToLetter(event.direction);
