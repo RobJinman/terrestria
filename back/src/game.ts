@@ -148,7 +148,7 @@ export class Game {
 
     console.log(`Adding player ${id}`);
   
-    this._pipe.addSocket(id, socket);
+    this._pipe.addConnection(id, socket);
 
     const newEntitiesResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
@@ -175,18 +175,18 @@ export class Game {
     return id;
   }
 
-  removePlayer(id: EntityId) {
-    console.log(`Removing player ${id}`);
-    this._pipe.removeSocket(id);
-    this._em.removeEntity_onClients(id);
+  removePlayer(playerId: EntityId) {
+    console.log(`Removing player ${playerId} from game`);
+    this._pipe.removeConnection(playerId);
+    this._em.removeEntity_onClients(playerId);
   }
 
-  hasPlayer(entityId: EntityId) {
-    return this._em.getSystem(ComponentType.AGENT).hasComponent(entityId);
+  hasPlayer(playerId: EntityId): boolean {
+    return this._pipe.hasConnection(playerId);
   }
 
   get numPlayers() {
-    return this._em.getSystem(ComponentType.AGENT).numComponents();
+    return this._pipe.numConnections;
   }
 
   get id() {

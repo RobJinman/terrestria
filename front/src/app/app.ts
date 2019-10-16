@@ -16,6 +16,7 @@ import { ClientSpatialSystem } from './client_spatial_system';
 import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
+import { GameEvent } from './common/event';
 
 const WEBSOCKET_URL = "ws://192.168.0.125:3001";
 

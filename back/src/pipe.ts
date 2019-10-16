@@ -9,12 +9,20 @@ export class Pipe {
     this._sockets = new Map<EntityId, WebSocket>();
   }
 
-  addSocket(playerId: EntityId, socket: WebSocket) {
+  addConnection(playerId: EntityId, socket: WebSocket) {
     this._sockets.set(playerId, socket);
   }
 
-  removeSocket(playerId: EntityId) {
+  removeConnection(playerId: EntityId) {
     return this._sockets.delete(playerId);
+  }
+
+  get numConnections() {
+    return this._sockets.size;
+  }
+
+  hasConnection(id: EntityId): boolean {
+    return this._sockets.has(id);
   }
 
   sendToAll(data: any) {
