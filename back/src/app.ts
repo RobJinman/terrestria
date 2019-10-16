@@ -63,12 +63,21 @@ export class App {
     const user = this._users.get(id);
 
     if (user) {
-      user.game.removePlayer(id);
+      let gameOver = user.game.numPlayers === 0;
+
+      console.log("hi");
+
+      if (user.game.hasPlayer(id)) {
+        console.log("yup");
+
+        // The player isn't actually removed until EntityManager.update() is
+        // run.
+        user.game.removePlayer(id);
+        gameOver = user.game.numPlayers === 1;
+      }
       user.ws.terminate();
 
-      // 1 (not 0) because the player isn't actually removed until
-      // EntityManager.update() is run.
-      if (user.game.numPlayers == 1) {
+      if (gameOver) {
         console.log("Deleting game " + user.game.id);
         user.game.terminate();
         this._games.delete(user.game);

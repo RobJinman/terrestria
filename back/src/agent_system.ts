@@ -44,7 +44,7 @@ export class AgentSystem implements ServerSystem {
   }
 
   hasComponent(id: EntityId) {
-    return id in this._components;
+    return this._components.has(id);
   }
 
   getComponent(id: EntityId) {

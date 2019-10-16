@@ -19,7 +19,18 @@ function constructGem(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id, staticImages, [], "gem.png");
+  const animations: AnimationDesc[] = [
+    {
+      name: "gem_burn",
+      duration: 1.0 / PLAYER_SPEED,
+      scaleFactor: 0.5
+    }
+  ];
+
+  const renderComp = new RenderComponent(id,
+                                         staticImages,
+                                         animations,
+                                         "gem.png");
 
   const spatialComp = new SpatialComponent(id, {
     solid: true,
@@ -30,7 +41,20 @@ function constructGem(em: EntityManager, id: EntityId) {
     isAgent: false
   });
 
-  em.addEntity(id, EntityType.GEM, [ spatialComp, renderComp ]);
+  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    renderSys.playAnimation(id, "gem_burn", () => {
+      em.removeEntity(id);
+    });
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.GEM, [ spatialComp,
+                                     renderComp,
+                                     behaviourComp ]);
 }
 
 function constructRock(em: EntityManager, id: EntityId) {

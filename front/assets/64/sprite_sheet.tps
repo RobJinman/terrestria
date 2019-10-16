@@ -186,6 +186,10 @@
             <key type="filename">explosion2.png</key>
             <key type="filename">explosion3.png</key>
             <key type="filename">gem.png</key>
+            <key type="filename">gem_burn0.png</key>
+            <key type="filename">gem_burn1.png</key>
+            <key type="filename">gem_burn2.png</key>
+            <key type="filename">gem_burn3.png</key>
             <key type="filename">man_dig_d0.png</key>
             <key type="filename">man_dig_d1.png</key>
             <key type="filename">man_dig_d2.png</key>
@@ -306,6 +310,10 @@
             <filename>explosion1.png</filename>
             <filename>explosion2.png</filename>
             <filename>explosion3.png</filename>
+            <filename>gem_burn0.png</filename>
+            <filename>gem_burn1.png</filename>
+            <filename>gem_burn2.png</filename>
+            <filename>gem_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

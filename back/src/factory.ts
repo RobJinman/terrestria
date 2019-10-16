@@ -85,6 +85,9 @@ export function constructGem(em: ServerEntityManager): EntityId {
 
     em.removeEntity_onClients(id);
   });
+  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    em.removeEntity(id);
+  });
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 

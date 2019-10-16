@@ -15,7 +15,7 @@ import { BehaviourSystem } from "./common/behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
-import { debounce, waitForCondition } from "./common/utils";
+import { debounce } from "./common/utils";
 import { InventorySystem } from "./inventory_system";
 
 function noThrow(fn: () => any) {
@@ -179,6 +179,10 @@ export class Game {
     console.log(`Removing player ${id}`);
     this._pipe.removeSocket(id);
     this._em.removeEntity_onClients(id);
+  }
+
+  hasPlayer(entityId: EntityId) {
+    return this._em.getSystem(ComponentType.AGENT).hasComponent(entityId);
   }
 
   get numPlayers() {
