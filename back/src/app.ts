@@ -1,9 +1,10 @@
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
-import { ActionType, LogInAction, deserialiseMessage } from "./common/action";
-import { GameResponse, GameResponseType, RError,
-         RLoginSuccess } from "./common/response";
+import { ActionType, LogInAction, deserialiseMessage,
+         RespawnAction } from "./common/action";
+import { GameResponse, GameResponseType, RError, RLoginSuccess, 
+         RNewPlayerId } from "./common/response";
 import { pinataAuth } from "./pinata";
 import { EntityId } from "./common/system";
 
@@ -19,6 +20,8 @@ interface ExtWebSocket extends WebSocket {
 interface UserConnection {
   ws: ExtWebSocket;
   playerId: EntityId;
+  pinataId: string;
+  pinataToken: string;
   game: Game;
 }
 
@@ -167,11 +170,17 @@ export class App {
 
     this._users.set(entityId, {
       playerId: entityId,
+      pinataId,
+      pinataToken,
       ws: sock,
       game
     });
 
-    sock.on("close", () => this._terminateUser(entityId));
+    sock.on("close", () => {
+      if (sock.userId) {
+        this._terminateUser(sock.userId);
+      }
+    });
 
     const response: RLoginSuccess = {
       type: GameResponseType.LOGIN_SUCCESS,
@@ -181,10 +190,32 @@ export class App {
     this._sendResponse(sock, response);
   }
 
+  private _respawnPlayer(playerId: EntityId) {
+    const user = this._users.get(playerId);
+    if (!user) {
+      throw new GameError(`Cannot respawn user; No player with id ${playerId}`);
+    }
+    user.playerId = user.game.respawnPlayer(playerId,
+                                            user.pinataId,
+                                            user.pinataToken);
+    this._users.delete(playerId);
+    this._users.set(user.playerId, user);
+
+    user.ws.userId = user.playerId;
+
+    const newIdMsg: RNewPlayerId = {
+      type: GameResponseType.NEW_PLAYER_ID,
+      playerId: user.playerId
+    };
+    this._sendResponse(user.ws, newIdMsg);
+  }
+
   // When a message comes in from the client, pass it onto the game instance
   private async _handleClientMessage(sock: ExtWebSocket,
                                      msg: string) {
     const action = deserialiseMessage(msg);
+
+    console.log(action);
 
     if (action.type === ActionType.LOG_IN) {
       const data = <LogInAction>action;
@@ -200,7 +231,14 @@ export class App {
         throw new GameError("No such client", ErrorCode.INTERNAL_ERROR);
       }
       action.playerId = sock.userId;
-      client.game.onPlayerAction(action);
+
+      if (action.type === ActionType.RESPAWN) {
+        const ac = <RespawnAction>action;
+        this._respawnPlayer(ac.playerId);
+      }
+      else {
+        client.game.onPlayerAction(action);
+      }
     }
   }
 }

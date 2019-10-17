@@ -2,7 +2,7 @@ import { GameError } from "./error";
 import { ComponentType } from "./component_types";
 import { GameEvent } from "./event";
 import { EntityType } from "./game_objects";
-import { EntityId, System, Component, ComponentPacket } from "./system";
+import { EntityId, System, Component } from "./system";
 
 let nextEntityId = 0;
 
@@ -53,6 +53,10 @@ export class EntityManager {
 
   getEntities(): Entity[] {
     return Array.from(this.entities.values());
+  }
+
+  hasEntity(id: EntityId) {
+    return this.entities.has(id);
   }
 
   removeEntity(entityId: EntityId) {

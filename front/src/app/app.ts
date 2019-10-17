@@ -1,8 +1,10 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction, LogInAction } from "./common/action";
+import { ActionType, MoveAction, LogInAction,
+         RespawnAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
-         RLoginSuccess, REntitiesDeleted, REvent } from "./common/response";
+         RLoginSuccess, REntitiesDeleted, REvent,
+         RNewPlayerId } from "./common/response";
 import { constructEntities } from './factory';
 import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
          PLAYER_SPEED } from "./common/config";
@@ -16,9 +18,11 @@ import { ClientSpatialSystem } from './client_spatial_system';
 import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
-import { GameEvent } from './common/event';
 
 const WEBSOCKET_URL = "ws://192.168.0.125:3001";
+
+const PLAYER_ID_UNSET = -1;
+const PLAYER_ID_DEAD = -2;
 
 class UserInput {
   _keyStates: Map<string, boolean>;
@@ -50,7 +54,7 @@ export class App {
   private _em: ClientEntityManager;
   private _scheduler: Scheduler;
   private _userInput: UserInput;
-  private _playerId: EntityId = -1;
+  private _playerId: EntityId = PLAYER_ID_UNSET;
   private _moveRemoteFn: (direction: Direction) => void;
 
   constructor() {
@@ -88,7 +92,7 @@ export class App {
 
   private _movePlayerRemote(direction: Direction) {
     const action: MoveAction = {
-      playerId: -1,
+      playerId: PLAYER_ID_UNSET,
       type: ActionType.MOVE,
       direction
     };
@@ -107,7 +111,14 @@ export class App {
   }
 
   private _keyboard() {
-    if (this._playerId == -1) {
+    if (this._playerId == PLAYER_ID_UNSET) {
+      return;
+    }
+
+    if (this._playerId == PLAYER_ID_DEAD &&
+        this._userInput.keyPressed("Enter")) {
+
+      this._requestRespawn();
       return;
     }
 
@@ -136,7 +147,7 @@ export class App {
     const password = "password";
 
     const data: LogInAction = {
-      playerId: -1,
+      playerId: PLAYER_ID_UNSET,
       type: ActionType.LOG_IN,
       email,
       password
@@ -169,6 +180,16 @@ export class App {
     this._pixi.ticker.add(delta => this._tick(delta));
   }
 
+  private _requestRespawn() {
+    const action: RespawnAction = {
+      type: ActionType.RESPAWN,
+      playerId: PLAYER_ID_UNSET
+    };
+
+    const dataString = JSON.stringify(action);
+    this._ws.send(dataString);
+  }
+
   private _startGame(playerId: EntityId) {
     // TODO
     console.log("Starting game");
@@ -192,6 +213,11 @@ export class App {
     });
   }
 
+  private _onPlayerKilled() {
+    console.log("You died!");
+    this._playerId = PLAYER_ID_DEAD;
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.NEW_ENTITIES:
@@ -206,10 +232,19 @@ export class App {
       case GameResponseType.EVENT:
         this._em.postEvent((<REvent>msg).event);
         break;
-      case GameResponseType.LOGIN_SUCCESS:
+      case GameResponseType.LOGIN_SUCCESS: {
         const m = <RLoginSuccess>msg;
         this._startGame(m.playerId);
         break;
+      }
+      case GameResponseType.PLAYER_KILLED:
+        this._onPlayerKilled();
+        break;
+      case GameResponseType.NEW_PLAYER_ID: {
+        const m = <RNewPlayerId>msg;
+        this._startGame(m.playerId);
+        break;
+      }
       case GameResponseType.ERROR:
         this._handleServerError(<RError>msg);
         break;

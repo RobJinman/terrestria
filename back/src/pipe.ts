@@ -25,6 +25,14 @@ export class Pipe {
     return this._sockets.has(id);
   }
 
+  getConnection(playerId: EntityId): WebSocket {
+    const socket = this._sockets.get(playerId);
+    if (!socket) {
+      throw new GameError(`No socket for player with id ${playerId}`);
+    }
+    return socket;
+  }
+
   sendToAll(data: any) {
     const json = JSON.stringify(data);
     this._sockets.forEach(socket => socket.send(json));

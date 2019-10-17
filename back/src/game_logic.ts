@@ -37,8 +37,14 @@ export class GameLogic {
 
   update(actions: PlayerAction[]) {
     if (this._queuedAction) {
-      if (this._handlePlayerAction(this._queuedAction)) {
+      try {
+        if (this._handlePlayerAction(this._queuedAction)) {
+          this._queuedAction = null;
+        }
+      }
+      catch (err) {
         this._queuedAction = null;
+        throw err;
       }
     }
 

@@ -9,7 +9,9 @@ export enum GameResponseType {
   GAME_STATE = "GAME_STATE",
   NEW_ENTITIES = "NEW_ENTITIES",
   ENTITIES_DELETED = "ENTITIES_DELETED",
-  EVENT = "EVENT"
+  EVENT = "EVENT",
+  PLAYER_KILLED = "PLAYER_KILLED",
+  NEW_PLAYER_ID = "NEW_PLAYER_ID"
 }
 
 export interface GameResponse {
@@ -39,4 +41,10 @@ export interface REntitiesDeleted extends GameResponse {
 
 export interface REvent extends GameResponse {
   event: GameEvent;
+}
+
+export interface RPlayerKilled extends GameResponse {}
+
+export interface RNewPlayerId extends GameResponse {
+  playerId: EntityId;
 }

@@ -6,17 +6,22 @@ import { constructSoil, constructRock, constructGem,
 import { AgentSystem } from "./agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponseType, RGameState, RNewEntities } from "./common/response";
+import { GameResponseType, RGameState, RNewEntities,
+         RPlayerKilled } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/config";
 import { EntityType } from "./common/game_objects";
-import { BehaviourSystem } from "./common/behaviour_system";
+import { BehaviourSystem, BehaviourComponent,
+         EventHandlerFn } from "./common/behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { debounce } from "./common/utils";
 import { InventorySystem } from "./inventory_system";
+import { getNextEntityId } from "./common/entity_manager";
+import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
+import { GameError, ErrorCode } from "./common/error";
 
 function noThrow(fn: () => any) {
   try {
@@ -36,6 +41,7 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
+  private _entityId: EntityId;
   private _doSyncFn: () => void;
 
   constructor() {
@@ -58,6 +64,18 @@ export class Game {
 
     this._gameLogic = new GameLogic(this._em);
 
+    this._entityId = getNextEntityId();
+    const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
+    const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
+    broadcastHandlers.set(GameEventType.PLAYER_KILLED,
+                          event => this._onPlayerKilled(event));
+
+    const behaviourComp = new BehaviourComponent(this._entityId,
+                                                 targetedHandlers,
+                                                 broadcastHandlers);
+
+    this._em.addEntity(this._entityId, EntityType.OTHER, [behaviourComp]);
+
     console.log(`Starting game ${this._id}`);
 
     this._populate();
@@ -66,6 +84,16 @@ export class Game {
                                     SERVER_FRAME_DURATION_MS);
 
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
+  }
+
+  private _onPlayerKilled(e: GameEvent) {
+    const event = <EPlayerKilled>e;
+
+    const msg: RPlayerKilled = {
+      type: GameResponseType.PLAYER_KILLED
+    };
+
+    this._pipe.send(event.playerId, msg);
   }
 
   private _doSync() {
@@ -171,6 +199,38 @@ export class Game {
     this._pipe.send(id, newEntitiesResp);
     this._pipe.sendToAll(newPlayerResp);
     this._pipe.send(id, stateUpdateResp);
+
+    return id;
+  }
+
+  respawnPlayer(oldId: EntityId, pinataId: string, pinataToken: string) {
+    if (this._em.hasEntity(oldId)) {
+      throw new GameError(`Cannot respawn; player ${oldId} is still alive`,
+                          ErrorCode.BAD_REQUEST);
+    }
+
+    if (!this._pipe.hasConnection(oldId)) {
+      throw new GameError(`Unrecognised player id ${oldId}`,
+                          ErrorCode.BAD_REQUEST);
+    }
+
+    const id = constructPlayer(this._em, pinataId, pinataToken);
+
+    const socket = this._pipe.getConnection(oldId);
+    this._pipe.removeConnection(oldId);
+    this._pipe.addConnection(id, socket);
+
+    console.log(`Respawning player ${oldId} => ${id}`);
+
+    const newPlayerResp: RNewEntities = {
+      type: GameResponseType.NEW_ENTITIES,
+      entities: [{
+        id,
+        type: EntityType.PLAYER
+      }]
+    };
+
+    this._pipe.sendToAll(newPlayerResp);
 
     return id;
   }

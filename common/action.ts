@@ -4,15 +4,15 @@ import { Direction } from "./definitions";
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
-  MOVE = "MOVE",
-  JUMP = "JUMP"
+  RESPAWN = "RESPAWN",
+  MOVE = "MOVE"
   // ...
 }
 
 const VALIDATORS: ValidatorFnMap = {
   LOG_IN: isLogInAction,
-  MOVE: isMoveAction,
-  JUMP: isJumpAction
+  RESPAWN: isRespawnAction,
+  MOVE: isMoveAction
   // ...
 };
 
@@ -25,8 +25,18 @@ export interface LogInAction extends PlayerAction {
 }
 
 export function isLogInAction(obj: any): obj is LogInAction {
-  return obj.email &&
+  return obj.type == ActionType.LOG_IN &&
+         obj.email &&
          obj.password;
+}
+
+// =======================================================
+// RespawnAction
+//
+export interface RespawnAction extends PlayerAction {}
+
+export function isRespawnAction(obj: any): obj is RespawnAction {
+  return obj.type === ActionType.RESPAWN;
 }
 
 // =======================================================
@@ -37,19 +47,9 @@ export interface MoveAction extends PlayerAction {
 }
 
 export function isMoveAction(obj: any): obj is MoveAction {
-  return obj.direction &&
+  return obj.type === ActionType.MOVE &&
+         obj.direction &&
          obj.direction in Direction;
-}
-
-// =======================================================
-// JumpAction
-//
-export interface JumpAction extends PlayerAction {
-  // TODO
-}
-
-export function isJumpAction(obj: any): obj is JumpAction {
-  return true; // TODO
 }
 
 // =======================================================
@@ -63,6 +63,13 @@ type ValidatorFn = (obj: any) => boolean;
 
 type ValidatorFnMap = { [ actionType in ActionType ]: ValidatorFn; };
 
+function assertHasProperty(obj: any, prop: string) {
+  if (!obj.hasOwnProperty(prop)) {
+    throw new GameError(`Malformed request: Missing ${prop} property`,
+                        ErrorCode.BAD_REQUEST);
+  }
+}
+
 export function deserialiseMessage(msg: string): PlayerAction {
   let action: PlayerAction;
   try {
@@ -73,10 +80,7 @@ export function deserialiseMessage(msg: string): PlayerAction {
                         ErrorCode.BAD_REQUEST);
   }
 
-  if (!action.type) {
-    throw new GameError("Malformed request: Missing type property",
-                        ErrorCode.BAD_REQUEST);
-  }
+  assertHasProperty(action, "type");
 
   const validator = VALIDATORS[action.type];
   if (!validator) {
