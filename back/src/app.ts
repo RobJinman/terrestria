@@ -1,3 +1,4 @@
+import http from "http";
 import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
@@ -28,18 +29,41 @@ interface UserConnection {
 type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
+  private _server: http.Server;
   private _wss: WebSocket.Server;
   private _users: Map<EntityId, UserConnection>;
   private _games: Set<Game>;
 
   constructor() {
-    this._wss = new WebSocket.Server({ port: SERVER_PORT });;
+    this._server = http.createServer((req, res) => {
+      this._handleHttpRequest(req, res);
+    });
+
+    this._wss = new WebSocket.Server({ server: this._server });;
     this._games = new Set<Game>();
     this._users = new Map<EntityId, UserConnection>();
 
     this._wss.on("connection", ws => this._handleConnection(ws));
 
+    this._server.listen(SERVER_PORT);
+
     setInterval(() => this._checkConnections(), PING_INTERVAL_MS);
+  }
+
+  private _handleHttpRequest(req: http.IncomingMessage,
+                             res: http.ServerResponse) {
+
+    console.log(req.url);
+
+    if (req.url == "/health") {
+      res.statusCode = 200;
+      res.write("Still alive!");
+    }
+    else {
+      res.statusCode = 404;
+    }
+
+    res.end();
   }
 
   private _handleConnection(ws: WebSocket) {
@@ -214,8 +238,6 @@ export class App {
   private async _handleClientMessage(sock: ExtWebSocket,
                                      msg: string) {
     const action = deserialiseMessage(msg);
-
-    console.log(action);
 
     if (action.type === ActionType.LOG_IN) {
       const data = <LogInAction>action;
