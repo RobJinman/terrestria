@@ -8,6 +8,7 @@ import { GameResponse, GameResponseType, RError, RLoginSuccess,
          RNewPlayerId } from "./common/response";
 import { pinataAuth } from "./pinata";
 import { EntityId } from "./common/system";
+import { AppConfig, makeAppConfig } from "./config";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -29,12 +30,15 @@ interface UserConnection {
 type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
+  private _config: AppConfig;
   private _server: http.Server;
   private _wss: WebSocket.Server;
   private _users: Map<EntityId, UserConnection>;
   private _games: Set<Game>;
 
   constructor() {
+    this._config = makeAppConfig();
+
     this._server = http.createServer((req, res) => {
       this._handleHttpRequest(req, res);
     });
@@ -52,9 +56,6 @@ export class App {
 
   private _handleHttpRequest(req: http.IncomingMessage,
                              res: http.ServerResponse) {
-
-    console.log(req.url);
-
     if (req.url == "/health") {
       res.statusCode = 200;
       res.write("Still alive!");
@@ -162,7 +163,7 @@ export class App {
       }
     }
 
-    const game = new Game();
+    const game = new Game(this._config);
     this._games.add(game);
 
     return game;
@@ -175,7 +176,7 @@ export class App {
     let pinataToken: string = "";
 
     try {
-      const auth = await pinataAuth(data);
+      const auth = await pinataAuth(this._config.pinataApiBase, data);
       pinataId = auth.accountId;
       pinataToken = auth.token;
 

@@ -3,7 +3,7 @@ import { SpatialComponentPacket, SpatialSystem, directionToVector,
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
-import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/config";
+import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EAgentBeginMove, GameEventType, EAgentEnterCell, EEntitySquashed, 
          EAgentAction, AgentActionType} from "./common/event";
 import { GameError } from "./common/error";

@@ -7,8 +7,10 @@ export interface PinataAuthResponse {
   token: string;
 }
 
-export async function pinataAuth(logInReq: LogInAction):
+export async function pinataAuth(pinataApiBase: string, logInReq: LogInAction):
   Promise<PinataAuthResponse> {
+
+  const web = pinataApiBase.startsWith("https") ? https: http;
 
   console.log("Authenticating");
 
@@ -22,7 +24,6 @@ export async function pinataAuth(logInReq: LogInAction):
     };
 
     const payload = JSON.stringify(body);
-
     console.log(payload);
 
     const options: http.RequestOptions = {
@@ -34,9 +35,16 @@ export async function pinataAuth(logInReq: LogInAction):
       agent: false
     };
 
-    const url = "http://localhost:3000/gamer/log-in";
+    const url = `${pinataApiBase}/gamer/log-in`;
 
-    let req = http.request(url, options, res => {
+    // TODO: Remove this
+    resolve({
+      accountId: "DUMMY_ACCOUNT_ID",
+      token: "DUMMY_TOKEN"
+    });
+    return;
+
+    let req = web.request(url, options, res => {
       let json = "";
 
       res.on("data", chunk => {

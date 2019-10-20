@@ -7,7 +7,7 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RNewPlayerId } from "./common/response";
 import { constructEntities } from './factory';
 import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
-         PLAYER_SPEED } from "./common/config";
+         PLAYER_SPEED } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { debounce, waitForCondition } from './common/utils';
@@ -19,7 +19,7 @@ import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 
-const WEBSOCKET_URL = "ws://192.168.0.125:3001";
+const WEBSOCKET_URL = "wss://api.terrestria.io:3001";
 
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;

@@ -10,7 +10,7 @@ import { GameResponseType, RGameState, RNewEntities,
          RPlayerKilled } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
-         SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/config";
+         SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { BehaviourSystem, BehaviourComponent,
          EventHandlerFn } from "./common/behaviour_system";
@@ -22,6 +22,7 @@ import { InventorySystem } from "./inventory_system";
 import { getNextEntityId } from "./common/entity_manager";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
+import { AppConfig } from "./config";
 
 function noThrow(fn: () => any) {
   try {
@@ -35,6 +36,7 @@ function noThrow(fn: () => any) {
 export class Game {
   private static nextGameId: number = 0;
 
+  private _appConfig: AppConfig;
   private _id: number;
   private _pipe: Pipe;
   private _em: ServerEntityManager;
@@ -44,7 +46,8 @@ export class Game {
   private _entityId: EntityId;
   private _doSyncFn: () => void;
 
-  constructor() {
+  constructor(appConfig: AppConfig) {
+    this._appConfig = appConfig;
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);

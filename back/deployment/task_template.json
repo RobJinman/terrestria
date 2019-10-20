@@ -1,0 +1,42 @@
+{
+  "containerDefinitions": [
+    {
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "pinata-demo-1",
+          "awslogs-region": "eu-west-2",
+          "awslogs-stream-prefix": "pinata-demo-1"
+        }
+      },
+      "healthCheck": {
+        "command": [ "CMD-SHELL", "curl -f http://localhost:3001/health" ],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3
+      },
+      "portMappings": [
+        {
+          "hostPort": 3001,
+          "containerPort": 3001
+        }
+      ],
+      "cpu": 100,
+      "environment": [
+        {
+          "name": "PRODUCT_KEY",
+          "value": "XXXXXXXX"
+        },
+        {
+          "name": "PINATA_API_BASE",
+          "value": "https://api.pinatagames.com"
+        }
+      ],
+      "memory": 1024,
+      "image": "826973917972.dkr.ecr.eu-west-2.amazonaws.com/pinata/pinata-demo-1:latest",
+      "name": "pinata-demo-1"
+    }
+  ],
+  "family": "pinata-demo-1",
+  "networkMode": "bridge"
+}

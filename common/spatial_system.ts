@@ -1,5 +1,5 @@
 import { ComponentType } from "./component_types";
-import { BLOCK_SZ } from "./config";
+import { BLOCK_SZ } from "./constants";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";

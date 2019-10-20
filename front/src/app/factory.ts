@@ -5,7 +5,7 @@ import { SpatialComponent } from "./common/spatial_system";
 import { RenderComponent, StaticImage, AnimationDesc,
          RenderSystem } from "./render_system";
 import { EntityId } from "./common/system";
-import { PLAYER_SPEED } from "./common/config";
+import { PLAYER_SPEED } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
