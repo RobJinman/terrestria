@@ -4,8 +4,8 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
-import { EAgentBeginMove, GameEventType, EAgentEnterCell, EEntitySquashed, 
-         EAgentAction, AgentActionType} from "./common/event";
+import { GameEventType, EAgentEnterCell, EEntitySquashed, EAgentAction,
+         AgentActionType} from "./common/event";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { ServerEntityManager } from "./server_entity_manager";
@@ -94,38 +94,85 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     this._gravity();
   }
 
-  private _moveAgent(id: EntityId,
-                     x: number,
-                     y: number,
-                     direction: Direction,
-                     t: number): boolean {
+  _moveAgentIntoFreeSpace(id: EntityId,
+                          destX: number,
+                          destY: number,
+                          direction: Direction) {
+    const t = 1.0 / PLAYER_SPEED;
+    if (this.positionEntity_tween(id, destX, destY, t)) {
+      const solid = this.grid.solidItemsAtPos(destX, destY);
+      if (solid.size > 1) { // The player is solid
+        const event: EAgentAction = {
+          type: GameEventType.AGENT_ACTION,
+          actionType: AgentActionType.DIG,
+          agentId: id,
+          entities: [...solid].map(c => c.entityId),
+          direction
+        };
 
-    if (this.positionEntity_tween(id, x, y, t)) {
-      const items = this.grid.idsAtPos(x, y);
+        this._em().submitEvent(event);
+      }
+      else {
+        const event: EAgentAction = {
+          type: GameEventType.AGENT_ACTION,
+          actionType: AgentActionType.RUN,
+          agentId: id,
+          entities: [id],
+          direction
+        };
 
-      const event: EAgentBeginMove = {
-        type: GameEventType.AGENT_BEGIN_MOVE,
-        entities: items,
-        entityId: id,
-        direction: direction,
-        gridX: Math.round(x / BLOCK_SZ),
-        gridY: Math.round(y / BLOCK_SZ)
-      };
-
-      this.em.postEvent(event);
+        this._em().submitEvent(event);
+      }
 
       return true;
     }
-
     return false;
   }
 
-  moveAgent(id: EntityId, direction: Direction): boolean {
-    const c = this.getComponent(id);
-    if (!c.isAgent) {
-      throw new GameError("Entity is not agent");
-    }
+  _moveAgentIntoBlockedSpace(id: EntityId,
+                             item: SpatialComponent,
+                             destX: number,
+                             destY: number,
+                             direction: Direction) {
+    let moved = false;
+    if (item.movable) {
+      const t = 1.0 / PLAYER_SPEED;
 
+      if (direction == Direction.LEFT) {
+        const xLeft = item.destX - BLOCK_SZ;
+        const y = item.destY;
+        if (this.grid.spaceFreeAtPos(xLeft, y)) {
+          this.stopEntity(item.entityId);
+          this.positionEntity_tween(item.entityId, xLeft, y, t);
+          moved = this.positionEntity_tween(id, destX, destY, t);
+        }
+      }
+      else if (direction == Direction.RIGHT) {
+        const xRight = item.destX + BLOCK_SZ;
+        const y = item.destY;
+        if (this.grid.spaceFreeAtPos(xRight, y)) {
+          this.stopEntity(item.entityId);
+          this.positionEntity_tween(item.entityId, xRight, y, t);
+          moved = this.positionEntity_tween(id, destX, destY, t);
+        }
+      }
+
+      if (moved) {
+        const event: EAgentAction = {
+          type: GameEventType.AGENT_ACTION,
+          actionType: AgentActionType.PUSH,
+          agentId: id,
+          entities: [id, item.entityId],
+          direction
+        };
+
+        this._em().submitEvent(event);
+      }
+    }
+    return moved;
+  }
+
+  _moveAgent(c: SpatialComponent, direction: Direction) {
     const delta = directionToVector(direction);
 
     const destX = c.x + delta[0];
@@ -135,77 +182,37 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
       return false;
     }
 
-    const oldDestGridX = this.grid.toGridX(c.destX);
-    const oldDestGridY = this.grid.toGridY(c.destY);
-
-    const t = 1.0 / PLAYER_SPEED;
     let moved = false;
 
     const blocking = this.grid.blockingItemsAtPos(destX, destY);
     if (blocking.size === 0) {
-      moved = this._moveAgent(c.entityId, destX, destY, direction, t);
-
-      if (moved) {
-        const solid = this.grid.solidItemsAtPos(destX, destY);
-        if (solid.size > 1) { // The player is solid
-          const event: EAgentAction = {
-            type: GameEventType.AGENT_ACTION,
-            actionType: AgentActionType.DIG,
-            agentId: c.entityId,
-            entities: [c.entityId].concat([...solid].map(c => c.entityId)),
-            direction
-          };
-
-          this._em().submitEvent(event);
-        }
-        else {
-          const event: EAgentAction = {
-            type: GameEventType.AGENT_ACTION,
-            actionType: AgentActionType.RUN,
-            agentId: c.entityId,
-            entities: [c.entityId],
-            direction
-          };
-
-          this._em().submitEvent(event);
-        }
-      }
+      moved = this._moveAgentIntoFreeSpace(c.entityId,
+                                           destX,
+                                           destY,
+                                           direction);
     }
     else if (blocking.size === 1) {
-      const item: SpatialComponent = blocking.values().next().value;
-      if (item.movable) {
-        if (direction == Direction.LEFT) {
-          const xLeft = item.destX - BLOCK_SZ;
-          const y = item.destY;
-          if (this.grid.spaceFreeAtPos(xLeft, y)) {
-            this.stopEntity(item.entityId);
-            this.positionEntity_tween(item.entityId, xLeft, y, t);
-            moved = this._moveAgent(c.entityId, destX, destY, direction, t);
-          }
-        }
-        else if (direction == Direction.RIGHT) {
-          const xRight = item.destX + BLOCK_SZ;
-          const y = item.destY;
-          if (this.grid.spaceFreeAtPos(xRight, y)) {
-            this.stopEntity(item.entityId);
-            this.positionEntity_tween(item.entityId, xRight, y, t);
-            moved = this._moveAgent(c.entityId, destX, destY, direction, t);
-          }
-        }
-
-        if (moved) {
-          const event: EAgentAction = {
-            type: GameEventType.AGENT_ACTION,
-            actionType: AgentActionType.PUSH,
-            agentId: c.entityId,
-            entities: [c.entityId, item.entityId],
-            direction
-          };
-
-          this._em().submitEvent(event);
-        }
-      }
+      const item = blocking.values().next().value;
+      moved = this._moveAgentIntoBlockedSpace(c.entityId,
+                                              item,
+                                              destX,
+                                              destY,
+                                              direction);
     }
+
+    return moved;
+  }
+
+  moveAgent(id: EntityId, direction: Direction): boolean {
+    const c = this.getComponent(id);
+    if (!c.isAgent) {
+      throw new GameError("Entity is not agent");
+    }
+
+    const oldDestGridX = this.grid.toGridX(c.destX);
+    const oldDestGridY = this.grid.toGridY(c.destY);
+
+    let moved = this._moveAgent(c, direction);
 
     if (moved) {
       const newDestGridX = this.grid.toGridX(c.destX);
