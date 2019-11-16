@@ -19,7 +19,7 @@ import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 
-const WEBSOCKET_URL = "wss://api.terrestria.io:3001";
+declare var __WEBSOCKET_URL__: string;
 
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
@@ -63,7 +63,7 @@ export class App {
     this._pixi.stage.position.y = renderer.height / renderer.resolution;
     this._pixi.stage.scale.y = -1;
 
-    this._ws = new WebSocket(WEBSOCKET_URL);
+    this._ws = new WebSocket(__WEBSOCKET_URL__);
 
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
@@ -71,9 +71,9 @@ export class App {
 
     this._em = new ClientEntityManager();
     const spatialSystem = new ClientSpatialSystem(this._em,
-                                            WORLD_W,
-                                            WORLD_H,
-                                            CLIENT_FRAME_RATE);
+                                                  WORLD_W,
+                                                  WORLD_H,
+                                                  CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,
                                           this._pixi);

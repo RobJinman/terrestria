@@ -7,7 +7,6 @@ export enum GameEventType {
   ENTITY_SQUASHED = "ENTITY_SQUASHED",
   ENTITY_BURNED = "ENTITY_BURNED",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
-  AGENT_BEGIN_MOVE = "AGENT_BEGIN_MOVE",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED"
 }
@@ -29,13 +28,6 @@ export interface EAgentEnterCell extends GameEvent {
   entityId: EntityId;
   prevGridX: number;
   prevGridY: number;
-  gridX: number;
-  gridY: number;
-  direction: Direction;
-}
-
-export interface EAgentBeginMove extends GameEvent {
-  entityId: EntityId;
   gridX: number;
   gridY: number;
   direction: Direction;

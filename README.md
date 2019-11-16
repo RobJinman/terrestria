@@ -43,12 +43,6 @@ Install dependencies
     npm install
 ```
 
-Set the relevant environment variables
-
-```
-    source ./environment/env_dev.sh
-```
-
 Compile and run the app
 
 ```

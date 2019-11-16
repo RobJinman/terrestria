@@ -10,6 +10,9 @@ const isProduction = process.env.NODE_ENV === "production";
 const rootDir = path.resolve(__dirname, "src");
 const distDir = path.resolve(__dirname, "dist");
 
+let websocketUrl = isProduction ? "wss://api.terrestria.io:3001"
+                                : "ws://localhost:3001";
+
 const baseConfig = {
   context: rootDir,
   entry: {
@@ -57,7 +60,7 @@ const baseConfig = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Pinata Demo 1",
+      title: "Terrestria",
       template: path.resolve(rootDir, "index.html"),
       inject: true,
       minify: {
@@ -73,7 +76,8 @@ const baseConfig = {
     ]),
     new webpack.DefinePlugin({
       "typeof CANVAS_RENDERER": JSON.stringify(true),
-      "typeof WEBGL_RENDERER": JSON.stringify(true)
+      "typeof WEBGL_RENDERER": JSON.stringify(true),
+      __WEBSOCKET_URL__: JSON.stringify(websocketUrl)
     }),
   ]
 };
