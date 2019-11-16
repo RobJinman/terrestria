@@ -23,6 +23,7 @@ import { getNextEntityId } from "./common/entity_manager";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
+import { Span, Span2d } from "./geometry";
 
 function noThrow(fn: () => any) {
   try {
@@ -134,6 +135,13 @@ export class Game {
     const spatialSys =
       <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
+    const gravRegion = new Span2d();
+    gravRegion.addHorizontalSpan(4, new Span(5, 16));
+    gravRegion.addHorizontalSpan(5, new Span(5, 16));
+    gravRegion.addHorizontalSpan(6, new Span(4, 17));
+    gravRegion.addHorizontalSpan(7, new Span(4, 18));
+    gravRegion.addHorizontalSpan(8, new Span(4, 15));
+
     const numRocks = 20;
     const numGems = 10;
 
@@ -141,6 +149,9 @@ export class Game {
     for (let c = 0; c < WORLD_W; ++c) {
       for (let r = 0; r < WORLD_H; ++r) {
         if (c === 0 && r === 0) {
+          continue;
+        }
+        if (gravRegion.contains(c, r)) {
           continue;
         }
         coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
