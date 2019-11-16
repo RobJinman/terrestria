@@ -90,6 +90,28 @@ export class App {
     this._insertElement();
   }
 
+  async start() {
+    const resources = await this._loadAssets();
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+
+    const resource = resources["sprite_sheet"];
+    if (!resource || !resource.spritesheet) {
+      throw new GameError("Sprite sheet not loaded");
+    }
+    const sheet = resource.spritesheet;
+    renderSys.setSpriteSheet(sheet);
+
+    await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
+                           500,
+                           10);
+
+    // TODO
+    this._logIn();
+
+    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
+    this._pixi.ticker.add(delta => this._tick(delta));
+  }
+
   private _movePlayerRemote(direction: Direction) {
     const action: MoveAction = {
       playerId: PLAYER_ID_UNSET,
@@ -142,7 +164,7 @@ export class App {
     }
   }
 
-  _logIn() {
+  private _logIn() {
     const email = "gamer1@email.com";
     const password = "password";
 
@@ -156,28 +178,6 @@ export class App {
     const dataString = JSON.stringify(data);
 
     this._ws.send(dataString);
-  }
-
-  async start() {
-    const resources = await this._loadAssets();
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-
-    const resource = resources["sprite_sheet"];
-    if (!resource || !resource.spritesheet) {
-      throw new GameError("Sprite sheet not loaded");
-    }
-    const sheet = resource.spritesheet;
-    renderSys.setSpriteSheet(sheet);
-
-    await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
-                           500,
-                           10);
-
-    // TODO
-    this._logIn();
-
-    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
-    this._pixi.ticker.add(delta => this._tick(delta));
   }
 
   private _requestRespawn() {

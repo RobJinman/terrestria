@@ -18,10 +18,6 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     super(em, w, h, frameRate);
   }
 
-  private _em() {
-    return <ServerEntityManager>(this.em);
-  }
-
   getState() {
     const packets: SpatialComponentPacket[] = [];
 
@@ -38,6 +34,51 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     });
 
     return packets;
+  }
+
+  update() {
+    super.update();
+    this._gravity();
+  }
+
+  moveAgent(id: EntityId, direction: Direction): boolean {
+    const c = this.getComponent(id);
+    if (!c.isAgent) {
+      throw new GameError("Entity is not agent");
+    }
+
+    const oldDestGridX = this.grid.toGridX(c.destX);
+    const oldDestGridY = this.grid.toGridY(c.destY);
+
+    let moved = this._moveAgent(c, direction);
+
+    if (moved) {
+      const newDestGridX = this.grid.toGridX(c.destX);
+      const newDestGridY = this.grid.toGridY(c.destY);
+
+      if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
+        const items = this.grid.idsInCell(newDestGridX, newDestGridY);
+
+        const event: EAgentEnterCell = {
+          type: GameEventType.AGENT_ENTER_CELL,
+          entityId: c.entityId,
+          entities: items,
+          prevGridX: oldDestGridX,
+          prevGridY: oldDestGridY,
+          gridX: newDestGridX,
+          gridY: newDestGridY,
+          direction
+        };
+
+        this.em.postEvent(event);
+      }
+    }
+
+    return moved;
+  }
+
+  private _em() {
+    return <ServerEntityManager>(this.em);
   }
 
   private _gravity() {
@@ -89,15 +130,10 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     });
   }
 
-  update() {
-    super.update();
-    this._gravity();
-  }
-
-  _moveAgentIntoFreeSpace(id: EntityId,
-                          destX: number,
-                          destY: number,
-                          direction: Direction) {
+  private _moveAgentIntoFreeSpace(id: EntityId,
+                                  destX: number,
+                                  destY: number,
+                                  direction: Direction) {
     const t = 1.0 / PLAYER_SPEED;
     if (this.positionEntity_tween(id, destX, destY, t)) {
       const solid = this.grid.solidItemsAtPos(destX, destY);
@@ -129,11 +165,11 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     return false;
   }
 
-  _moveAgentIntoBlockedSpace(id: EntityId,
-                             item: SpatialComponent,
-                             destX: number,
-                             destY: number,
-                             direction: Direction) {
+  private _moveAgentIntoBlockedSpace(id: EntityId,
+                                     item: SpatialComponent,
+                                     destX: number,
+                                     destY: number,
+                                     direction: Direction) {
     let moved = false;
     if (item.movable) {
       const t = 1.0 / PLAYER_SPEED;
@@ -172,7 +208,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     return moved;
   }
 
-  _moveAgent(c: SpatialComponent, direction: Direction) {
+  private _moveAgent(c: SpatialComponent, direction: Direction) {
     const delta = directionToVector(direction);
 
     const destX = c.x + delta[0];
@@ -198,42 +234,6 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
                                               destX,
                                               destY,
                                               direction);
-    }
-
-    return moved;
-  }
-
-  moveAgent(id: EntityId, direction: Direction): boolean {
-    const c = this.getComponent(id);
-    if (!c.isAgent) {
-      throw new GameError("Entity is not agent");
-    }
-
-    const oldDestGridX = this.grid.toGridX(c.destX);
-    const oldDestGridY = this.grid.toGridY(c.destY);
-
-    let moved = this._moveAgent(c, direction);
-
-    if (moved) {
-      const newDestGridX = this.grid.toGridX(c.destX);
-      const newDestGridY = this.grid.toGridY(c.destY);
-
-      if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
-        const items = this.grid.idsInCell(newDestGridX, newDestGridY);
-
-        const event: EAgentEnterCell = {
-          type: GameEventType.AGENT_ENTER_CELL,
-          entityId: c.entityId,
-          entities: items,
-          prevGridX: oldDestGridX,
-          prevGridY: oldDestGridY,
-          gridX: newDestGridX,
-          gridY: newDestGridY,
-          direction
-        };
-
-        this.em.postEvent(event);
-      }
     }
 
     return moved;

@@ -53,20 +53,6 @@ export class Scheduler {
     this._pendingDelete = [];
   }
 
-  private _addFunction(id: ScheduledFnHandle,
-                       fn: ScheduledFn,
-                       delayMs: number,
-                       due: number,
-                       repeatWhile?: Predicate) {
-    this._functions.set(id, {
-      id,
-      fn,
-      delayMs,
-      due,
-      repeatWhile
-    });
-  }
-
   addFunction(fn: ScheduledFn,
               msFromNow: number,
               repeatWhile?: Predicate): ScheduledFnHandle {
@@ -86,5 +72,19 @@ export class Scheduler {
 
   removeFunction(handle: ScheduledFnHandle) {
     this._pendingDelete.push(handle);
+  }
+
+  private _addFunction(id: ScheduledFnHandle,
+                       fn: ScheduledFn,
+                       delayMs: number,
+                       due: number,
+                       repeatWhile?: Predicate) {
+    this._functions.set(id, {
+      id,
+      fn,
+      delayMs,
+      due,
+      repeatWhile
+    });
   }
 }

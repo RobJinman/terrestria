@@ -90,99 +90,6 @@ export class Game {
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
   }
 
-  private _onPlayerKilled(e: GameEvent) {
-    const event = <EPlayerKilled>e;
-
-    const msg: RPlayerKilled = {
-      type: GameResponseType.PLAYER_KILLED
-    };
-
-    this._pipe.send(event.playerId, msg);
-  }
-
-  private _doSync() {
-    const dirties = this._em.getDirties();
-
-    if (dirties.length > 0) {
-      const response: RGameState = {
-        type: GameResponseType.GAME_STATE,
-        packets: dirties
-      };
-
-      this._pipe.sendToAll(response);
-    }
-
-    this._em.transmitEvents();
-  }
-
-  private _tick() {
-    try {
-      this._gameLogic.update(this._actionQueue);
-    }
-    catch (e) {
-      this._actionQueue = [];
-      throw e;
-    }
-
-    this._actionQueue = [];
-
-    this._em.update();
-
-    this._doSyncFn();
-  }
-
-  private _populate() {
-    const spatialSys =
-      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-
-    const gravRegion = new Span2d();
-    gravRegion.addHorizontalSpan(4, new Span(5, 16));
-    gravRegion.addHorizontalSpan(5, new Span(5, 16));
-    gravRegion.addHorizontalSpan(6, new Span(4, 17));
-    gravRegion.addHorizontalSpan(7, new Span(4, 18));
-    gravRegion.addHorizontalSpan(8, new Span(4, 15));
-
-    const numRocks = 20;
-    const numGems = 10;
-
-    let coords: [number, number][] = [];
-    for (let c = 0; c < WORLD_W; ++c) {
-      for (let r = 0; r < WORLD_H; ++r) {
-        if (c === 0 && r === 0) {
-          continue;
-        }
-        if (gravRegion.contains(c, r)) {
-          continue;
-        }
-        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
-      }
-    }
-
-    coords = _.shuffle(coords);
-
-    let idx = 0;
-    const rockCoords = coords.slice(0, numRocks);
-    idx += numRocks;
-    const gemCoords = coords.slice(idx, idx + numGems);
-    idx += numGems;
-    const soilCoords = coords.slice(idx);
-
-    rockCoords.forEach(([c, r]) => {
-      const id = constructRock(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
-
-    gemCoords.forEach(([c, r]) => {
-      const id = constructGem(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
-
-    soilCoords.forEach(([c, r]) => {
-      const id = constructSoil(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
-  }
-
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
     const entities = this._em.getEntities();
   
@@ -274,5 +181,98 @@ export class Game {
   terminate() {
     console.log(`Terminating game ${this._id}`);
     clearInterval(this._loopTimeout);
+  }
+
+  private _onPlayerKilled(e: GameEvent) {
+    const event = <EPlayerKilled>e;
+
+    const msg: RPlayerKilled = {
+      type: GameResponseType.PLAYER_KILLED
+    };
+
+    this._pipe.send(event.playerId, msg);
+  }
+
+  private _doSync() {
+    const dirties = this._em.getDirties();
+
+    if (dirties.length > 0) {
+      const response: RGameState = {
+        type: GameResponseType.GAME_STATE,
+        packets: dirties
+      };
+
+      this._pipe.sendToAll(response);
+    }
+
+    this._em.transmitEvents();
+  }
+
+  private _tick() {
+    try {
+      this._gameLogic.update(this._actionQueue);
+    }
+    catch (e) {
+      this._actionQueue = [];
+      throw e;
+    }
+
+    this._actionQueue = [];
+
+    this._em.update();
+
+    this._doSyncFn();
+  }
+
+  private _populate() {
+    const spatialSys =
+      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+
+    const gravRegion = new Span2d();
+    gravRegion.addHorizontalSpan(4, new Span(5, 16));
+    gravRegion.addHorizontalSpan(5, new Span(5, 16));
+    gravRegion.addHorizontalSpan(6, new Span(4, 17));
+    gravRegion.addHorizontalSpan(7, new Span(4, 18));
+    gravRegion.addHorizontalSpan(8, new Span(4, 15));
+
+    const numRocks = 20;
+    const numGems = 10;
+
+    let coords: [number, number][] = [];
+    for (let c = 0; c < WORLD_W; ++c) {
+      for (let r = 0; r < WORLD_H; ++r) {
+        if (c === 0 && r === 0) {
+          continue;
+        }
+        if (gravRegion.contains(c, r)) {
+          continue;
+        }
+        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
+      }
+    }
+
+    coords = _.shuffle(coords);
+
+    let idx = 0;
+    const rockCoords = coords.slice(0, numRocks);
+    idx += numRocks;
+    const gemCoords = coords.slice(idx, idx + numGems);
+    idx += numGems;
+    const soilCoords = coords.slice(idx);
+
+    rockCoords.forEach(([c, r]) => {
+      const id = constructRock(this._em);
+      spatialSys.positionEntity(id, c, r);
+    });
+
+    gemCoords.forEach(([c, r]) => {
+      const id = constructGem(this._em);
+      spatialSys.positionEntity(id, c, r);
+    });
+
+    soilCoords.forEach(([c, r]) => {
+      const id = constructSoil(this._em);
+      spatialSys.positionEntity(id, c, r);
+    });
   }
 }

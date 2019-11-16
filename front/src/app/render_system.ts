@@ -90,36 +90,6 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
-  private _setActiveSprite(c: RenderComponent,
-                           name: string,
-                           animated: boolean) {
-    if (c.stagedSprite) {
-      this._pixi.stage.removeChild(c.stagedSprite);
-    }
-    if (c.activeAnimation) {
-      this._scheduler.removeFunction(c.activeAnimation.setEndFrameFnHandle);
-    }
-    if (animated) {
-      const anim = c.animatedSprites.get(name);
-      if (!anim) {
-        throw new GameError("Component has no sprite with name " + name);
-      }
-      this._pixi.stage.addChild(anim.sprite);
-      c.stagedSprite = anim.sprite;
-      c.activeAnimation = anim;
-    }
-    else {
-      const sprite = c.staticSprites.get(name);
-      if (!sprite) {
-        throw new GameError("Component has no sprite with name " + name);
-      }
-      this._pixi.stage.addChild(sprite);
-      c.stagedSprite = sprite;
-    }
-
-    this._onEntityMoved(c.entityId);
-  }
-
   playAnimation(entityId: EntityId,
                 name: string,
                 onFinish?: () => void): boolean {
@@ -222,19 +192,6 @@ export class RenderSystem implements ClientSystem {
     this._components.delete(id);
   }
 
-  private _onEntityMoved(id: EntityId) {
-    if (this.hasComponent(id)) {
-      const spatialComp =
-        <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
-
-      const c = this.getComponent(id);
-      if (c.stagedSprite) {
-        c.stagedSprite.x = spatialComp.x;
-        c.stagedSprite.y = spatialComp.y;
-      }
-    }
-  }
-
   handleEvent(event: GameEvent) {
     switch (event.type) {
       case GameEventType.ENTITY_MOVED:
@@ -248,5 +205,48 @@ export class RenderSystem implements ClientSystem {
 
   getDirties() {
     return [];
+  }
+
+  private _onEntityMoved(id: EntityId) {
+    if (this.hasComponent(id)) {
+      const spatialComp =
+        <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+
+      const c = this.getComponent(id);
+      if (c.stagedSprite) {
+        c.stagedSprite.x = spatialComp.x;
+        c.stagedSprite.y = spatialComp.y;
+      }
+    }
+  }
+
+  private _setActiveSprite(c: RenderComponent,
+                           name: string,
+                           animated: boolean) {
+    if (c.stagedSprite) {
+      this._pixi.stage.removeChild(c.stagedSprite);
+    }
+    if (c.activeAnimation) {
+      this._scheduler.removeFunction(c.activeAnimation.setEndFrameFnHandle);
+    }
+    if (animated) {
+      const anim = c.animatedSprites.get(name);
+      if (!anim) {
+        throw new GameError("Component has no sprite with name " + name);
+      }
+      this._pixi.stage.addChild(anim.sprite);
+      c.stagedSprite = anim.sprite;
+      c.activeAnimation = anim;
+    }
+    else {
+      const sprite = c.staticSprites.get(name);
+      if (!sprite) {
+        throw new GameError("Component has no sprite with name " + name);
+      }
+      this._pixi.stage.addChild(sprite);
+      c.stagedSprite = sprite;
+    }
+
+    this._onEntityMoved(c.entityId);
   }
 }
