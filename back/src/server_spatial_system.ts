@@ -9,13 +9,15 @@ import { GameEventType, EAgentEnterCell, EEntitySquashed, EAgentAction,
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { ServerEntityManager } from "./server_entity_manager";
+import { Span2d } from "./common/geometry";
 
 export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   constructor(em: ServerEntityManager,
               w: number,
               h: number,
+              gravityRegion: Span2d,
               frameRate: number) {
-    super(em, w, h, frameRate);
+    super(em, w, h, gravityRegion, frameRate);
   }
 
   getState() {
@@ -83,7 +85,9 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
 
   private _gravity() {
     this.components.forEach(c => {
-      if (c.heavy) {
+      const heavy = (c.freeMode && c.heavy_fm) || (!c.freeMode && c.heavy_gm);
+
+      if (heavy) {
         const x = c.destX;
         const y = c.destY;
         const yDown = y - BLOCK_SZ;
@@ -171,7 +175,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
                                      destY: number,
                                      direction: Direction) {
     let moved = false;
-    if (item.movable) {
+    if (item.movable_gm) {
       const t = 1.0 / PLAYER_SPEED;
 
       if (direction == Direction.LEFT) {

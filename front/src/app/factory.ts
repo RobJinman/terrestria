@@ -32,14 +32,22 @@ function constructGem(em: EntityManager, id: EntityId) {
                                          animations,
                                          "gem.png");
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: false,
     stackable: false,
     heavy: true,
-    movable: false,
-    isAgent: false
-  });
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -78,14 +86,22 @@ function constructRock(em: EntityManager, id: EntityId) {
                                          animations,
                                          "rock.png");
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
-    blocking: true,
+    blocking: false,
     stackable: false,
     heavy: true,
-    movable: true,
-    isAgent: false
-  });
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -124,14 +140,22 @@ function constructSoil(em: EntityManager, id: EntityId) {
                                          animations,
                                          "soil.png");
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: false,
-    stackable: true,
-    heavy: false,
-    movable: false,
-    isAgent: false
-  });
+    stackable: false,
+    heavy: true,
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: false
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -272,14 +296,22 @@ function constructPlayer(em: EntityManager, id: EntityId) {
                                          animations,
                                          "man_run_d0.png");
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: false,
-    stackable: true,
-    heavy: false,
-    movable: false,
-    isAgent: true
-  });
+    stackable: false,
+    heavy: true,
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           true);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 

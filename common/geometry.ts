@@ -1,4 +1,4 @@
-import { GameError } from "./common/error";
+import { GameError } from "./error";
 
 // Represents a range from A to B, inclusive
 export class Span {

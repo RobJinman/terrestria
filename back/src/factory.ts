@@ -15,14 +15,22 @@ import { ServerSpatialSystem } from "./server_spatial_system";
 export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: false,
     stackable: true,
     heavy: false,
-    movable: false,
-    isAgent: false
-  });
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: false
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
@@ -42,14 +50,22 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 export function constructRock(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: true,
     stackable: false,
     heavy: true,
-    movable: true,
-    isAgent: false
-  });
+    movable: true
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
@@ -66,14 +82,23 @@ export function constructRock(em: ServerEntityManager): EntityId {
 export function constructGem(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
-  const spatialComp = new SpatialComponent(id, {
+  const gridModeProps = {
     solid: true,
     blocking: false,
     stackable: false,
     heavy: true,
     movable: false,
     isAgent: false
-  });
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           false);
 
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "gems", 1);
@@ -102,14 +127,23 @@ export function constructPlayer(em: ServerEntityManager,
   const id = getNextEntityId();
 
   const agentComp = new AgentComponent(id, pinataId, pinataToken);
-  const spatialComp = new SpatialComponent(id, {
+
+  const gridModeProps = {
     solid: true,
     blocking: false,
     stackable: true,
     heavy: false,
-    movable: false,
-    isAgent: true
-  });
+    movable: false
+  };
+
+  const freeModeProps = {
+    heavy: true
+  };
+
+  const spatialComp = new SpatialComponent(id,
+                                           gridModeProps,
+                                           freeModeProps,
+                                           true);
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));

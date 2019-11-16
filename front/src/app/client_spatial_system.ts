@@ -4,13 +4,16 @@ import { SpatialComponent, SpatialComponentPacket,
 import { EntityManager } from "./common/entity_manager";
 import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityId } from "./common/system";
+import { Span2d } from "./common/geometry";
 
 export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
   constructor(em: EntityManager,
               w: number,
               h: number,
               frameRate: number) {
-    super(em, w, h, frameRate);
+
+    const gravRegion = new Span2d();
+    super(em, w, h, gravRegion, frameRate);
   }
 
   updateComponent(packet: SpatialComponentPacket) {

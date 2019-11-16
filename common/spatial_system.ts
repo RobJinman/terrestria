@@ -6,6 +6,7 @@ import { GameError } from "./error";
 import { GameEvent } from "./event";
 import { EntityManager } from "./entity_manager";
 import { inRange, addSetToSet } from "./utils";
+import { Span2d } from "./geometry";
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
@@ -42,7 +43,7 @@ export interface SpatialComponentPacket extends ComponentPacket {
   speed: number;
 }
 
-export interface PhysicalProperties {
+export interface GridModeProperties {
   // If it blocks other objects (except agents) from occupying the same space
   solid: boolean;
   // If it blocks agents from occupying the same space
@@ -51,15 +52,18 @@ export interface PhysicalProperties {
   heavy: boolean;
   // If an agent can move it
   movable: boolean;
-  // If a playable agent
-  isAgent: boolean;
   // If other items can be stacked on top without rolling off
   stackable: boolean;
+}
+
+export interface FreeModeProperties {
+  heavy: boolean;
 }
 
 export class SpatialComponent extends Component {
   dirty = true;
   falling = false;
+  freeMode = false;
 
   private _posX: number = 0;
   private _posY: number = 0;
@@ -67,22 +71,19 @@ export class SpatialComponent extends Component {
   private _destX: number = 0;
   private _destY: number = 0;
 
-  private _solid: boolean;
-  private _blocking: boolean;
-  private _stackable: boolean;
-  private _heavy: boolean;
-  private _movable: boolean;
+  private _gridModeProperties: GridModeProperties;
+  private _freeModeProperties: FreeModeProperties;
   private _isAgent: boolean;
 
-  constructor(entityId: EntityId, properties: PhysicalProperties) {
+  constructor(entityId: EntityId,
+              gridModeProperties: GridModeProperties,
+              freeModeProperties: FreeModeProperties,
+              isAgent: boolean) {
     super(entityId, ComponentType.SPATIAL);
 
-    this._solid = properties.solid;
-    this._blocking = properties.blocking;
-    this._stackable = properties.stackable;
-    this._heavy = properties.heavy;
-    this._movable = properties.movable;
-    this._isAgent = properties.isAgent;
+    this._gridModeProperties = gridModeProperties;
+    this._freeModeProperties = freeModeProperties;
+    this._isAgent = isAgent;
   }
 
   moving() {
@@ -146,24 +147,28 @@ export class SpatialComponent extends Component {
     return this._destY;
   }
   
-  get solid() {
-    return this._solid;
+  get solid_gm() {
+    return this._gridModeProperties.solid;
   }
 
-  get blocking() {
-    return this._blocking;
+  get blocking_gm() {
+    return this._gridModeProperties.blocking;
   }
 
-  get stackable() {
-    return this._stackable;
+  get stackable_gm() {
+    return this._gridModeProperties.stackable;
   }
 
-  get heavy() {
-    return this._heavy;
+  get heavy_gm() {
+    return this._gridModeProperties.heavy;
   }
 
-  get movable() {
-    return this._movable;
+  get movable_gm() {
+    return this._gridModeProperties.movable;
+  }
+
+  get heavy_fm() {
+    return this._freeModeProperties.heavy;
   }
 
   get isAgent() {
@@ -320,19 +325,19 @@ export class Grid {
   }
 
   blockingItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "blocking");
+    return this.itemsWithPropAtPos(x, y, "blocking_gm");
   }
 
   solidItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "solid");
+    return this.itemsWithPropAtPos(x, y, "solid_gm");
   }
 
   stackableItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "stackable");
+    return this.itemsWithPropAtPos(x, y, "stackable_gm");
   }
 
   movableItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "movable");
+    return this.itemsWithPropAtPos(x, y, "movable_gm");
   }
 
   spaceFreeAtPos(x: number, y: number): boolean {
@@ -352,15 +357,21 @@ export class SpatialSystem {
   protected components: Map<number, SpatialComponent>;
   protected w = 0;
   protected h = 0;
+  protected gravityRegion: Span2d;
   protected frameRate: number;
   grid: Grid;
 
-  constructor(em: EntityManager, w: number, h: number, frameRate: number) {
+  constructor(em: EntityManager,
+              w: number,
+              h: number,
+              gravityRegion: Span2d,
+              frameRate: number) {
     this.em = em;
     this.components = new Map<number, SpatialComponent>();
 
     this.w = w;
     this.h = h;
+    this.gravityRegion = gravityRegion;
     this.frameRate = frameRate;
 
     this.grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
@@ -376,9 +387,9 @@ export class SpatialSystem {
 
   positionEntity(id: EntityId, x: number, y: number) {
     const c = this.getComponent(id);
-    c.setPos(this.grid, x, y);
+    this._setEntityPos(c, x, y);
   }
-  
+
   entityIsMoving(id: EntityId) {
     const c = this.getComponent(id);
     return c.moving();
@@ -432,7 +443,7 @@ export class SpatialSystem {
 
   stopEntity(id: EntityId) {
     const c = this.getComponent(id);
-    c.setPos(this.grid, c.x, c.y);
+    this._setEntityPos(c, c.x, c.y);
   }
 
   moveEntity(id: EntityId, dx: number, dy: number) {
@@ -495,8 +506,15 @@ export class SpatialSystem {
     const reachedDestX = xDir * (c.x - c.destX) > -0.5;
     const reachedDestY = yDir * (c.y - c.destY) > -0.5;
 
-    if (reachedDestX && reachedDestY) { 
-      c.setPos(this.grid, c.destX, c.destY);
+    if (reachedDestX && reachedDestY) {
+      this._setEntityPos(c, c.destX, c.destY);
     }
+  }
+
+  private _setEntityPos(c: SpatialComponent, x: number, y: number) {
+    c.setPos(this.grid, x, y);
+    const gridX = this.grid.toGridX(x);
+    const gridY = this.grid.toGridY(y);
+    c.freeMode = this.gravityRegion.contains(gridX, gridY);
   }
 }

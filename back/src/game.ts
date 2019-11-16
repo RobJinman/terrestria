@@ -23,7 +23,7 @@ import { getNextEntityId } from "./common/entity_manager";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
-import { Span, Span2d } from "./geometry";
+import { Span, Span2d } from "./common/geometry";
 
 function noThrow(fn: () => any) {
   try {
@@ -46,6 +46,7 @@ export class Game {
   private _gameLogic: GameLogic;
   private _entityId: EntityId;
   private _doSyncFn: () => void;
+  private _gravRegion = new Span2d();
 
   constructor(appConfig: AppConfig) {
     this._appConfig = appConfig;
@@ -56,6 +57,7 @@ export class Game {
     const spatialSystem = new ServerSpatialSystem(this._em,
                                                   WORLD_W,
                                                   WORLD_H,
+                                                  this._gravRegion,
                                                   SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem(this._em);
     const behaviourSystem = new BehaviourSystem();
@@ -228,12 +230,17 @@ export class Game {
     const spatialSys =
       <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    const gravRegion = new Span2d();
-    gravRegion.addHorizontalSpan(4, new Span(5, 16));
-    gravRegion.addHorizontalSpan(5, new Span(5, 16));
-    gravRegion.addHorizontalSpan(6, new Span(4, 17));
-    gravRegion.addHorizontalSpan(7, new Span(4, 18));
-    gravRegion.addHorizontalSpan(8, new Span(4, 15));
+    this._gravRegion.addHorizontalSpan(WORLD_H - 1, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(WORLD_H - 2, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(WORLD_H - 3, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(WORLD_H - 4, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(WORLD_H - 5, new Span(0, WORLD_W - 1));
+
+    this._gravRegion.addHorizontalSpan(4, new Span(5, 16));
+    this._gravRegion.addHorizontalSpan(5, new Span(5, 16));
+    this._gravRegion.addHorizontalSpan(6, new Span(4, 17));
+    this._gravRegion.addHorizontalSpan(7, new Span(4, 18));
+    this._gravRegion.addHorizontalSpan(8, new Span(4, 15));
 
     const numRocks = 20;
     const numGems = 10;
@@ -244,7 +251,7 @@ export class Game {
         if (c === 0 && r === 0) {
           continue;
         }
-        if (gravRegion.contains(c, r)) {
+        if (this._gravRegion.contains(c, r)) {
           continue;
         }
         coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
