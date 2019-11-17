@@ -18,25 +18,14 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    if (c.destX != packet.destX || c.destY != packet.destY) {
-      // If the entity is moving
-      if (packet.speed > 0.1) {
-        const dx = packet.x - c.x;
-        const dy = packet.y - c.y;
-        // If we're behind, increase the speed so we can catch up
-        const multiplier = Math.max(1.0, Math.sqrt(dx * dx + dy * dy) * 0.1);
-
-        c.setDestination(this.grid,
-                         packet.destX,
-                         packet.destY,
-                         packet.speed * multiplier);
-      }
-      else {
-        this.stopEntity(packet.entityId);
-        this.positionEntity_tween(packet.entityId, packet.x, packet.y, 0.2);
-      }
+    // If the entity is moving
+    if (packet.speed > 0.1) {
+      c.setDestination(this.grid, packet.destX, packet.destY, packet.speed);
     }
-    c.dirty = false;
+    else {
+      this.stopEntity(packet.entityId);
+      this.positionEntity(packet.entityId, packet.destX, packet.destY);
+    }
   }
 
   positionEntity(id: EntityId, x: number, y: number) {
