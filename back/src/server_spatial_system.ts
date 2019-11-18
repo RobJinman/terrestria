@@ -1,5 +1,6 @@
 import { SpatialComponentPacket, SpatialSystem, directionToVector,
-         SpatialComponent} from "./common/spatial_system";
+         SpatialComponent,
+         GridModeSubcomponent} from "./common/spatial_system";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { EntityId } from "./common/system";
@@ -29,9 +30,9 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
         entityId: c.entityId,
         x: c.x,
         y: c.y,
-        destX: c.destX,
-        destY: c.destY,
-        speed: c.speed
+        destX: c.gridMode.destX,
+        destY: c.gridMode.destY,
+        speed: c.gridMode.speed
       });
     });
 
@@ -44,19 +45,21 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   }
 
   moveAgent(id: EntityId, direction: Direction): boolean {
+    // TODO: Free mode
+
     const c = this.getComponent(id);
-    if (!c.isAgent) {
+    if (!c.gridMode.isAgent) {
       throw new GameError("Entity is not agent");
     }
 
-    const oldDestGridX = this.grid.toGridX(c.destX);
-    const oldDestGridY = this.grid.toGridY(c.destY);
+    const oldDestGridX = this.grid.toGridX(c.gridMode.destX);
+    const oldDestGridY = this.grid.toGridY(c.gridMode.destY);
 
     let moved = this._moveAgent(c, direction);
 
     if (moved) {
-      const newDestGridX = this.grid.toGridX(c.destX);
-      const newDestGridY = this.grid.toGridY(c.destY);
+      const newDestGridX = this.grid.toGridX(c.gridMode.destX);
+      const newDestGridY = this.grid.toGridY(c.gridMode.destY);
 
       if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
         const items = this.grid.idsInCell(newDestGridX, newDestGridY);
@@ -83,13 +86,12 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
     return <ServerEntityManager>(this.em);
   }
 
+  // TODO: Move into GridModeImpl
   private _gravity() {
     this.components.forEach(c => {
-      const heavy = (c.freeMode && c.heavy_fm) || (!c.freeMode && c.heavy_gm);
-
-      if (heavy) {
-        const x = c.destX;
-        const y = c.destY;
+      if (c.gridMode.heavy) {
+        const x = c.gridMode.destX;
+        const y = c.gridMode.destY;
         const yDown = y - BLOCK_SZ;
         const xRight = x + BLOCK_SZ;
         const xLeft = x - BLOCK_SZ;
@@ -98,11 +100,11 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
 
         if (!this.grid.outOfRange(x, yDown)) {
           if (this.grid.spaceFreeAtPos(x, yDown)) {
-            this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, t);
-            c.falling = true;
+            this.gridModeImpl.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, t);
+            c.gridMode.falling = true;
           }
           else {
-            if (c.falling) {
+            if (c.gridMode.falling) {
               const event: EEntitySquashed = {
                 type: GameEventType.ENTITY_SQUASHED,
                 entities: this.grid.idsAtPos(x, yDown),
@@ -114,18 +116,18 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
               this.em.postEvent(event);
             }
 
-            c.falling = false;
+            c.gridMode.falling = false;
 
             if (!this.grid.stackableSpaceAtPos(x, yDown)) {
               if (this.grid.spaceFreeAtPos(xRight, y) &&
                 this.grid.spaceFreeAtPos(xRight, yDown)) {
 
-                this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, t);
+                this.gridModeImpl.moveEntity_tween(c.entityId, BLOCK_SZ, 0, t);
               }
               else if (this.grid.spaceFreeAtPos(xLeft, y) &&
                 this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
-                this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, t);
+                this.gridModeImpl.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, t);
               }
             }
           }
@@ -139,7 +141,7 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
                                   destY: number,
                                   direction: Direction) {
     const t = 1.0 / PLAYER_SPEED;
-    if (this.positionEntity_tween(id, destX, destY, t)) {
+    if (this.gridModeImpl.positionEntity_tween(id, destX, destY, t)) {
       const solid = this.grid.solidItemsAtPos(destX, destY);
       if (solid.size > 1) { // The player is solid
         const event: EAgentAction = {
@@ -170,30 +172,30 @@ export class ServerSpatialSystem extends SpatialSystem implements ServerSystem {
   }
 
   private _moveAgentIntoBlockedSpace(id: EntityId,
-                                     item: SpatialComponent,
+                                     item: GridModeSubcomponent,
                                      destX: number,
                                      destY: number,
                                      direction: Direction) {
     let moved = false;
-    if (item.movable_gm) {
+    if (item.movable) {
       const t = 1.0 / PLAYER_SPEED;
 
       if (direction == Direction.LEFT) {
         const xLeft = item.destX - BLOCK_SZ;
         const y = item.destY;
         if (this.grid.spaceFreeAtPos(xLeft, y)) {
-          this.stopEntity(item.entityId);
-          this.positionEntity_tween(item.entityId, xLeft, y, t);
-          moved = this.positionEntity_tween(id, destX, destY, t);
+          this.gridModeImpl.stopEntity(item.entityId);
+          this.gridModeImpl.positionEntity_tween(item.entityId, xLeft, y, t);
+          moved = this.gridModeImpl.positionEntity_tween(id, destX, destY, t);
         }
       }
       else if (direction == Direction.RIGHT) {
         const xRight = item.destX + BLOCK_SZ;
         const y = item.destY;
         if (this.grid.spaceFreeAtPos(xRight, y)) {
-          this.stopEntity(item.entityId);
-          this.positionEntity_tween(item.entityId, xRight, y, t);
-          moved = this.positionEntity_tween(id, destX, destY, t);
+          this.gridModeImpl.stopEntity(item.entityId);
+          this.gridModeImpl.positionEntity_tween(item.entityId, xRight, y, t);
+          moved = this.gridModeImpl.positionEntity_tween(id, destX, destY, t);
         }
       }
 

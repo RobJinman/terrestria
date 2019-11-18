@@ -1,7 +1,7 @@
 import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
-import { SpatialComponent } from "./common/spatial_system";
+import { SpatialComponent, SpatialSystem } from "./common/spatial_system";
 import { RenderComponent, StaticImage, AnimationDesc,
          RenderSystem } from "./render_system";
 import { EntityId } from "./common/system";
@@ -37,17 +37,21 @@ function constructGem(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: false,
     heavy: true,
-    movable: false
+    movable: false,
+    isAgent: false
   };
 
   const freeModeProps = {
     heavy: true
   };
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -91,17 +95,21 @@ function constructRock(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: false,
     heavy: true,
-    movable: false
+    movable: false,
+    isAgent: false
   };
 
   const freeModeProps = {
     heavy: true
   };
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -145,17 +153,21 @@ function constructSoil(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: false,
     heavy: true,
-    movable: false
+    movable: false,
+    isAgent: false
   };
 
   const freeModeProps = {
     heavy: false
   };
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -301,17 +313,21 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     blocking: false,
     stackable: false,
     heavy: true,
-    movable: false
+    movable: false,
+    isAgent: true
   };
 
   const freeModeProps = {
     heavy: true
   };
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           true);
+                                           freeModeProps);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 

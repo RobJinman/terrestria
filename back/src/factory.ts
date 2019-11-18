@@ -20,17 +20,21 @@ export function constructSoil(em: ServerEntityManager): EntityId {
     blocking: false,
     stackable: true,
     heavy: false,
-    movable: false
+    movable: false,
+    isAgent: false
   };
 
   const freeModeProps = {
     heavy: false
   };
 
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
@@ -55,17 +59,21 @@ export function constructRock(em: ServerEntityManager): EntityId {
     blocking: true,
     stackable: false,
     heavy: true,
-    movable: true
+    movable: true,
+    isAgent: false
   };
 
   const freeModeProps = {
     heavy: true
   };
 
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
@@ -95,10 +103,13 @@ export function constructGem(em: ServerEntityManager): EntityId {
     heavy: true
   };
 
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           false);
+                                           freeModeProps);
 
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "gems", 1);
@@ -133,22 +144,24 @@ export function constructPlayer(em: ServerEntityManager,
     blocking: false,
     stackable: true,
     heavy: false,
-    movable: false
+    movable: false,
+    isAgent: true
   };
 
   const freeModeProps = {
     heavy: true
   };
 
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
   const spatialComp = new SpatialComponent(id,
+                                           em,
+                                           spatialSys.grid,
                                            gridModeProps,
-                                           freeModeProps,
-                                           true);
+                                           freeModeProps);
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
-
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_SQUASHED, e => {

@@ -1,6 +1,5 @@
 import { ClientSystem } from "./common/client_system";
-import { SpatialComponent, SpatialComponentPacket,
-         SpatialSystem } from "./common/spatial_system";
+import { SpatialComponentPacket, SpatialSystem } from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
 import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityId } from "./common/system";
@@ -20,10 +19,9 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
     const c = this.getComponent(packet.entityId);
     // If the entity is moving
     if (packet.speed > 0.1) {
-      c.setDestination(this.grid, packet.destX, packet.destY, packet.speed);
+      c.gridMode.setDestination(packet.destX, packet.destY, packet.speed);
     }
     else {
-      this.stopEntity(packet.entityId);
       this.positionEntity(packet.entityId, packet.destX, packet.destY);
     }
   }
@@ -37,20 +35,6 @@ export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
       entityId: id,
       x: x,
       y: y
-    };
-
-    this.em.postEvent(event);
-  }
-
-  updateEntityPos(c: SpatialComponent) {
-    super.updateEntityPos(c);
-
-    const event: EEntityMoved = {
-      type: GameEventType.ENTITY_MOVED,
-      entities: [c.entityId],
-      entityId: c.entityId,
-      x: c.x,
-      y: c.y
     };
 
     this.em.postEvent(event);

@@ -59,7 +59,11 @@ export class GameLogic {
     const spatialSys =
       <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    if (spatialSys.entityIsMoving(action.playerId)) {
+    // TODO: Free mode
+
+    if (spatialSys.gridMode(action.playerId) &&
+        spatialSys.gm_entityIsMoving(action.playerId)) {
+
       this._queuedAction = action;
       return false;
     }

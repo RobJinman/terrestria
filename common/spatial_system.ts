@@ -3,8 +3,8 @@ import { BLOCK_SZ } from "./constants";
 import { ComponentPacket, Component, EntityId } from "./system";
 import { Direction } from "./definitions";
 import { GameError } from "./error";
-import { GameEvent } from "./event";
-import { EntityManager } from "./entity_manager";
+import { GameEvent, EEntityMoved, GameEventType } from "./event";
+import { EntityManager, Entity } from "./entity_manager";
 import { inRange, addSetToSet } from "./utils";
 import { Span2d } from "./geometry";
 
@@ -54,89 +54,110 @@ export interface GridModeProperties {
   movable: boolean;
   // If other items can be stacked on top without rolling off
   stackable: boolean;
+  // If the entity is an agent
+  isAgent: boolean;
 }
 
 export interface FreeModeProperties {
   heavy: boolean;
 }
 
-export class SpatialComponent extends Component {
+abstract class SpatialSubcomponent {
+  abstract x(): number;
+  abstract y(): number;
+  // Set position without changing destination or speed
+  abstract setInstantaneousPos(x: number, y: number): void;
+  // Set the position and stop the entity moving
+  abstract setStaticPos(x: number, y: number): void;
+}
+
+export class GridModeSubcomponent implements SpatialSubcomponent {
   dirty = true;
   falling = false;
-  freeMode = false;
 
+  private _entityId: EntityId;
+  private _speed: number = 0; // Pixels per second
   private _posX: number = 0;
   private _posY: number = 0;
-  private _speed: number = 0; // Pixels per second
   private _destX: number = 0;
   private _destY: number = 0;
-
-  private _gridModeProperties: GridModeProperties;
-  private _freeModeProperties: FreeModeProperties;
-  private _isAgent: boolean;
+  private _em: EntityManager;
+  private _grid: Grid;
+  private _properties: GridModeProperties;
 
   constructor(entityId: EntityId,
-              gridModeProperties: GridModeProperties,
-              freeModeProperties: FreeModeProperties,
-              isAgent: boolean) {
-    super(entityId, ComponentType.SPATIAL);
-
-    this._gridModeProperties = gridModeProperties;
-    this._freeModeProperties = freeModeProperties;
-    this._isAgent = isAgent;
+              entityManager: EntityManager,
+              grid: Grid,
+              properties: GridModeProperties) {
+    this._entityId = entityId;
+    this._em = entityManager;
+    this._grid = grid;
+    this._properties = properties;
   }
 
   moving() {
     return this._speed > 0.1;
   }
 
-  get x() {
-    return this._posX;
-  }
-
-  get y() {
-    return this._posY;
-  }
-
-  updatePos(x: number, y: number) {
-    this._posX = x;
-    this._posY = y;
-  }
-
-  setPos(grid: Grid, x: number, y: number) {
-    const oldDestX = this._destX;
-    const oldDestY = this._destY;
-
-    this._posX = x;
-    this._posY = y;
-    this._destX = x;
-    this._destY = y;
-    this._speed = 0;
-
-    if (oldDestX != x || oldDestY != y) {
-      this.dirty = true;
-      grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
-    }
+  get entityId() {
+    return this._entityId;
   }
 
   get speed() {
     return this._speed;
   }
 
-  setDestination(grid: Grid,
-                 destX: number,
-                 destY: number,
-                 speed: number) {
+  set speed(value: number) {
+    if (value != this._speed) {
+      this._speed = value;
+      this.dirty = true;
+    }
+  }
 
+  setInstantaneousPos(x: number, y: number) {
+    this._posX = x;
+    this._posY = y;
+
+    const event: EEntityMoved = {
+      type: GameEventType.ENTITY_MOVED,
+      entities: [this.entityId],
+      entityId: this.entityId,
+      x,
+      y
+    };
+
+    this._em.postEvent(event);
+  }
+
+  setStaticPos(x: number, y: number) {
+    this.setInstantaneousPos(x, y);
+    this.setDestination(x, y, 0);
+  }
+
+  setDestination(x: number, y: number, speed: number) {
     const oldDestX = this._destX;
     const oldDestY = this._destY;
 
-    this._destX = destX;
-    this._destY = destY;
-    this._speed = speed;
-    this.dirty = true;
+    this._destX = x;
+    this._destY = y;
+    this.speed = speed;
 
-    grid.onItemMoved(this, oldDestX, oldDestY, this._destX, this._destY);
+    if (oldDestX != x || oldDestY != y) {
+      this.dirty = true;
+      this._grid.onItemMoved(this,
+                             oldDestX,
+                             oldDestY,
+                             this._destX,
+                             this._destY);
+    }
+  }
+
+  x() {
+    return this._posX;
+  }
+
+  y() {
+    return this._posY;
   }
 
   get destX() {
@@ -146,33 +167,121 @@ export class SpatialComponent extends Component {
   get destY() {
     return this._destY;
   }
-  
-  get solid_gm() {
-    return this._gridModeProperties.solid;
+
+  get solid() {
+    return this._properties.solid;
   }
 
-  get blocking_gm() {
-    return this._gridModeProperties.blocking;
+  get blocking() {
+    return this._properties.blocking;
   }
 
-  get stackable_gm() {
-    return this._gridModeProperties.stackable;
+  get stackable() {
+    return this._properties.stackable;
   }
 
-  get heavy_gm() {
-    return this._gridModeProperties.heavy;
+  get heavy() {
+    return this._properties.heavy;
   }
 
-  get movable_gm() {
-    return this._gridModeProperties.movable;
-  }
-
-  get heavy_fm() {
-    return this._freeModeProperties.heavy;
+  get movable() {
+    return this._properties.movable;
   }
 
   get isAgent() {
-    return this._isAgent;
+    return this._properties.isAgent;
+  }
+}
+
+export class FreeModeSubcomponent implements SpatialSubcomponent {
+  dirty = true;
+
+  private _properties: FreeModeProperties;
+  private _posX = 0;
+  private _posY = 0;
+
+  constructor(properties: FreeModeProperties) {
+    this._properties = properties;
+  }
+
+  setInstantaneousPos(x: number, y: number) {
+    // TODO
+  }
+
+  setStaticPos(x: number, y: number) {
+    // TODO
+  }
+
+  x() {
+    return this._posX;
+  }
+
+  y() {
+    return this._posY;
+  }
+}
+
+export enum SpatialMode {
+  GRID_MODE,
+  FREE_MODE
+}
+
+export class SpatialComponent extends Component {
+  currentMode: SpatialMode = SpatialMode.GRID_MODE;
+  gridMode: GridModeSubcomponent;
+  freeMode: FreeModeSubcomponent;
+
+  constructor(entityId: EntityId,
+              entityManager: EntityManager,
+              grid: Grid,
+              gridModeProperties: GridModeProperties,
+              freeModeProperties: FreeModeProperties) {
+    super(entityId, ComponentType.SPATIAL);
+
+    this.gridMode = new GridModeSubcomponent(entityId,
+                                             entityManager,
+                                             grid,
+                                             gridModeProperties);
+    this.freeMode = new FreeModeSubcomponent(freeModeProperties);
+  }
+
+  isDirty() {
+    return this.gridMode.dirty || this.freeMode.dirty;
+  }
+
+  setClean() {
+    this.gridMode.dirty = false;
+    this.freeMode.dirty = false;
+  }
+
+  get x() {
+    return this.currentMode == SpatialMode.GRID_MODE ?
+      this.gridMode.x() :
+      this.freeMode.x();
+  }
+
+  get y() {
+    return this.currentMode == SpatialMode.GRID_MODE ?
+      this.gridMode.y() :
+      this.freeMode.y();
+  }
+
+  setInstantaneousPos(x: number, y: number) {
+    if (this.currentMode == SpatialMode.GRID_MODE) {
+      this.gridMode.setInstantaneousPos(x, y);
+    }
+    else if (this.currentMode == SpatialMode.FREE_MODE) {
+      this.freeMode.setInstantaneousPos(x, y);
+    }
+  }
+
+  setStaticPos(x: number, y: number) {
+    if (this.currentMode == SpatialMode.GRID_MODE) {
+      this.gridMode.setStaticPos(x, y);
+    }
+    else if (this.currentMode == SpatialMode.FREE_MODE) {
+      this.freeMode.setStaticPos(x, y);
+    }
   }
 }
 
@@ -181,7 +290,7 @@ export class Grid {
   _blockH: number;
   _w: number;
   _h: number;
-  _grid: Set<SpatialComponent>[][];
+  _grid: Set<GridModeSubcomponent>[][];
 
   constructor(blockW: number,
               blockH: number,
@@ -195,7 +304,7 @@ export class Grid {
     for (let col = 0; col < this._w; ++col) {
       this._grid[col] = (new Array(this._h));
       for (let row = 0; row < this._h; ++row) {
-        this._grid[col][row] = new Set<SpatialComponent>();
+        this._grid[col][row] = new Set<GridModeSubcomponent>();
       }
     }
   }
@@ -215,13 +324,13 @@ export class Grid {
            row < 0 || row > this._h - 1;
   }
 
-  addItem(item: SpatialComponent) {
-    const col = this.toGridX(item.x);
-    const row = this.toGridY(item.y);
+  addItem(item: GridModeSubcomponent) {
+    const col = this.toGridX(item.x());
+    const row = this.toGridY(item.y());
     this.inCell(col, row).add(item);
   }
 
-  onItemMoved(item: SpatialComponent,
+  onItemMoved(item: GridModeSubcomponent,
               oldX: number,
               oldY: number,
               newX: number,
@@ -243,7 +352,7 @@ export class Grid {
     this.inCell(newCol, newRow).add(item);
   }
 
-  removeItem(item: SpatialComponent): boolean {
+  removeItem(item: GridModeSubcomponent): boolean {
     for (const col of this._grid) {
       for (const cell of col) {
         if (cell.delete(item)) {
@@ -255,7 +364,7 @@ export class Grid {
     return false;
   }
 
-  inCell(col: number, row: number): Set<SpatialComponent> {
+  inCell(col: number, row: number): Set<GridModeSubcomponent> {
     if (col < 0 || col > this._w - 1 || row < 0 || row > this._h - 1) {
       throw new GameError(`Cannot retrieve items in cell (${col}, ${row}). ` +
                           `Index out of range`);
@@ -266,8 +375,8 @@ export class Grid {
   inCells(fromCol: number,
           toCol: number,
           fromRow: number,
-          toRow: number): Set<SpatialComponent> {
-    const items = new Set<SpatialComponent>();
+          toRow: number): Set<GridModeSubcomponent> {
+    const items = new Set<GridModeSubcomponent>();
     for (let c = fromCol; c <= toCol; ++c) {
       for (let r = fromRow; r <= toRow; ++r) {
         if (inRange(c, 0, this._w - 1) && inRange(r, 0, this._h - 1)) {
@@ -290,7 +399,7 @@ export class Grid {
     return [...this.inCell(col, row)].map(c => c.entityId);
   }
 
-  atPos(x: number, y: number): Set<SpatialComponent> {
+  atPos(x: number, y: number): Set<GridModeSubcomponent> {
     const col = this.toGridX(x);
     const row = this.toGridY(y);
     return this.inCell(col, row);
@@ -312,7 +421,7 @@ export class Grid {
 
   itemsWithPropAtPos(x: number, y: number, prop: string) {
     const allItems = this.atPos(x, y);
-    const itemsWithProp = new Set<SpatialComponent>();
+    const itemsWithProp = new Set<GridModeSubcomponent>();
 
     for (const item of allItems) {
       const c = <any>item;
@@ -325,19 +434,19 @@ export class Grid {
   }
 
   blockingItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "blocking_gm");
+    return this.itemsWithPropAtPos(x, y, "blocking");
   }
 
   solidItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "solid_gm");
+    return this.itemsWithPropAtPos(x, y, "solid");
   }
 
   stackableItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "stackable_gm");
+    return this.itemsWithPropAtPos(x, y, "stackable");
   }
 
   movableItemsAtPos(x: number, y: number) {
-    return this.itemsWithPropAtPos(x, y, "movable_gm");
+    return this.itemsWithPropAtPos(x, y, "movable");
   }
 
   spaceFreeAtPos(x: number, y: number): boolean {
@@ -352,6 +461,127 @@ export class Grid {
   }
 }
 
+class GridModeImpl {
+  private _components: Map<number, SpatialComponent>;
+  private _grid: Grid;
+  private _frameRate: number;
+
+  constructor(components: Map<number, SpatialComponent>,
+              w: number,
+              h: number,
+              frameRate: number) {
+    this._components = components;
+    this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
+    this._frameRate = frameRate;
+  }
+
+  get grid() {
+    return this._grid;
+  }
+
+  getComponent(id: EntityId): GridModeSubcomponent {
+    const c = this._components.get(id);
+    if (!c) {
+      throw new GameError(`No spatial component for entity ${id}`);
+    }
+    return c.gridMode;
+  }
+
+  update() {
+    this._components.forEach(c => {
+      if (c.gridMode.moving()) {
+        this.updateEntityPos(c.gridMode);
+      }
+    });
+  }
+
+  updateEntityPos(c: GridModeSubcomponent) {
+    const v: Vec2 = {
+      x: c.destX - c.x(),
+      y: c.destY - c.y()
+    };
+    normalise(v);
+
+    const dx = v.x * c.speed / this._frameRate;
+    const dy = v.y * c.speed / this._frameRate;
+
+    c.setInstantaneousPos(c.x() + dx, c.y() + dy);
+
+    const xDir = dx < 0 ? -1 : 1;
+    const yDir = dy < 0 ? -1 : 1;
+    const reachedDestX = xDir * (c.x() - c.destX) > -0.5;
+    const reachedDestY = yDir * (c.y() - c.destY) > -0.5;
+
+    if (reachedDestX && reachedDestY) {
+      c.setStaticPos(c.destX, c.destY);
+    }
+  }
+
+  finishTween(id: EntityId) {
+    const c = this.getComponent(id);
+    c.setStaticPos(c.destX, c.destY);
+  }
+
+  positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
+    const c = this.getComponent(id);
+    if (!c.moving()) {
+      const dx = x - c.x();
+      const dy = y - c.y();
+      const s = Math.sqrt(dx * dx + dy * dy);
+      c.setDestination(x, y, s / t);
+      return true;
+    }
+    return false;
+  }
+
+  moveEntity_tween(id: EntityId, dx: number, dy: number, t: number): boolean {
+    const c = this.getComponent(id);
+    return this.positionEntity_tween(id, c.x() + dx, c.y() + dy, t);
+  }
+
+  entityIsMoving(id: EntityId) {
+    const c = this.getComponent(id);
+    return c.moving();
+  }
+
+  stopEntity(id: EntityId) {
+    const c = this.getComponent(id);
+    c.speed = 0;
+  }
+
+  onComponentAdded(c: SpatialComponent) {
+    this._grid.addItem(c.gridMode);
+  }
+
+  onComponentRemoved(c: SpatialComponent) {
+    this._grid.removeItem(c.gridMode);
+  }
+}
+
+class FreeModeImpl {
+  private _components: Map<number, SpatialComponent>;
+
+  constructor(components: Map<number, SpatialComponent>) {
+    this._components = components;
+  }
+
+  update() {
+    // TODO
+  }
+
+  onComponentAdded(c: SpatialComponent) {
+    // TODO
+  }
+
+  onComponentRemoved(c: SpatialComponent) {
+    // TODO
+  }
+
+  positionEntity(id: EntityId, x: number, y: number) {
+    // TODO
+  }
+}
+
 export class SpatialSystem {
   protected em: EntityManager;
   protected components: Map<number, SpatialComponent>;
@@ -359,7 +589,8 @@ export class SpatialSystem {
   protected h = 0;
   protected gravityRegion: Span2d;
   protected frameRate: number;
-  grid: Grid;
+  protected gridModeImpl: GridModeImpl;
+  protected freeModeImpl: FreeModeImpl;
 
   constructor(em: EntityManager,
               w: number,
@@ -374,30 +605,23 @@ export class SpatialSystem {
     this.gravityRegion = gravityRegion;
     this.frameRate = frameRate;
 
-    this.grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
+    this.gridModeImpl = new GridModeImpl(this.components, w, h, frameRate);
+    this.freeModeImpl = new FreeModeImpl(this.components);
+  }
+
+  get grid() {
+    return this.gridModeImpl.grid;
   }
 
   update() {
-    this.components.forEach(c => {
-      if (c.moving()) {
-        this.updateEntityPos(c);
-      }
-    });
-  }
-
-  positionEntity(id: EntityId, x: number, y: number) {
-    const c = this.getComponent(id);
-    this._setEntityPos(c, x, y);
-  }
-
-  entityIsMoving(id: EntityId) {
-    const c = this.getComponent(id);
-    return c.moving();
+    this.gridModeImpl.update();
+    this.freeModeImpl.update();
   }
 
   addComponent(component: SpatialComponent) {
     this.components.set(component.entityId, component);
-    this.grid.addItem(component);
+    this.gridModeImpl.onComponentAdded(component);
+    this.freeModeImpl.onComponentAdded(component);
   }
 
   hasComponent(id: EntityId) {
@@ -415,16 +639,10 @@ export class SpatialSystem {
   removeComponent(id: EntityId) {
     const c = this.components.get(id);
     if (c) {
-      this.grid.removeItem(c);
+      this.gridModeImpl.onComponentRemoved(c);
+      this.freeModeImpl.onComponentRemoved(c);
     }
     this.components.delete(id);
-  }
-
-  finishTween(id: EntityId) {
-    const c = this.components.get(id);
-    if (c) {
-      this.positionEntity(id, c.destX, c.destY);
-    }
   }
 
   numComponents() {
@@ -441,9 +659,9 @@ export class SpatialSystem {
     return this.h;
   }
 
-  stopEntity(id: EntityId) {
+  positionEntity(id: EntityId, x: number, y: number) {
     const c = this.getComponent(id);
-    this._setEntityPos(c, c.x, c.y);
+    c.setStaticPos(x, y);
   }
 
   moveEntity(id: EntityId, dx: number, dy: number) {
@@ -451,70 +669,39 @@ export class SpatialSystem {
     this.positionEntity(id, c.x + dx, c.y + dy);
   }
 
-  positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
-    const c = this.getComponent(id);
-    if (!c.moving()) {
-      const dx = x - c.x;
-      const dy = y - c.y;
-      const s = Math.sqrt(dx * dx + dy * dy);
-      c.setDestination(this.grid, x, y, s / t);
-      return true;
-    }
-    return false;
-  }
-
-  moveEntity_tween(id: EntityId, dx: number, dy: number, t: number): boolean {
-    const c = this.getComponent(id);
-    return this.positionEntity_tween(id, c.x + dx, c.y + dy, t);
-  }
-
   getDirties() {
     const dirties: SpatialComponentPacket[] = [];
 
     this.components.forEach((c, id) => {
-      if (c.dirty) {
+      if (c.isDirty()) {
         dirties.push({
           entityId: c.entityId,
           componentType: ComponentType.SPATIAL,
           x: c.x,
           y: c.y,
-          speed: c.speed,
-          destX: c.destX,
-          destY: c.destY
+          speed: c.gridMode.speed,
+          destX: c.gridMode.destX,
+          destY: c.gridMode.destY
         });
-        c.dirty = false;
+        c.setClean();
       }
     });
 
     return dirties;
   }
 
-  protected updateEntityPos(c: SpatialComponent) {
-    const v: Vec2 = {
-      x: c.destX - c.x,
-      y: c.destY - c.y
-    };
-    normalise(v);
-
-    const dx = v.x * c.speed / this.frameRate;
-    const dy = v.y * c.speed / this.frameRate;
-
-    c.updatePos(c.x + dx, c.y + dy);
-
-    const xDir = dx < 0 ? -1 : 1;
-    const yDir = dy < 0 ? -1 : 1;
-    const reachedDestX = xDir * (c.x - c.destX) > -0.5;
-    const reachedDestY = yDir * (c.y - c.destY) > -0.5;
-
-    if (reachedDestX && reachedDestY) {
-      this._setEntityPos(c, c.destX, c.destY);
-    }
+  gridMode(entityId: EntityId): boolean {
+    const c = this.getComponent(entityId);
+    return c.currentMode == SpatialMode.GRID_MODE;
   }
 
-  private _setEntityPos(c: SpatialComponent, x: number, y: number) {
-    c.setPos(this.grid, x, y);
-    const gridX = this.grid.toGridX(x);
-    const gridY = this.grid.toGridY(y);
-    c.freeMode = this.gravityRegion.contains(gridX, gridY);
+  freeMode(entityId: EntityId): boolean {
+    const c = this.getComponent(entityId);
+    return c.currentMode == SpatialMode.FREE_MODE;
+  }
+
+  gm_entityIsMoving(id: EntityId): boolean {
+    const c = this.getComponent(id);
+    return c.gridMode.moving();
   }
 }
