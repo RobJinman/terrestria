@@ -1,6 +1,5 @@
 import { getNextEntityId } from "./common/entity_manager";
 import { AgentComponent } from "./agent_system";
-import { SpatialComponent } from "./common/spatial_system";
 import { EntityType } from "./common/game_objects";
 import { GameEventType, EAgentEnterCell, EEntityBurned, 
          EPlayerKilled } from "./common/event";
@@ -11,6 +10,7 @@ import { InventorySystem, CCollector, CCollectable,
          Bucket } from "./inventory_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { ServerSpatialSystem } from "./server_spatial_system";
+import { ServerSpatialComponent } from "./server_spatial_component";
 
 export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
@@ -30,11 +30,11 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 em,
+                                                 spatialSys.grid,
+                                                 gridModeProps,
+                                                 freeModeProps);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
@@ -69,11 +69,11 @@ export function constructRock(em: ServerEntityManager): EntityId {
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 em,
+                                                 spatialSys.grid,
+                                                 gridModeProps,
+                                                 freeModeProps);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
@@ -105,11 +105,11 @@ export function constructGem(em: ServerEntityManager): EntityId {
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 em,
+                                                 spatialSys.grid,
+                                                 gridModeProps,
+                                                 freeModeProps);
 
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "gems", 1);
@@ -154,11 +154,11 @@ export function constructPlayer(em: ServerEntityManager,
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 em,
+                                                 spatialSys.grid,
+                                                 gridModeProps,
+                                                 freeModeProps);
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));

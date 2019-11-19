@@ -1,11 +1,10 @@
 import { ClientSystem } from "./common/client_system";
-import { SpatialComponentPacket, SpatialSystem } from "./common/spatial_system";
 import { EntityManager } from "./common/entity_manager";
 import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityId } from "./common/system";
 import { Span2d } from "./common/geometry";
 
-export class ClientSpatialSystem extends SpatialSystem implements ClientSystem {
+export class ClientSpatialSystem implements ClientSystem {
   constructor(em: EntityManager,
               w: number,
               h: number,
