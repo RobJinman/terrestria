@@ -1,18 +1,18 @@
-import { ServerEntityManager } from "./server_entity_manager";
+import { SpatialComponent } from "./spatial_component";
+import { Grid } from "./grid";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
+import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
+import { Vec2, normalise, directionToVector } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
          AgentActionType } from "./common/event";
-import { ServerSpatialComponent } from "./server_spatial_component";
-import { Grid } from "./grid";
-import { GridModeSubcomponent } from "./grid_mode_subcomponent";
-import { Vec2, normalise, directionToVector } from "./common/geometry";
 import { Direction } from "./common/definitions";
+import { ServerEntityManager } from "./server_entity_manager";
 
 export class GridModeImpl {
   private _em: ServerEntityManager;
-  private _components = new Map<number, ServerSpatialComponent>();
+  private _components = new Map<number, SpatialComponent>();
   private _grid: Grid;
   private _frameRate: number;
 
@@ -25,7 +25,7 @@ export class GridModeImpl {
     this._frameRate = frameRate;
   }
 
-  setComponentsMap(components: Map<number, ServerSpatialComponent>) {
+  setComponentsMap(components: Map<number, SpatialComponent>) {
     this._components = components;
   }
 
@@ -104,11 +104,11 @@ export class GridModeImpl {
     c.speed = 0;
   }
 
-  onComponentAdded(c: ServerSpatialComponent) {
+  onComponentAdded(c: SpatialComponent) {
     this._grid.addItem(c.gridMode);
   }
 
-  onComponentRemoved(c: ServerSpatialComponent) {
+  onComponentRemoved(c: SpatialComponent) {
     this._grid.removeItem(c.gridMode);
   }
 

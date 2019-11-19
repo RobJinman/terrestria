@@ -1,12 +1,12 @@
 import { PlayerAction, ActionType, MoveAction } from "./common/action";
 import { ComponentType } from "./common/component_types";
-import { ServerSpatialSystem } from "./server_spatial_system";;
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { getNextEntityId } from "./common/entity_manager";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { EntityType } from "./common/game_objects";
+import { SpatialSystem } from "./spatial_system";
 
 export class GameLogic {
   private _em: ServerEntityManager;
@@ -56,8 +56,7 @@ export class GameLogic {
   }
 
   private _movePlayer(action: MoveAction): boolean {
-    const spatialSys =
-      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     // TODO: Free mode
 

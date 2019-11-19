@@ -3,10 +3,10 @@ import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ComponentType } from "./common/component_types";
-import { SpatialComponent } from "./common/spatial_system";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './scheduler';
+import { ClientSpatialComponent } from './client_spatial_component';
 
 export interface AnimationDesc {
   duration: number;
@@ -210,7 +210,8 @@ export class RenderSystem implements ClientSystem {
   private _onEntityMoved(id: EntityId) {
     if (this.hasComponent(id)) {
       const spatialComp =
-        <SpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+        <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
+                                                      id);
 
       const c = this.getComponent(id);
       if (c.stagedSprite) {

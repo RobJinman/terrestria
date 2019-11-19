@@ -1,9 +1,9 @@
-import { EEntityMoved, GameEventType } from "./common/event";
+import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { EntityId } from "./common/system";
 import { EntityManager } from "./common/entity_manager";
 import { Grid } from "./grid";
-import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { GridModeProperties } from "./grid_mode_properties";
+import { EEntityMoved, GameEventType } from "./common/event";
 
 export class GridModeSubcomponent implements SpatialSubcomponent {
   dirty = true;

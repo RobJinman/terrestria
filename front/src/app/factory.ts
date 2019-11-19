@@ -1,7 +1,6 @@
 import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
-import { SpatialComponent, SpatialSystem } from "./common/spatial_system";
 import { RenderComponent, StaticImage, AnimationDesc,
          RenderSystem } from "./render_system";
 import { EntityId } from "./common/system";
@@ -10,6 +9,7 @@ import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
+import { ClientSpatialComponent } from "./client_spatial_component";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
@@ -32,26 +32,7 @@ function constructGem(em: EntityManager, id: EntityId) {
                                          animations,
                                          "gem.png");
 
-  const gridModeProps = {
-    solid: true,
-    blocking: false,
-    stackable: false,
-    heavy: true,
-    movable: false,
-    isAgent: false
-  };
-
-  const freeModeProps = {
-    heavy: true
-  };
-
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ClientSpatialComponent(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -90,26 +71,7 @@ function constructRock(em: EntityManager, id: EntityId) {
                                          animations,
                                          "rock.png");
 
-  const gridModeProps = {
-    solid: true,
-    blocking: false,
-    stackable: false,
-    heavy: true,
-    movable: false,
-    isAgent: false
-  };
-
-  const freeModeProps = {
-    heavy: true
-  };
-
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ClientSpatialComponent(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -148,26 +110,7 @@ function constructSoil(em: EntityManager, id: EntityId) {
                                          animations,
                                          "soil.png");
 
-  const gridModeProps = {
-    solid: true,
-    blocking: false,
-    stackable: false,
-    heavy: true,
-    movable: false,
-    isAgent: false
-  };
-
-  const freeModeProps = {
-    heavy: false
-  };
-
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ClientSpatialComponent(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -308,26 +251,7 @@ function constructPlayer(em: EntityManager, id: EntityId) {
                                          animations,
                                          "man_run_d0.png");
 
-  const gridModeProps = {
-    solid: true,
-    blocking: false,
-    stackable: false,
-    heavy: true,
-    movable: false,
-    isAgent: true
-  };
-
-  const freeModeProps = {
-    heavy: true
-  };
-
-  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
-
-  const spatialComp = new SpatialComponent(id,
-                                           em,
-                                           spatialSys.grid,
-                                           gridModeProps,
-                                           freeModeProps);
+  const spatialComp = new ClientSpatialComponent(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 

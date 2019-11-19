@@ -1,18 +1,18 @@
 import { Component, EntityId } from "./common/system";
+import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { FreeModeSubcomponent } from "./free_mode_impl";
 import { EntityManager } from "./common/entity_manager";
-import { ComponentType } from "./common/component_types";
-import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { Grid } from "./grid";
-import { FreeModeProperties } from "./free_mode_properties";
 import { GridModeProperties } from "./grid_mode_properties";
+import { FreeModeProperties } from "./free_mode_properties";
+import { ComponentType } from "./common/component_types";
 
 export enum SpatialMode {
   GRID_MODE,
   FREE_MODE
 }
 
-export class ServerSpatialComponent extends Component {
+export class SpatialComponent extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
   gridMode: GridModeSubcomponent;
   freeMode: FreeModeSubcomponent;

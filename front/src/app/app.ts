@@ -71,8 +71,6 @@ export class App {
 
     this._em = new ClientEntityManager();
     const spatialSystem = new ClientSpatialSystem(this._em,
-                                                  WORLD_W,
-                                                  WORLD_H,
                                                   CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,

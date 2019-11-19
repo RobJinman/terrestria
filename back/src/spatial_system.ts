@@ -1,15 +1,14 @@
-import { ComponentType } from "./common/component_types";
-import { ServerEntityManager } from "./server_entity_manager";
+import { ComponentPacket, EntityId } from "./common/system";
+import { ServerSystem } from "./common/server_system";
+import { SpatialComponent, SpatialMode } from "./spatial_component";
 import { Span2d } from "./common/geometry";
 import { GridModeImpl } from "./grid_mode_impl";
-import { EntityId, ComponentPacket } from "./common/system";
-import { EntityManager } from "./common/entity_manager";
+import { FreeModeImpl } from "./free_mode_impl";
+import { ComponentType } from "./common/component_types";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
-import { FreeModeImpl } from "./free_mode_impl";
-import { ServerSpatialComponent,
-         SpatialMode } from "./server_spatial_component";
 import { Direction } from "./common/definitions";
+import { ServerEntityManager } from "./server_entity_manager";
 
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
@@ -19,9 +18,9 @@ export interface SpatialComponentPacket extends ComponentPacket {
   speed: number;
 }
 
-export class ServerSpatialSystem {
-  protected em: EntityManager;
-  protected components: Map<number, ServerSpatialComponent>;
+export class SpatialSystem implements ServerSystem {
+  protected em: ServerEntityManager;
+  protected components: Map<number, SpatialComponent>;
   protected w = 0;
   protected h = 0;
   protected gravityRegion: Span2d;
@@ -35,7 +34,7 @@ export class ServerSpatialSystem {
               gravityRegion: Span2d,
               frameRate: number) {
     this.em = em;
-    this.components = new Map<number, ServerSpatialComponent>();
+    this.components = new Map<number, SpatialComponent>();
     this.gridModeImpl = new GridModeImpl(em, w, h, frameRate);
     this.freeModeImpl = new FreeModeImpl();
     this.w = w;
@@ -80,7 +79,7 @@ export class ServerSpatialSystem {
     this.freeModeImpl.update();
   }
 
-  addComponent(component: ServerSpatialComponent) {
+  addComponent(component: SpatialComponent) {
     this.components.set(component.entityId, component);
     this.gridModeImpl.onComponentAdded(component);
     this.freeModeImpl.onComponentAdded(component);

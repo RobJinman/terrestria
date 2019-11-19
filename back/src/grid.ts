@@ -1,7 +1,7 @@
+import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
 import { inRange, addSetToSet } from "./common/utils";
 import { EntityId } from "./common/system";
-import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 
 export class Grid {
   _blockW: number;
