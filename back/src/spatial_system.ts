@@ -15,7 +15,6 @@ export interface SpatialComponentPacket extends ComponentPacket {
   y: number;
   destX: number;
   destY: number;
-  speed: number;
 }
 
 export class SpatialSystem implements ServerSystem {
@@ -35,7 +34,7 @@ export class SpatialSystem implements ServerSystem {
               frameRate: number) {
     this.em = em;
     this.components = new Map<number, SpatialComponent>();
-    this.gridModeImpl = new GridModeImpl(em, w, h, frameRate);
+    this.gridModeImpl = new GridModeImpl(em, w, h);
     this.freeModeImpl = new FreeModeImpl();
     this.w = w;
     this.h = h;
@@ -55,9 +54,8 @@ export class SpatialSystem implements ServerSystem {
         entityId: c.entityId,
         x: c.x,
         y: c.y,
-        destX: c.gridMode.destX,
-        destY: c.gridMode.destY,
-        speed: c.gridMode.speed
+        destX: c.gridMode.x(),
+        destY: c.gridMode.x()
       });
     });
 
@@ -144,9 +142,8 @@ export class SpatialSystem implements ServerSystem {
           componentType: ComponentType.SPATIAL,
           x: c.x,
           y: c.y,
-          speed: c.gridMode.speed,
-          destX: c.gridMode.destX,
-          destY: c.gridMode.destY
+          destX: c.gridMode.x(),
+          destY: c.gridMode.y()
         });
         c.setClean();
       }

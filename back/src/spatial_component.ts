@@ -25,14 +25,13 @@ export class SpatialComponent extends Component {
     super(entityId, ComponentType.SPATIAL);
 
     this.gridMode = new GridModeSubcomponent(entityId,
-                                             entityManager,
                                              grid,
                                              gridModeProperties);
     this.freeMode = new FreeModeSubcomponent(freeModeProperties);
   }
 
   isDirty() {
-    return this.gridMode.dirty || this.freeMode.dirty;
+    return this.gridMode.dirty;// || this.freeMode.dirty;
   }
 
   setClean() {

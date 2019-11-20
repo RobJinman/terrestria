@@ -4,7 +4,7 @@ import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
 import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
-import { Vec2, normalise, directionToVector } from "./common/geometry";
+import { directionToVector } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
          AgentActionType } from "./common/event";
 import { Direction } from "./common/definitions";
@@ -14,15 +14,12 @@ export class GridModeImpl {
   private _em: ServerEntityManager;
   private _components = new Map<number, SpatialComponent>();
   private _grid: Grid;
-  private _frameRate: number;
 
   constructor(entityManager: ServerEntityManager,
               w: number,
-              h: number,
-              frameRate: number) {
+              h: number) {
     this._em = entityManager;
     this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
-    this._frameRate = frameRate;
   }
 
   setComponentsMap(components: Map<number, SpatialComponent>) {
@@ -42,66 +39,7 @@ export class GridModeImpl {
   }
 
   update() {
-    this._components.forEach(c => {
-      if (c.gridMode.moving()) {
-        this.updateEntityPos(c.gridMode);
-      }
-    });
     this._gravity();
-  }
-
-  updateEntityPos(c: GridModeSubcomponent) {
-    const v: Vec2 = {
-      x: c.destX - c.x(),
-      y: c.destY - c.y()
-    };
-    normalise(v);
-
-    const dx = v.x * c.speed / this._frameRate;
-    const dy = v.y * c.speed / this._frameRate;
-
-    c.setInstantaneousPos(c.x() + dx, c.y() + dy);
-
-    const xDir = dx < 0 ? -1 : 1;
-    const yDir = dy < 0 ? -1 : 1;
-    const reachedDestX = xDir * (c.x() - c.destX) > -0.5;
-    const reachedDestY = yDir * (c.y() - c.destY) > -0.5;
-
-    if (reachedDestX && reachedDestY) {
-      c.setStaticPos(c.destX, c.destY);
-    }
-  }
-
-  finishTween(id: EntityId) {
-    const c = this.getComponent(id);
-    c.setStaticPos(c.destX, c.destY);
-  }
-
-  positionEntity_tween(id: EntityId, x: number, y: number, t: number): boolean {
-    const c = this.getComponent(id);
-    if (!c.moving()) {
-      const dx = x - c.x();
-      const dy = y - c.y();
-      const s = Math.sqrt(dx * dx + dy * dy);
-      c.setDestination(x, y, s / t);
-      return true;
-    }
-    return false;
-  }
-
-  moveEntity_tween(id: EntityId, dx: number, dy: number, t: number): boolean {
-    const c = this.getComponent(id);
-    return this.positionEntity_tween(id, c.x() + dx, c.y() + dy, t);
-  }
-
-  entityIsMoving(id: EntityId) {
-    const c = this.getComponent(id);
-    return c.moving();
-  }
-
-  stopEntity(id: EntityId) {
-    const c = this.getComponent(id);
-    c.speed = 0;
   }
 
   onComponentAdded(c: SpatialComponent) {
@@ -118,14 +56,14 @@ export class GridModeImpl {
       throw new GameError("Entity is not agent");
     }
 
-    const oldDestGridX = this.grid.toGridX(c.destX);
-    const oldDestGridY = this.grid.toGridY(c.destY);
+    const oldDestGridX = c.gridX;
+    const oldDestGridY = c.gridY;
 
     let moved = this._moveAgent(c, direction);
 
     if (moved) {
-      const newDestGridX = this.grid.toGridX(c.destX);
-      const newDestGridY = this.grid.toGridY(c.destY);
+      const newDestGridX = c.gridX;
+      const newDestGridY = c.gridY;
 
       if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
         const items = this.grid.idsInCell(newDestGridX, newDestGridY);
@@ -149,10 +87,11 @@ export class GridModeImpl {
   }
 
   private _gravity() {
-    this._components.forEach(c => {
-      if (c.gridMode.heavy) {
-        const x = c.gridMode.destX;
-        const y = c.gridMode.destY;
+    this._components.forEach(c_ => {
+      const c = c_.gridMode;
+      if (c.heavy) {
+        const x = c.x();
+        const y = c.y();
         const yDown = y - BLOCK_SZ;
         const xRight = x + BLOCK_SZ;
         const xLeft = x - BLOCK_SZ;
@@ -161,11 +100,11 @@ export class GridModeImpl {
 
         if (!this.grid.outOfRange(x, yDown)) {
           if (this.grid.spaceFreeAtPos(x, yDown)) {
-            this.moveEntity_tween(c.entityId, 0, -BLOCK_SZ, t);
-            c.gridMode.falling = true;
+            c.moveToPos(c.x(), c.y() - BLOCK_SZ, t);
+            c.falling = true;
           }
           else {
-            if (c.gridMode.falling) {
+            if (c.falling) {
               const event: EEntitySquashed = {
                 type: GameEventType.ENTITY_SQUASHED,
                 entities: this.grid.idsAtPos(x, yDown),
@@ -177,18 +116,18 @@ export class GridModeImpl {
               this._em.postEvent(event);
             }
 
-            c.gridMode.falling = false;
+            c.falling = false;
 
             if (!this.grid.stackableSpaceAtPos(x, yDown)) {
               if (this.grid.spaceFreeAtPos(xRight, y) &&
                 this.grid.spaceFreeAtPos(xRight, yDown)) {
 
-                this.moveEntity_tween(c.entityId, BLOCK_SZ, 0, t);
+                c.moveToPos(c.x() + BLOCK_SZ, c.y(), t);
               }
               else if (this.grid.spaceFreeAtPos(xLeft, y) &&
                 this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
-                this.moveEntity_tween(c.entityId, -BLOCK_SZ, 0, t);
+                c.moveToPos(c.x() - BLOCK_SZ, c.y(), t);
               }
             }
           }
@@ -202,7 +141,9 @@ export class GridModeImpl {
                                   destY: number,
                                   direction: Direction) {
     const t = 1.0 / PLAYER_SPEED;
-    if (this.positionEntity_tween(id, destX, destY, t)) {
+    const c = this.getComponent(id);
+
+    if (c.moveToPos(destX, destY, t)) {
       const solid = this.grid.solidItemsAtPos(destX, destY);
       if (solid.size > 1) { // The player is solid
         const event: EAgentAction = {
@@ -237,26 +178,27 @@ export class GridModeImpl {
                                      destX: number,
                                      destY: number,
                                      direction: Direction) {
+    const c = this.getComponent(id);
     let moved = false;
     if (item.movable) {
       const t = 1.0 / PLAYER_SPEED;
 
       if (direction == Direction.LEFT) {
-        const xLeft = item.destX - BLOCK_SZ;
-        const y = item.destY;
+        const xLeft = item.x() - BLOCK_SZ;
+        const y = item.y();
         if (this.grid.spaceFreeAtPos(xLeft, y)) {
-          this.stopEntity(item.entityId);
-          this.positionEntity_tween(item.entityId, xLeft, y, t);
-          moved = this.positionEntity_tween(id, destX, destY, t);
+          item.stop();
+          item.moveToPos(xLeft, y, t);
+          moved = c.moveToPos(destX, destY, t);
         }
       }
       else if (direction == Direction.RIGHT) {
-        const xRight = item.destX + BLOCK_SZ;
-        const y = item.destY;
+        const xRight = item.x() + BLOCK_SZ;
+        const y = item.y();
         if (this.grid.spaceFreeAtPos(xRight, y)) {
-          this.stopEntity(item.entityId);
-          this.positionEntity_tween(item.entityId, xRight, y, t);
-          moved = this.positionEntity_tween(id, destX, destY, t);
+          item.stop();
+          item.moveToPos(xRight, y, t);
+          moved = c.moveToPos(destX, destY, t);
         }
       }
 

@@ -1,105 +1,95 @@
-import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { EntityId } from "./common/system";
-import { EntityManager } from "./common/entity_manager";
 import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
-import { EEntityMoved, GameEventType } from "./common/event";
+import { BLOCK_SZ } from "./common/constants";
+import { SpatialSubcomponent } from "./spatial_subcomponent";
 
 export class GridModeSubcomponent implements SpatialSubcomponent {
   dirty = true;
   falling = false;
 
   private _entityId: EntityId;
-  private _speed: number = 0; // Pixels per second
-  private _posX: number = 0;
-  private _posY: number = 0;
-  private _destX: number = 0;
-  private _destY: number = 0;
-  private _em: EntityManager;
+  private _gridX: number = 0;
+  private _gridY: number = 0;
   private _grid: Grid;
   private _properties: GridModeProperties;
+  private _lockedUntil: number = -1;
 
   constructor(entityId: EntityId,
-              entityManager: EntityManager,
               grid: Grid,
               properties: GridModeProperties) {
     this._entityId = entityId;
-    this._em = entityManager;
     this._grid = grid;
     this._properties = properties;
-  }
-
-  moving() {
-    return this._speed > 0.1;
   }
 
   get entityId() {
     return this._entityId;
   }
 
-  get speed() {
-    return this._speed;
+  stop() {
+    this._lockedUntil = -1;
   }
 
-  set speed(value: number) {
-    if (value != this._speed) {
-      this._speed = value;
+  moving() {
+    return this._lockedUntil !== -1;
+  }
+
+  setGridPos(x: number, y: number) {
+    // TODO: Check _lockedUntil
+
+    if (x != this._gridX || y != this._gridY) {
+      const oldX = this._gridX;
+      const oldY = this._gridY;
+
+      this._gridX = x;
+      this._gridY = y;
+    
+      this._grid.onItemMoved(this, oldX, oldY, x, y);
+
       this.dirty = true;
     }
+
+    return true; // TODO
   }
 
   setInstantaneousPos(x: number, y: number) {
-    this._posX = x;
-    this._posY = y;
+    // TODO: Check _lockedUntil
 
-    const event: EEntityMoved = {
-      type: GameEventType.ENTITY_MOVED,
-      entities: [this.entityId],
-      entityId: this.entityId,
-      x,
-      y
-    };
+    const gridX = this._grid.toGridX(x);
+    const gridY = this._grid.toGridY(y);
+    this.setGridPos(gridX, gridY);
 
-    this._em.postEvent(event);
+    return true; // TODO
   }
 
   setStaticPos(x: number, y: number) {
-    this.setInstantaneousPos(x, y);
-    this.setDestination(x, y, 0);
+    // The same until we introduce a notion of time
+    return this.setInstantaneousPos(x, y);
   }
 
-  setDestination(x: number, y: number, speed: number) {
-    const oldDestX = this._destX;
-    const oldDestY = this._destY;
+  moveToPos(x: number, y: number, t: number) {
+    this.setStaticPos(x, y);
+    //const now = (new Date()).getTime();
+    //this._lockedUntil = now + t * 1000;
 
-    this._destX = x;
-    this._destY = y;
-    this.speed = speed;
+    return true; // TODO
+  }
 
-    if (oldDestX != x || oldDestY != y) {
-      this.dirty = true;
-      this._grid.onItemMoved(this,
-                             oldDestX,
-                             oldDestY,
-                             this._destX,
-                             this._destY);
-    }
+  get gridX() {
+    return this._gridX;
+  }
+
+  get gridY() {
+    return this._gridY;
   }
 
   x() {
-    return this._posX;
+    return this._gridX * BLOCK_SZ;
   }
 
   y() {
-    return this._posY;
-  }
-
-  get destX() {
-    return this._destX;
-  }
-
-  get destY() {
-    return this._destY;
+    return this._gridY * BLOCK_SZ;
   }
 
   get solid() {

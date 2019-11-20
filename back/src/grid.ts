@@ -49,25 +49,21 @@ export class Grid {
   }
 
   onItemMoved(item: GridModeSubcomponent,
-              oldX: number,
-              oldY: number,
-              newX: number,
-              newY: number) {
-    const oldCol = this.toGridX(oldX);
-    const oldRow = this.toGridY(oldY);
-
-    const newCol = this.toGridX(newX);
-    const newRow = this.toGridY(newY);
-
-    if (oldCol == newCol && oldRow == newRow) {
+              oldGridX: number,
+              oldGridY: number,
+              newGridX: number,
+              newGridY: number) {
+  
+    if (oldGridX == newGridX && oldGridY == newGridY) {
       return;
     }
 
-    if (!this.inCell(oldCol, oldRow).delete(item)) {
-      throw new GameError(`No such entity at position ${oldX}, ${oldY}`);
+    if (!this.inCell(oldGridX, oldGridY).delete(item)) {
+      throw new GameError(`No such entity at grid position ${oldGridX}, ` +
+                          `${oldGridY}`);
     }
   
-    this.inCell(newCol, newRow).add(item);
+    this.inCell(newGridX, newGridY).add(item);
   }
 
   removeItem(item: GridModeSubcomponent): boolean {
