@@ -1,7 +1,6 @@
 import { ComponentPacket, EntityId } from "./common/system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
-import { EntityManager } from "./common/entity_manager";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
@@ -9,8 +8,6 @@ import { Vec2, normalise } from "./common/geometry";
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
   y: number;
-  destX: number;
-  destY: number;
   speed: number;
 }
 
@@ -26,7 +23,7 @@ export class ClientSpatialSystem implements ClientSystem {
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
     if (packet.speed > 0.1) {
-      c.setDestination(packet.destX, packet.destY, packet.speed);
+      c.setDestination(packet.x, packet.y, packet.speed);
     }
     else {
       c.setStaticPos(packet.x, packet.y);

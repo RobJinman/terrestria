@@ -13,8 +13,6 @@ import { ServerEntityManager } from "./server_entity_manager";
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
   y: number;
-  destX: number;
-  destY: number;
   speed: number;
 }
 
@@ -55,8 +53,6 @@ export class SpatialSystem implements ServerSystem {
         entityId: c.entityId,
         x: c.x,
         y: c.y,
-        destX: c.gridMode.x(),
-        destY: c.gridMode.x(),
         speed: c.gridMode.speed
       });
     });
@@ -144,8 +140,6 @@ export class SpatialSystem implements ServerSystem {
           componentType: ComponentType.SPATIAL,
           x: c.x,
           y: c.y,
-          destX: c.gridMode.x(),
-          destY: c.gridMode.y(),
           speed: c.gridMode.speed
         });
         c.setClean();
