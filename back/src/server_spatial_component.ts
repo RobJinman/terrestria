@@ -1,7 +1,6 @@
 import { Component, EntityId } from "./common/system";
 import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { FreeModeSubcomponent } from "./free_mode_impl";
-import { EntityManager } from "./common/entity_manager";
 import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
 import { FreeModeProperties } from "./free_mode_properties";
@@ -12,13 +11,12 @@ export enum SpatialMode {
   FREE_MODE
 }
 
-export class SpatialComponent extends Component {
+export class ServerSpatialComponent extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
   gridMode: GridModeSubcomponent;
   freeMode: FreeModeSubcomponent;
 
   constructor(entityId: EntityId,
-              entityManager: EntityManager,
               grid: Grid,
               gridModeProperties: GridModeProperties,
               freeModeProperties: FreeModeProperties) {

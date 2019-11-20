@@ -23,7 +23,7 @@ import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
 import { Span, Span2d } from "./common/geometry";
-import { SpatialSystem } from "./spatial_system";
+import { ServerSpatialSystem } from "./server_spatial_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -54,16 +54,16 @@ export class Game {
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
 
-    const spatialSystem = new SpatialSystem(this._em,
-                                            WORLD_W,
-                                            WORLD_H,
-                                            this._gravRegion,
-                                            SERVER_FRAME_RATE);
+    const serverSpatialSystem = new ServerSpatialSystem(this._em,
+                                                        WORLD_W,
+                                                        WORLD_H,
+                                                        this._gravRegion,
+                                                        SERVER_FRAME_RATE);
     const agentSystem = new AgentSystem(this._em);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
 
-    this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
+    this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
@@ -227,7 +227,8 @@ export class Game {
   }
 
   private _populate() {
-    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialSys =
+      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     this._gravRegion.addHorizontalSpan(WORLD_H - 1, new Span(0, WORLD_W - 1));
     this._gravRegion.addHorizontalSpan(WORLD_H - 2, new Span(0, WORLD_W - 1));

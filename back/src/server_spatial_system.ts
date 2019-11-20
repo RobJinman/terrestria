@@ -1,6 +1,7 @@
-import { ComponentPacket, EntityId } from "./common/system";
+import { EntityId } from "./common/system";
 import { ServerSystem } from "./common/server_system";
-import { SpatialComponent, SpatialMode } from "./spatial_component";
+import { ServerSpatialComponent,
+         SpatialMode } from "./server_spatial_component";
 import { Span2d } from "./common/geometry";
 import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
@@ -8,17 +9,12 @@ import { ComponentType } from "./common/component_types";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { Direction } from "./common/definitions";
+import { SpatialComponentPacket } from "./common/spatial_component_packet";
 import { ServerEntityManager } from "./server_entity_manager";
 
-export interface SpatialComponentPacket extends ComponentPacket {
-  x: number;
-  y: number;
-  speed: number;
-}
-
-export class SpatialSystem implements ServerSystem {
+export class ServerSpatialSystem implements ServerSystem {
   protected em: ServerEntityManager;
-  protected components: Map<number, SpatialComponent>;
+  protected components: Map<number, ServerSpatialComponent>;
   protected w = 0;
   protected h = 0;
   protected gravityRegion: Span2d;
@@ -32,7 +28,7 @@ export class SpatialSystem implements ServerSystem {
               gravityRegion: Span2d,
               frameRate: number) {
     this.em = em;
-    this.components = new Map<number, SpatialComponent>();
+    this.components = new Map<number, ServerSpatialComponent>();
     this.gridModeImpl = new GridModeImpl(em, w, h);
     this.freeModeImpl = new FreeModeImpl();
     this.w = w;
@@ -75,7 +71,7 @@ export class SpatialSystem implements ServerSystem {
     this.freeModeImpl.update();
   }
 
-  addComponent(component: SpatialComponent) {
+  addComponent(component: ServerSpatialComponent) {
     this.components.set(component.entityId, component);
     this.gridModeImpl.onComponentAdded(component);
     this.freeModeImpl.onComponentAdded(component);

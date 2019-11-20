@@ -1,4 +1,4 @@
-import { SpatialComponent } from "./spatial_component";
+import { ServerSpatialComponent } from "./server_spatial_component";
 import { Grid } from "./grid";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
@@ -12,7 +12,7 @@ import { ServerEntityManager } from "./server_entity_manager";
 
 export class GridModeImpl {
   private _em: ServerEntityManager;
-  private _components = new Map<number, SpatialComponent>();
+  private _components = new Map<number, ServerSpatialComponent>();
   private _grid: Grid;
 
   constructor(entityManager: ServerEntityManager,
@@ -22,7 +22,7 @@ export class GridModeImpl {
     this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
   }
 
-  setComponentsMap(components: Map<number, SpatialComponent>) {
+  setComponentsMap(components: Map<number, ServerSpatialComponent>) {
     this._components = components;
   }
 
@@ -42,11 +42,11 @@ export class GridModeImpl {
     this._gravity();
   }
 
-  onComponentAdded(c: SpatialComponent) {
+  onComponentAdded(c: ServerSpatialComponent) {
     this._grid.addItem(c.gridMode);
   }
 
-  onComponentRemoved(c: SpatialComponent) {
+  onComponentRemoved(c: ServerSpatialComponent) {
     this._grid.removeItem(c.gridMode);
   }
 

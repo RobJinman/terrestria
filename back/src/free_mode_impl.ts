@@ -1,5 +1,5 @@
 import { SpatialSubcomponent } from "./spatial_subcomponent";
-import { SpatialComponent } from "./spatial_component";
+import { ServerSpatialComponent } from "./server_spatial_component";
 import { FreeModeProperties } from "./free_mode_properties";
 import { EntityId } from "./common/system";
 import { Direction } from "./common/definitions";
@@ -33,11 +33,11 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
 }
 
 export class FreeModeImpl {
-  private _components = new Map<number, SpatialComponent>();
+  private _components = new Map<number, ServerSpatialComponent>();
 
   constructor() {}
 
-  setComponentsMap(components: Map<number, SpatialComponent>) {
+  setComponentsMap(components: Map<number, ServerSpatialComponent>) {
     this._components = components;
   }
 
@@ -45,11 +45,11 @@ export class FreeModeImpl {
     // TODO
   }
 
-  onComponentAdded(c: SpatialComponent) {
+  onComponentAdded(c: ServerSpatialComponent) {
     // TODO
   }
 
-  onComponentRemoved(c: SpatialComponent) {
+  onComponentRemoved(c: ServerSpatialComponent) {
     // TODO
   }
 

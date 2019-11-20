@@ -1,15 +1,10 @@
-import { ComponentPacket, EntityId } from "./common/system";
+import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
-
-export interface SpatialComponentPacket extends ComponentPacket {
-  x: number;
-  y: number;
-  speed: number;
-}
+import { SpatialComponentPacket } from "./common/spatial_component_packet";
 
 export class ClientSpatialSystem implements ClientSystem {
   private _components: Map<number, ClientSpatialComponent>;
