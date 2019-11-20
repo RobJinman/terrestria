@@ -6,8 +6,7 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted, REvent,
          RNewPlayerId } from "./common/response";
 import { constructEntities } from './factory';
-import { WORLD_W, WORLD_H, CLIENT_FRAME_RATE,
-         PLAYER_SPEED } from "./common/constants";
+import { CLIENT_FRAME_RATE, PLAYER_SPEED } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { debounce, waitForCondition } from './common/utils';
@@ -70,8 +69,7 @@ export class App {
     this._scheduler = new Scheduler();
 
     this._em = new ClientEntityManager();
-    const spatialSystem = new ClientSpatialSystem(this._em,
-                                                  CLIENT_FRAME_RATE);
+    const spatialSystem = new ClientSpatialSystem(CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,
                                           this._pixi);

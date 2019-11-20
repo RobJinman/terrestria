@@ -15,6 +15,7 @@ export interface SpatialComponentPacket extends ComponentPacket {
   y: number;
   destX: number;
   destY: number;
+  speed: number;
 }
 
 export class SpatialSystem implements ServerSystem {
@@ -55,7 +56,8 @@ export class SpatialSystem implements ServerSystem {
         x: c.x,
         y: c.y,
         destX: c.gridMode.x(),
-        destY: c.gridMode.x()
+        destY: c.gridMode.x(),
+        speed: c.gridMode.speed
       });
     });
 
@@ -143,7 +145,8 @@ export class SpatialSystem implements ServerSystem {
           x: c.x,
           y: c.y,
           destX: c.gridMode.x(),
-          destY: c.gridMode.y()
+          destY: c.gridMode.y(),
+          speed: c.gridMode.speed
         });
         c.setClean();
       }

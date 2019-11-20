@@ -13,6 +13,7 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
   private _gridY: number = 0;
   private _grid: Grid;
   private _properties: GridModeProperties;
+  private _speed = 0;
   private _lockedUntil: number = -1;
 
   constructor(entityId: EntityId,
@@ -32,11 +33,17 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
   }
 
   moving() {
-    return this._lockedUntil !== -1;
+    if (this._lockedUntil == -1) {
+      return false;
+    }
+    const now = (new Date()).getTime();
+    return now < this._lockedUntil;
   }
 
   setGridPos(x: number, y: number) {
-    // TODO: Check _lockedUntil
+    if (this.moving()) {
+      return false;
+    }
 
     if (x != this._gridX || y != this._gridY) {
       const oldX = this._gridX;
@@ -50,30 +57,42 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
       this.dirty = true;
     }
 
-    return true; // TODO
+    return true;
   }
 
   setInstantaneousPos(x: number, y: number) {
-    // TODO: Check _lockedUntil
+    if (this.moving()) {
+      return false;
+    }
 
     const gridX = this._grid.toGridX(x);
     const gridY = this._grid.toGridY(y);
     this.setGridPos(gridX, gridY);
 
-    return true; // TODO
+    return true;
   }
 
   setStaticPos(x: number, y: number) {
-    // The same until we introduce a notion of time
+    this.stop();
     return this.setInstantaneousPos(x, y);
   }
 
   moveToPos(x: number, y: number, t: number) {
-    this.setStaticPos(x, y);
-    //const now = (new Date()).getTime();
-    //this._lockedUntil = now + t * 1000;
+    if (this.moving()) {
+      return false;
+    }
 
-    return true; // TODO
+    const dx = x - this.x();
+    const dy = y - this.y();
+    const s = Math.sqrt(dx * dx + dy * dy);
+    this._speed = s / t;
+
+    this.setStaticPos(x, y);
+
+    const now = (new Date()).getTime();
+    this._lockedUntil = now + t * 1000;
+
+    return true;
   }
 
   get gridX() {
@@ -90,6 +109,10 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
 
   y() {
     return this._gridY * BLOCK_SZ;
+  }
+
+  get speed() {
+    return this._speed;
   }
 
   get solid() {

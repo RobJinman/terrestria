@@ -5,36 +5,32 @@ import { EntityManager } from "./common/entity_manager";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
-import { PLAYER_SPEED, BLOCK_SZ } from "./common/constants";
 
 export interface SpatialComponentPacket extends ComponentPacket {
   x: number;
   y: number;
   destX: number;
   destY: number;
+  speed: number;
 }
 
 export class ClientSpatialSystem implements ClientSystem {
-  private _em: EntityManager;
   private _components: Map<number, ClientSpatialComponent>;
   private _frameRate: number;
 
-  constructor(em: EntityManager,
-              frameRate: number) {
-    this._em = em;
+  constructor(frameRate: number) {
     this._components = new Map<number, ClientSpatialComponent>();
     this._frameRate = frameRate;
   }
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    //if (packet.speed > 0.1) {
-    //console.log(packet);
-      c.setDestination(packet.destX, packet.destY, PLAYER_SPEED * BLOCK_SZ);
-    //}
-    //else {
-    //  c.setStaticPos(packet.x, packet.y);
-    //}
+    if (packet.speed > 0.1) {
+      c.setDestination(packet.destX, packet.destY, packet.speed);
+    }
+    else {
+      c.setStaticPos(packet.x, packet.y);
+    }
   }
 
   update() {
