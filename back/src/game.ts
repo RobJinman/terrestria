@@ -10,7 +10,7 @@ import { GameResponseType, RGameState, RNewEntities,
          RPlayerKilled } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
-         SERVER_FRAME_RATE, SYNC_INTERVAL_MS } from "./common/constants";
+         SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { BehaviourSystem, BehaviourComponent,
          EventHandlerFn } from "./common/behaviour_system";
@@ -57,8 +57,7 @@ export class Game {
     const serverSpatialSystem = new ServerSpatialSystem(this._em,
                                                         WORLD_W,
                                                         WORLD_H,
-                                                        this._gravRegion,
-                                                        SERVER_FRAME_RATE);
+                                                        this._gravRegion);
     const agentSystem = new AgentSystem(this._em);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();

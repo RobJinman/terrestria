@@ -19,7 +19,7 @@ export class GridModeImpl {
               w: number,
               h: number) {
     this._em = entityManager;
-    this._grid = new Grid(BLOCK_SZ, BLOCK_SZ, w, h);
+    this._grid = new Grid(entityManager, BLOCK_SZ, BLOCK_SZ, w, h);
   }
 
   setComponentsMap(components: Map<number, ServerSpatialComponent>) {

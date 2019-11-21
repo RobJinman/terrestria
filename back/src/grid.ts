@@ -2,18 +2,24 @@ import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
 import { inRange, addSetToSet } from "./common/utils";
 import { EntityId } from "./common/system";
+import { EntityManager } from "./common/entity_manager";
+import { EEntityMoved, GameEventType } from "./common/event";
+import { BLOCK_SZ } from "./common/constants";
 
 export class Grid {
+  _em: EntityManager;
   _blockW: number;
   _blockH: number;
   _w: number;
   _h: number;
   _grid: Set<GridModeSubcomponent>[][];
 
-  constructor(blockW: number,
+  constructor(entityManager: EntityManager,
+              blockW: number,
               blockH: number,
               numBlocksX: number,
               numBlocksY: number) {
+    this._em = entityManager;
     this._blockW = blockW;
     this._blockH = blockH;
     this._w = numBlocksX;
@@ -64,6 +70,16 @@ export class Grid {
     }
   
     this.inCell(newGridX, newGridY).add(item);
+
+    const event: EEntityMoved = {
+      type: GameEventType.ENTITY_MOVED,
+      entities: [ item.entityId ],
+      entityId: item.entityId,
+      x: newGridX * BLOCK_SZ,
+      y: newGridY * BLOCK_SZ
+    };
+
+    this._em.postEvent(event);
   }
 
   removeItem(item: GridModeSubcomponent): boolean {

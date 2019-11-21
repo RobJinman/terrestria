@@ -7,10 +7,11 @@ import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
 import { ComponentType } from "./common/component_types";
 import { GameError } from "./common/error";
-import { GameEvent } from "./common/event";
+import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { Direction } from "./common/definitions";
 import { SpatialComponentPacket } from "./common/spatial_component_packet";
 import { ServerEntityManager } from "./server_entity_manager";
+import { BLOCK_SZ } from "./common/constants";
 
 export class ServerSpatialSystem implements ServerSystem {
   private _em: ServerEntityManager;
@@ -18,15 +19,13 @@ export class ServerSpatialSystem implements ServerSystem {
   private _w = 0;
   private _h = 0;
   private _gravityRegion: Span2d;
-  private _frameRate: number;
   private _gridModeImpl: GridModeImpl;
   private _freeModeImpl: FreeModeImpl;
 
   constructor(em: ServerEntityManager,
               w: number,
               h: number,
-              gravityRegion: Span2d,
-              frameRate: number) {
+              gravityRegion: Span2d) {
     this._em = em;
     this._components = new Map<number, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em, w, h);
@@ -34,7 +33,6 @@ export class ServerSpatialSystem implements ServerSystem {
     this._w = w;
     this._h = h;
     this._gravityRegion = gravityRegion;
-    this._frameRate = frameRate;
 
     this._gridModeImpl.setComponentsMap(this._components);
     this._freeModeImpl.setComponentsMap(this._components);
@@ -102,7 +100,15 @@ export class ServerSpatialSystem implements ServerSystem {
     return this._components.size;
   }
 
-  handleEvent(event: GameEvent) {}
+  handleEvent(event: GameEvent) {
+    switch (event.type) {
+      case GameEventType.ENTITY_MOVED: {
+        const e = <EEntityMoved>event;
+        this._onEntityMoved(e);
+        break;
+      }
+    }
+  }
 
   get width() {
     return this._w;
@@ -158,5 +164,18 @@ export class ServerSpatialSystem implements ServerSystem {
   gm_entityIsMoving(id: EntityId): boolean {
     const c = this.getComponent(id);
     return c.gridMode.moving();
+  }
+
+  private _onEntityMoved(event: EEntityMoved) {
+    const c = this.getComponent(event.entityId);
+    const gridX = Math.floor(event.x / BLOCK_SZ);
+    const gridY = Math.floor(event.y / BLOCK_SZ);
+
+    if (this._gravityRegion.contains(gridX, gridY)) {
+      c.currentMode == SpatialMode.FREE_MODE;
+    }
+    else {
+      c.currentMode = SpatialMode.GRID_MODE;
+    }
   }
 }
