@@ -16,11 +16,17 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
   }
 
   setInstantaneousPos(x: number, y: number) {
-    // TODO
+    this._posX = x;
+    this._posY = y;
+
+    this.dirty = true;
   }
 
   setStaticPos(x: number, y: number) {
-    // TODO
+    this._posX = x;
+    this._posY = y;
+
+    this.dirty = true;
   }
 
   x() {

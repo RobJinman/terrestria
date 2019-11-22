@@ -172,10 +172,18 @@ export class ServerSpatialSystem implements ServerSystem {
     const gridY = Math.floor(event.y / BLOCK_SZ);
 
     if (this._gravityRegion.contains(gridX, gridY)) {
-      c.currentMode == SpatialMode.FREE_MODE;
+      if (c.currentMode != SpatialMode.FREE_MODE) {
+        c.currentMode = SpatialMode.FREE_MODE;
+
+        c.freeMode.setStaticPos(c.gridMode.x(), c.gridMode.y());
+      }
     }
     else {
-      c.currentMode = SpatialMode.GRID_MODE;
+      if (c.currentMode != SpatialMode.GRID_MODE) {
+        c.currentMode = SpatialMode.GRID_MODE;
+
+        c.gridMode.setStaticPos(c.freeMode.x(), c.freeMode.y());
+      }
     }
   }
 }

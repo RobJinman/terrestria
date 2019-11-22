@@ -1,4 +1,4 @@
-import { ServerSpatialComponent } from "./server_spatial_component";
+import { ServerSpatialComponent, SpatialMode } from "./server_spatial_component";
 import { Grid } from "./grid";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
@@ -88,6 +88,10 @@ export class GridModeImpl {
 
   private _gravity() {
     this._components.forEach(c_ => {
+      if (c_.currentMode != SpatialMode.GRID_MODE) {
+        return;
+      }
+
       const c = c_.gridMode;
       if (c.heavy) {
         const x = c.x();
