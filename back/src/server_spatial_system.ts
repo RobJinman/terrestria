@@ -1,7 +1,7 @@
 import { EntityId } from "./common/system";
 import { ServerSystem } from "./common/server_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
-import { Span2d } from "./common/geometry";
+import { Span2d } from "./common/span";
 import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
 import { ComponentType } from "./common/component_types";
@@ -29,7 +29,7 @@ export class ServerSpatialSystem implements ServerSystem {
     this._em = em;
     this._components = new Map<number, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em, w, h);
-    this._freeModeImpl = new FreeModeImpl(w, h);
+    this._freeModeImpl = new FreeModeImpl(w, h, gravityRegion);
     this._w = w;
     this._h = h;
     this._gravityRegion = gravityRegion;
