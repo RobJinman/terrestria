@@ -5,4 +5,6 @@ export abstract class SpatialSubcomponent {
   abstract setInstantaneousPos(x: number, y: number): void;
   // Set the position and stop the entity moving
   abstract setStaticPos(x: number, y: number): void;
+  abstract isDirty(): boolean;
+  abstract setClean(): void;
 }

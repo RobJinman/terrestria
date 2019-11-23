@@ -1,4 +1,3 @@
-import { ServerSpatialComponent, SpatialMode } from "./server_spatial_component";
 import { Grid } from "./grid";
 import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
@@ -12,7 +11,7 @@ import { ServerEntityManager } from "./server_entity_manager";
 
 export class GridModeImpl {
   private _em: ServerEntityManager;
-  private _components = new Map<number, ServerSpatialComponent>();
+  private _components = new Map<number, GridModeSubcomponent>();
   private _grid: Grid;
 
   constructor(entityManager: ServerEntityManager,
@@ -20,10 +19,6 @@ export class GridModeImpl {
               h: number) {
     this._em = entityManager;
     this._grid = new Grid(entityManager, BLOCK_SZ, BLOCK_SZ, w, h);
-  }
-
-  setComponentsMap(components: Map<number, ServerSpatialComponent>) {
-    this._components = components;
   }
 
   get grid() {
@@ -35,19 +30,21 @@ export class GridModeImpl {
     if (!c) {
       throw new GameError(`No spatial component for entity ${id}`);
     }
-    return c.gridMode;
+    return c;
   }
 
   update() {
     this._gravity();
   }
 
-  onComponentAdded(c: ServerSpatialComponent) {
-    this._grid.addItem(c.gridMode);
+  addComponent(c: GridModeSubcomponent) {
+    this._components.set(c.entityId, c);
+    this._grid.addItem(c);
   }
 
-  onComponentRemoved(c: ServerSpatialComponent) {
-    this._grid.removeItem(c.gridMode);
+  removeComponent(c: GridModeSubcomponent) {
+    this._grid.removeItem(c);
+    this._components.delete(c.entityId);
   }
 
   moveAgent(id: EntityId, direction: Direction): boolean {
@@ -87,12 +84,7 @@ export class GridModeImpl {
   }
 
   private _gravity() {
-    this._components.forEach(c_ => {
-      if (c_.currentMode != SpatialMode.GRID_MODE) {
-        return;
-      }
-
-      const c = c_.gridMode;
+    this._components.forEach(c => {
       if (c.heavy) {
         const x = c.x();
         const y = c.y();

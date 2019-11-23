@@ -5,7 +5,6 @@ import { BLOCK_SZ } from "./common/constants";
 import { SpatialSubcomponent } from "./spatial_subcomponent";
 
 export class GridModeSubcomponent implements SpatialSubcomponent {
-  dirty = true;
   falling = false;
 
   private _entityId: EntityId;
@@ -15,6 +14,7 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
   private _properties: GridModeProperties;
   private _speed = 0;
   private _lockedUntil: number = -1;
+  private _dirty = true;
 
   constructor(entityId: EntityId,
               grid: Grid,
@@ -26,6 +26,14 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
 
   get entityId() {
     return this._entityId;
+  }
+
+  isDirty() {
+    return this._dirty;
+  }
+
+  setClean() {
+    this._dirty = false;
   }
 
   stop() {
@@ -54,7 +62,7 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
     
       this._grid.onItemMoved(this, oldX, oldY, x, y);
 
-      this.dirty = true;
+      this._dirty = true;
     }
 
     return true;

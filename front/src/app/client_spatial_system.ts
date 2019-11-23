@@ -4,7 +4,9 @@ import { GameEvent } from "./common/event";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
-import { SpatialComponentPacket } from "./common/spatial_component_packet";
+import { SpatialComponentPacket,
+         SpatialMode } from "./common/spatial_component_packet";
+import { SYNC_INTERVAL_MS } from "./common/constants";
 
 export class ClientSpatialSystem implements ClientSystem {
   private _components: Map<number, ClientSpatialComponent>;
@@ -17,11 +19,20 @@ export class ClientSpatialSystem implements ClientSystem {
 
   updateComponent(packet: SpatialComponentPacket) {
     const c = this.getComponent(packet.entityId);
-    if (packet.speed > 0.1) {
-      c.setDestination(packet.x, packet.y, packet.speed);
+    if (packet.mode == SpatialMode.GRID_MODE) {
+      if (packet.speed > 0) {
+        c.setDestination(packet.x, packet.y, packet.speed);
+      }
+      else {
+        c.setStaticPos(packet.x, packet.y);
+      }
     }
-    else {
-      c.setStaticPos(packet.x, packet.y);
+    else if (packet.mode == SpatialMode.FREE_MODE) {
+      const dx = packet.x - c.x;
+      const dy = packet.y - c.y;
+      const s = Math.sqrt(dx * dx + dy * dy);
+      const t = SYNC_INTERVAL_MS / 1000;
+      c.setDestination(packet.x, packet.y, s / t);
     }
   }
 

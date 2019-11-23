@@ -1,15 +1,11 @@
 import { Component, EntityId } from "./common/system";
 import { GridModeSubcomponent } from "./grid_mode_subcomponent";
-import { FreeModeSubcomponent } from "./free_mode_impl";
+import { FreeModeSubcomponent } from "./free_mode_subcomponent";
 import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
 import { FreeModeProperties } from "./free_mode_properties";
 import { ComponentType } from "./common/component_types";
-
-export enum SpatialMode {
-  GRID_MODE,
-  FREE_MODE
-}
+import { SpatialMode } from "./common/spatial_component_packet";
 
 export class ServerSpatialComponent extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
@@ -25,16 +21,21 @@ export class ServerSpatialComponent extends Component {
     this.gridMode = new GridModeSubcomponent(entityId,
                                              grid,
                                              gridModeProperties);
-    this.freeMode = new FreeModeSubcomponent(freeModeProperties);
+    this.freeMode = new FreeModeSubcomponent(entityId, freeModeProperties);
   }
 
   isDirty() {
-    return this.gridMode.dirty;// || this.freeMode.dirty;
+    if (this.currentMode == SpatialMode.GRID_MODE) {
+      return this.gridMode.isDirty();
+    }
+    else {
+      return this.freeMode.isDirty();
+    }
   }
 
   setClean() {
-    this.gridMode.dirty = false;
-    this.freeMode.dirty = false;
+    this.gridMode.setClean();
+    this.freeMode.setClean();
   }
 
   get x() {

@@ -1,62 +1,37 @@
-import { SpatialSubcomponent } from "./spatial_subcomponent";
-import { ServerSpatialComponent } from "./server_spatial_component";
-import { FreeModeProperties } from "./free_mode_properties";
+import { Engine, World } from "matter-js";
 import { EntityId } from "./common/system";
 import { Direction } from "./common/definitions";
-
-export class FreeModeSubcomponent implements SpatialSubcomponent {
-  dirty = true;
-
-  private _properties: FreeModeProperties;
-  private _posX = 0;
-  private _posY = 0;
-
-  constructor(properties: FreeModeProperties) {
-    this._properties = properties;
-  }
-
-  setInstantaneousPos(x: number, y: number) {
-    this._posX = x;
-    this._posY = y;
-
-    this.dirty = true;
-  }
-
-  setStaticPos(x: number, y: number) {
-    this._posX = x;
-    this._posY = y;
-
-    this.dirty = true;
-  }
-
-  x() {
-    return this._posX;
-  }
-
-  y() {
-    return this._posY;
-  }
-}
+import { FreeModeSubcomponent } from "./free_mode_subcomponent";
+import { SERVER_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 
 export class FreeModeImpl {
-  private _components = new Map<number, ServerSpatialComponent>();
+  private _w: number;
+  private _h: number;
+  private _engine = Engine.create();
+  private _components = new Map<number, FreeModeSubcomponent>();
 
-  constructor() {}
-
-  setComponentsMap(components: Map<number, ServerSpatialComponent>) {
-    this._components = components;
+  constructor(w: number, h: number) {
+    this._w = w;
+    this._h = h;
   }
 
   update() {
-    // TODO
+    Engine.update(this._engine, 1000.0 / SERVER_FRAME_RATE);
   }
 
-  onComponentAdded(c: ServerSpatialComponent) {
-    // TODO
+  addComponent(c: FreeModeSubcomponent) {
+    this._components.set(c.entityId, c);
+
+    const toMatterJsY = (y: number, h: number) => this._h * BLOCK_SZ - y - h;
+    const fromMatterJsY = (y: number, h: number) => this._h * BLOCK_SZ - y - h;
+    c.init(toMatterJsY, fromMatterJsY);
+
+    World.add(this._engine.world, c.body);
   }
 
-  onComponentRemoved(c: ServerSpatialComponent) {
-    // TODO
+  removeComponent(c: FreeModeSubcomponent) {
+    World.remove(this._engine.world, c.body);
+    this._components.delete(c.entityId);
   }
 
   moveAgent(id: EntityId, direction: Direction): boolean {

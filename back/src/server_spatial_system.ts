@@ -1,7 +1,6 @@
 import { EntityId } from "./common/system";
 import { ServerSystem } from "./common/server_system";
-import { ServerSpatialComponent,
-         SpatialMode } from "./server_spatial_component";
+import { ServerSpatialComponent } from "./server_spatial_component";
 import { Span2d } from "./common/geometry";
 import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
@@ -9,7 +8,8 @@ import { ComponentType } from "./common/component_types";
 import { GameError } from "./common/error";
 import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { Direction } from "./common/definitions";
-import { SpatialComponentPacket } from "./common/spatial_component_packet";
+import { SpatialComponentPacket,
+         SpatialMode } from "./common/spatial_component_packet";
 import { ServerEntityManager } from "./server_entity_manager";
 import { BLOCK_SZ } from "./common/constants";
 
@@ -29,13 +29,10 @@ export class ServerSpatialSystem implements ServerSystem {
     this._em = em;
     this._components = new Map<number, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em, w, h);
-    this._freeModeImpl = new FreeModeImpl();
+    this._freeModeImpl = new FreeModeImpl(w, h);
     this._w = w;
     this._h = h;
     this._gravityRegion = gravityRegion;
-
-    this._gridModeImpl.setComponentsMap(this._components);
-    this._freeModeImpl.setComponentsMap(this._components);
   }
 
   getState() {
@@ -45,6 +42,7 @@ export class ServerSpatialSystem implements ServerSystem {
       packets.push({
         componentType: ComponentType.SPATIAL,
         entityId: c.entityId,
+        mode: c.currentMode,
         x: c.x,
         y: c.y,
         speed: c.gridMode.speed
@@ -71,8 +69,13 @@ export class ServerSpatialSystem implements ServerSystem {
 
   addComponent(component: ServerSpatialComponent) {
     this._components.set(component.entityId, component);
-    this._gridModeImpl.onComponentAdded(component);
-    this._freeModeImpl.onComponentAdded(component);
+
+    if (component.currentMode == SpatialMode.GRID_MODE) {
+      this._gridModeImpl.addComponent(component.gridMode);
+    }
+    else if (component.currentMode == SpatialMode.FREE_MODE) {
+      this._freeModeImpl.addComponent(component.freeMode);
+    }
   }
 
   hasComponent(id: EntityId) {
@@ -90,8 +93,8 @@ export class ServerSpatialSystem implements ServerSystem {
   removeComponent(id: EntityId) {
     const c = this._components.get(id);
     if (c) {
-      this._gridModeImpl.onComponentRemoved(c);
-      this._freeModeImpl.onComponentRemoved(c);
+      this._gridModeImpl.removeComponent(c.gridMode);
+      this._freeModeImpl.removeComponent(c.freeMode);
     }
     this._components.delete(id);
   }
@@ -137,13 +140,26 @@ export class ServerSpatialSystem implements ServerSystem {
 
     this._components.forEach((c, id) => {
       if (c.isDirty()) {
-        dirties.push({
-          entityId: c.entityId,
-          componentType: ComponentType.SPATIAL,
-          x: c.x,
-          y: c.y,
-          speed: c.gridMode.speed
-        });
+        if (c.currentMode == SpatialMode.GRID_MODE) {
+          dirties.push({
+            entityId: c.entityId,
+            componentType: ComponentType.SPATIAL,
+            mode: c.currentMode,
+            x: c.x,
+            y: c.y,
+            speed: c.gridMode.speed
+          });
+        }
+        else if (c.currentMode == SpatialMode.FREE_MODE) {
+          dirties.push({
+            entityId: c.entityId,
+            componentType: ComponentType.SPATIAL,
+            mode: c.currentMode,
+            x: c.x,
+            y: c.y,
+            speed: 0
+          });
+        }
         c.setClean();
       }
     });
@@ -175,12 +191,18 @@ export class ServerSpatialSystem implements ServerSystem {
       if (c.currentMode != SpatialMode.FREE_MODE) {
         c.currentMode = SpatialMode.FREE_MODE;
 
+        this._gridModeImpl.removeComponent(c.gridMode);
+        this._freeModeImpl.addComponent(c.freeMode);
+
         c.freeMode.setStaticPos(c.gridMode.x(), c.gridMode.y());
       }
     }
     else {
       if (c.currentMode != SpatialMode.GRID_MODE) {
         c.currentMode = SpatialMode.GRID_MODE;
+
+        this._freeModeImpl.removeComponent(c.freeMode);
+        this._gridModeImpl.addComponent(c.gridMode);
 
         c.gridMode.setStaticPos(c.freeMode.x(), c.freeMode.y());
       }
