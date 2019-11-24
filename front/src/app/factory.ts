@@ -14,16 +14,14 @@ import { ClientSpatialComponent } from "./client_spatial_component";
 function constructGem(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
-      name: "gem.png",
-      scaleFactor: 0.5
+      name: "gem.png"
     }
   ];
 
   const animations: AnimationDesc[] = [
     {
       name: "gem_burn",
-      duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      duration: 1.0 / PLAYER_SPEED
     }
   ];
 
@@ -53,16 +51,14 @@ function constructGem(em: EntityManager, id: EntityId) {
 function constructRock(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
-      name: "rock.png",
-      scaleFactor: 0.5
+      name: "rock.png"
     }
   ];
 
   const animations: AnimationDesc[] = [
     {
       name: "rock_burn",
-      duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      duration: 1.0 / PLAYER_SPEED
     }
   ];
 
@@ -92,16 +88,14 @@ function constructRock(em: EntityManager, id: EntityId) {
 function constructSoil(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
-      name: "soil.png",
-      scaleFactor: 0.5
+      name: "soil.png"
     }
   ];
 
   const animations: AnimationDesc[] = [
     {
       name: "soil_puff",
-      duration: 1.0 / PLAYER_SPEED,
-      scaleFactor: 0.5
+      duration: 1.0 / PLAYER_SPEED
     }
   ];
 
@@ -147,20 +141,16 @@ function directionToLetter(direction: Direction): string {
 function constructPlayer(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
     {
-      name: "man_run_u0.png",
-      scaleFactor: 0.5
+      name: "man_run_u0.png"
     },
     {
-      name: "man_run_r0.png",
-      scaleFactor: 0.5
+      name: "man_run_r0.png"
     },
     {
-      name: "man_run_d0.png",
-      scaleFactor: 0.5
+      name: "man_run_d0.png"
     },
     {
-      name: "man_run_l0.png",
-      scaleFactor: 0.5
+      name: "man_run_l0.png"
     }
   ]
 
@@ -171,76 +161,65 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     {
       name: "explosion",
       duration: duration,
-      scaleFactor: 0.5,
       endFrameDelayMs
     },
     {
       name: "man_run_u",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_u0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_r",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_d",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_d0.png",
       endFrameDelayMs
     },
     {
       name: "man_run_l",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_l0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_u",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_u0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_r",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
       name: "man_dig_d",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_d0.png",
       endFrameDelayMs
     },
     {
      name: "man_dig_l",
      duration: duration,
-     scaleFactor: 0.5,
      endFrame: "man_run_l0.png",
      endFrameDelayMs
     },
     {
       name: "man_push_r",
       duration: duration,
-      scaleFactor: 0.5,
       endFrame: "man_run_r0.png",
       endFrameDelayMs
     },
     {
      name: "man_push_l",
      duration: duration,
-     scaleFactor: 0.5,
      endFrame: "man_run_l0.png",
      endFrameDelayMs
     }

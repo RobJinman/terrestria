@@ -27,3 +27,53 @@ export function normalise(v: Vec2) {
     v.y = 0.70710678118;
   }
 }
+
+export enum ShapeType {
+  CIRCLE,
+  RECTANGLE,
+  POLYGON
+}
+
+export abstract class Shape {
+  private _type: ShapeType;
+
+  constructor(type: ShapeType) {
+    this._type = type;
+  }
+
+  get type() {
+    return this._type;
+  }
+}
+
+export class Rectangle extends Shape {
+  width: number;
+  height: number;
+
+  constructor(width: number, height: number) {
+    super(ShapeType.RECTANGLE);
+
+    this.width = width;
+    this.height = height;
+  }
+}
+
+export class Circle extends Shape {
+  radius: number;
+
+  constructor(radius: number) {
+    super(ShapeType.CIRCLE);
+
+    this.radius = radius;
+  }
+}
+
+export class Polygon extends Shape {
+  points: Vec2[];
+
+  constructor(points: Vec2[]) {
+    super(ShapeType.POLYGON);
+
+    this.points = points;
+  }
+}

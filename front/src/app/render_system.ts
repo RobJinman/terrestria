@@ -7,18 +7,17 @@ import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
+import { BLOCK_SZ } from './common/constants';
 
 export interface AnimationDesc {
   duration: number;
   name: string;
-  scaleFactor: number;
   endFrame?: string;
   endFrameDelayMs?: number;
 }
 
 export interface StaticImage {
   name: string;
-  scaleFactor: number;
 }
 
 interface Animation {
@@ -136,8 +135,6 @@ export class RenderSystem implements ClientSystem {
 
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
-      sprite.width *= anim.scaleFactor;
-      sprite.height *= anim.scaleFactor;
 
       const defaultDuration = sprite.textures.length / 60;
       const speedUp = defaultDuration / anim.duration;
@@ -158,8 +155,6 @@ export class RenderSystem implements ClientSystem {
 
       const texture = this._spriteSheet.textures[imgDesc.name];
       const sprite = new PIXI.Sprite(texture);
-      sprite.width *= imgDesc.scaleFactor;
-      sprite.height *= imgDesc.scaleFactor;
 
       component.staticSprites.set(imgDesc.name, sprite);
     });
@@ -211,10 +206,10 @@ export class RenderSystem implements ClientSystem {
 
       const c = this.getComponent(id);
       if (c.stagedSprite) {
-        c.stagedSprite.x = spatialComp.x;
-        c.stagedSprite.y = spatialComp.y;
-
-        //c.stagedSprite.angle = spatialComp.angle;
+        c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+        c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                    spatialComp.y + BLOCK_SZ * 0.5);
+        c.stagedSprite.rotation = spatialComp.angle;
       }
     }
   }

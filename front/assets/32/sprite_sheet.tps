@@ -56,7 +56,7 @@
         <key>jxrCompressionLevel</key>
         <uint>0</uint>
         <key>ditherType</key>
-        <enum type="SettingsBase::DitherType">NearestNeighbour</enum>
+        <enum type="SettingsBase::DitherType">PngQuantLow</enum>
         <key>backgroundColor</key>
         <uint>0</uint>
         <key>libGdx</key>
@@ -132,7 +132,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename></filename>
+                <filename>sprite_sheet.json</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -181,7 +181,19 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">explosion0.png</key>
+            <key type="filename">explosion1.png</key>
+            <key type="filename">explosion2.png</key>
+            <key type="filename">explosion3.png</key>
             <key type="filename">gem.png</key>
+            <key type="filename">gem_burn0.png</key>
+            <key type="filename">gem_burn1.png</key>
+            <key type="filename">gem_burn2.png</key>
+            <key type="filename">gem_burn3.png</key>
+            <key type="filename">man_dig_d0.png</key>
+            <key type="filename">man_dig_d1.png</key>
+            <key type="filename">man_dig_d2.png</key>
+            <key type="filename">man_dig_d3.png</key>
             <key type="filename">man_dig_l0.png</key>
             <key type="filename">man_dig_l1.png</key>
             <key type="filename">man_dig_l2.png</key>
@@ -190,6 +202,10 @@
             <key type="filename">man_dig_r1.png</key>
             <key type="filename">man_dig_r2.png</key>
             <key type="filename">man_dig_r3.png</key>
+            <key type="filename">man_dig_u0.png</key>
+            <key type="filename">man_dig_u1.png</key>
+            <key type="filename">man_dig_u2.png</key>
+            <key type="filename">man_dig_u3.png</key>
             <key type="filename">man_push_l0.png</key>
             <key type="filename">man_push_l1.png</key>
             <key type="filename">man_push_l2.png</key>
@@ -202,21 +218,37 @@
             <key type="filename">man_run_d1.png</key>
             <key type="filename">man_run_d2.png</key>
             <key type="filename">man_run_d3.png</key>
+            <key type="filename">man_run_l0.png</key>
+            <key type="filename">man_run_l1.png</key>
+            <key type="filename">man_run_l2.png</key>
+            <key type="filename">man_run_l3.png</key>
+            <key type="filename">man_run_r0.png</key>
+            <key type="filename">man_run_r1.png</key>
+            <key type="filename">man_run_r2.png</key>
+            <key type="filename">man_run_r3.png</key>
             <key type="filename">man_run_u0.png</key>
             <key type="filename">man_run_u1.png</key>
             <key type="filename">man_run_u2.png</key>
             <key type="filename">man_run_u3.png</key>
             <key type="filename">rock.png</key>
+            <key type="filename">rock_burn0.png</key>
+            <key type="filename">rock_burn1.png</key>
+            <key type="filename">rock_burn2.png</key>
+            <key type="filename">rock_burn3.png</key>
             <key type="filename">soil.png</key>
+            <key type="filename">soil_puff0.png</key>
+            <key type="filename">soil_puff1.png</key>
+            <key type="filename">soil_puff2.png</key>
+            <key type="filename">soil_puff3.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
-                <point_f>0,0</point_f>
+                <point_f>0.5,0.5</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
-                <rect>8,8,16,16</rect>
+                <rect>16,16,32,32</rect>
                 <key>scale9Paddings</key>
-                <rect>8,8,16,16</rect>
+                <rect>16,16,32,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -224,6 +256,10 @@
         <key>fileList</key>
         <array>
             <filename>gem.png</filename>
+            <filename>man_dig_d0.png</filename>
+            <filename>man_dig_d1.png</filename>
+            <filename>man_dig_d2.png</filename>
+            <filename>man_dig_d3.png</filename>
             <filename>man_dig_l0.png</filename>
             <filename>man_dig_l1.png</filename>
             <filename>man_dig_l2.png</filename>
@@ -232,6 +268,10 @@
             <filename>man_dig_r1.png</filename>
             <filename>man_dig_r2.png</filename>
             <filename>man_dig_r3.png</filename>
+            <filename>man_dig_u0.png</filename>
+            <filename>man_dig_u1.png</filename>
+            <filename>man_dig_u2.png</filename>
+            <filename>man_dig_u3.png</filename>
             <filename>man_push_l0.png</filename>
             <filename>man_push_l1.png</filename>
             <filename>man_push_l2.png</filename>
@@ -244,12 +284,36 @@
             <filename>man_run_d1.png</filename>
             <filename>man_run_d2.png</filename>
             <filename>man_run_d3.png</filename>
+            <filename>man_run_l0.png</filename>
+            <filename>man_run_l1.png</filename>
+            <filename>man_run_l2.png</filename>
+            <filename>man_run_l3.png</filename>
+            <filename>man_run_r0.png</filename>
+            <filename>man_run_r1.png</filename>
+            <filename>man_run_r2.png</filename>
+            <filename>man_run_r3.png</filename>
             <filename>man_run_u0.png</filename>
             <filename>man_run_u1.png</filename>
             <filename>man_run_u2.png</filename>
             <filename>man_run_u3.png</filename>
             <filename>rock.png</filename>
             <filename>soil.png</filename>
+            <filename>soil_puff0.png</filename>
+            <filename>soil_puff1.png</filename>
+            <filename>soil_puff2.png</filename>
+            <filename>soil_puff3.png</filename>
+            <filename>rock_burn0.png</filename>
+            <filename>rock_burn1.png</filename>
+            <filename>rock_burn2.png</filename>
+            <filename>rock_burn3.png</filename>
+            <filename>explosion0.png</filename>
+            <filename>explosion1.png</filename>
+            <filename>explosion2.png</filename>
+            <filename>explosion3.png</filename>
+            <filename>gem_burn0.png</filename>
+            <filename>gem_burn1.png</filename>
+            <filename>gem_burn2.png</filename>
+            <filename>gem_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

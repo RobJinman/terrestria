@@ -6,6 +6,7 @@ import { GridModeProperties } from "./grid_mode_properties";
 import { FreeModeProperties } from "./free_mode_properties";
 import { ComponentType } from "./common/component_types";
 import { SpatialMode } from "./common/spatial_component_packet";
+import { Shape } from "./common/geometry";
 
 export class ServerSpatialComponent extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
@@ -15,13 +16,16 @@ export class ServerSpatialComponent extends Component {
   constructor(entityId: EntityId,
               grid: Grid,
               gridModeProperties: GridModeProperties,
-              freeModeProperties: FreeModeProperties) {
+              freeModeProperties: FreeModeProperties,
+              shape?: Shape) {
     super(entityId, ComponentType.SPATIAL);
 
     this.gridMode = new GridModeSubcomponent(entityId,
                                              grid,
                                              gridModeProperties);
-    this.freeMode = new FreeModeSubcomponent(entityId, freeModeProperties);
+    this.freeMode = new FreeModeSubcomponent(entityId,
+                                             freeModeProperties,
+                                             shape);
   }
 
   isDirty() {

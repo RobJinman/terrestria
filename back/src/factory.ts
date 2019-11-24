@@ -11,6 +11,8 @@ import { InventorySystem, CCollector, CCollectable,
 import { ServerEntityManager } from "./server_entity_manager";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
+import { Circle, Polygon, Rectangle } from "./common/geometry";
+import { BLOCK_SZ } from "./common/constants";
 
 export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
@@ -66,12 +68,15 @@ export function constructRock(em: ServerEntityManager): EntityId {
     heavy: true
   };
 
+  const shape = new Circle(BLOCK_SZ * 0.5);
+
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new ServerSpatialComponent(id,
                                                  spatialSys.grid,
                                                  gridModeProps,
-                                                 freeModeProps);
+                                                 freeModeProps,
+                                                 shape);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
@@ -101,12 +106,22 @@ export function constructGem(em: ServerEntityManager): EntityId {
     heavy: true
   };
 
+  const points = [
+    { x: 0, y: 10 },
+    { x: 16, y: 32 },
+    { x: 32, y: 10 },
+    { x: 27, y: 0 },
+    { x: 5, y: 0 }
+  ];
+  const shape = new Polygon(points);
+
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new ServerSpatialComponent(id,
                                                  spatialSys.grid,
                                                  gridModeProps,
-                                                 freeModeProps);
+                                                 freeModeProps,
+                                                 shape);
 
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "gems", 1);
@@ -149,12 +164,15 @@ export function constructPlayer(em: ServerEntityManager,
     heavy: true
   };
 
+  const shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);
+
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new ServerSpatialComponent(id,
                                                  spatialSys.grid,
                                                  gridModeProps,
-                                                 freeModeProps);
+                                                 freeModeProps,
+                                                 shape);
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
