@@ -277,16 +277,14 @@ describe("Span2d", () => {
         },
       ]));
     });
-  });
 
-  describe("getPerimeter", () => {
     it("should return all 4 edges of a single row span2d", () => {
       const span = new Span(4, 6);
       const span2d = new Span2d();
       span2d.addHorizontalSpan(9, span);
-
+  
       const edges = new Set(getPerimeter(span2d));
-
+  
       expect(edges).toEqual(new Set([
         // Top
         {
@@ -310,16 +308,16 @@ describe("Span2d", () => {
         },
       ]));
     });
-
+  
     it("should return all 8 edges of a single row (2 span) span2d", () => {
       const span1 = new Span(4, 6);
       const span2 = new Span(9, 13);
       const span2d = new Span2d();
       span2d.addHorizontalSpan(9, span1);
       span2d.addHorizontalSpan(9, span2);
-
+  
       const edges = new Set(getPerimeter(span2d));
-
+  
       expect(edges).toEqual(new Set([
         // === Left span ===
         //
@@ -366,16 +364,16 @@ describe("Span2d", () => {
         },
       ]));
     });
-
+  
     it("should return all 4 edges of 2 touching spans on single row", () => {
       const span1 = new Span(4, 6);
       const span2 = new Span(7, 13);
       const span2d = new Span2d();
       span2d.addHorizontalSpan(9, span1);
       span2d.addHorizontalSpan(9, span2);
-
+  
       const edges = new Set(getPerimeter(span2d));
-
+  
       expect(edges).toEqual(new Set([
         // Top
         {
@@ -399,16 +397,16 @@ describe("Span2d", () => {
         }
       ]));
     });
-
+  
     it("should return all 4 edges of 2 touching spans on 2 rows", () => {
       const span1 = new Span(4, 6);
       const span2 = new Span(4, 6);
       const span2d = new Span2d();
       span2d.addHorizontalSpan(9, span1);
       span2d.addHorizontalSpan(10, span2);
-
+  
       const edges = new Set(getPerimeter(span2d));
-
+  
       expect(edges).toEqual(new Set([
         // Top
         {
