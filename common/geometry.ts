@@ -3,9 +3,9 @@ import { BLOCK_SZ } from "./constants";
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
-    case Direction.UP: return [0, BLOCK_SZ];
+    case Direction.UP: return [0, -BLOCK_SZ];
     case Direction.RIGHT: return [BLOCK_SZ, 0];
-    case Direction.DOWN: return [0, -BLOCK_SZ];
+    case Direction.DOWN: return [0, BLOCK_SZ];
     case Direction.LEFT: return [-BLOCK_SZ, 0];
     default: return [0, 0];
   }

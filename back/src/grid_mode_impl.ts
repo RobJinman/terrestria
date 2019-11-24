@@ -88,7 +88,7 @@ export class GridModeImpl {
       if (c.heavy) {
         const x = c.x();
         const y = c.y();
-        const yDown = y - BLOCK_SZ;
+        const yDown = y + BLOCK_SZ;
         const xRight = x + BLOCK_SZ;
         const xLeft = x - BLOCK_SZ;
 
@@ -96,7 +96,7 @@ export class GridModeImpl {
 
         if (!this.grid.outOfRange(x, yDown)) {
           if (this.grid.spaceFreeAtPos(x, yDown)) {
-            c.moveToPos(c.x(), c.y() - BLOCK_SZ, t);
+            c.moveToPos(c.x(), c.y() + BLOCK_SZ, t);
             c.falling = true;
           }
           else {

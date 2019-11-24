@@ -136,9 +136,6 @@ export class RenderSystem implements ClientSystem {
 
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
-      sprite.textures.forEach(t => {
-        t.rotate = 8;
-      });
       sprite.width *= anim.scaleFactor;
       sprite.height *= anim.scaleFactor;
 
@@ -161,7 +158,6 @@ export class RenderSystem implements ClientSystem {
 
       const texture = this._spriteSheet.textures[imgDesc.name];
       const sprite = new PIXI.Sprite(texture);
-      sprite.texture.rotate = 8;
       sprite.width *= imgDesc.scaleFactor;
       sprite.height *= imgDesc.scaleFactor;
 
@@ -217,6 +213,8 @@ export class RenderSystem implements ClientSystem {
       if (c.stagedSprite) {
         c.stagedSprite.x = spatialComp.x;
         c.stagedSprite.y = spatialComp.y;
+
+        //c.stagedSprite.angle = spatialComp.angle;
       }
     }
   }

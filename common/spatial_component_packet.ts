@@ -9,5 +9,6 @@ export interface SpatialComponentPacket extends ComponentPacket {
   mode: SpatialMode;
   x: number;
   y: number;
+  angle: number;
   speed: number;
 }

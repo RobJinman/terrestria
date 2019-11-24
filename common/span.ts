@@ -209,31 +209,31 @@ export function getOutsideEdges(span2d: Span2d): Edge[] {
 
   for (let square of span2d) {
     // Top
-    if (!span2d.contains(square.x, square.y + 1)) {
+    if (!span2d.contains(square.x, square.y - 1)) {
       edges.push({
-        A: { x: square.x, y: square.y + 1 },
-        B: { x: square.x + 1, y: square.y + 1 }
+        A: { x: square.x, y: square.y },
+        B: { x: square.x + 1, y: square.y }
       });
     }
     // Right
     if (!span2d.contains(square.x + 1, square.y)) {
       edges.push({
-        A: { x: square.x + 1, y: square.y + 1 },
-        B: { x: square.x + 1, y: square.y }
+        A: { x: square.x + 1, y: square.y },
+        B: { x: square.x + 1, y: square.y + 1 }
       });
     }
     // Bottom
-    if (!span2d.contains(square.x, square.y - 1)) {
+    if (!span2d.contains(square.x, square.y + 1)) {
       edges.push({
-        A: { x: square.x + 1, y: square.y },
-        B: { x: square.x, y: square.y }
+        A: { x: square.x + 1, y: square.y + 1 },
+        B: { x: square.x, y: square.y + 1 }
       });
     }
     // Left
     if (!span2d.contains(square.x - 1, square.y)) {
       edges.push({
-        A: { x: square.x, y: square.y },
-        B: { x: square.x, y: square.y + 1 }
+        A: { x: square.x, y: square.y + 1 },
+        B: { x: square.x, y: square.y }
       });
     }
   }

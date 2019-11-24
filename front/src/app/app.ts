@@ -6,7 +6,8 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted, REvent,
          RNewPlayerId } from "./common/response";
 import { constructEntities } from './factory';
-import { CLIENT_FRAME_RATE, PLAYER_SPEED } from "./common/constants";
+import { CLIENT_FRAME_RATE, PLAYER_SPEED, BLOCK_SZ, WORLD_W,
+         WORLD_H } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { debounce, waitForCondition } from './common/utils';
@@ -57,13 +58,12 @@ export class App {
   private _moveRemoteFn: (direction: Direction) => void;
 
   constructor() {
-    this._pixi = new PIXI.Application();
-    const renderer = this._pixi.renderer;
-    this._pixi.stage.position.y = renderer.height / renderer.resolution;
-    this._pixi.stage.scale.y = -1;
+    this._pixi = new PIXI.Application({
+      width: WORLD_W * BLOCK_SZ,
+      height: WORLD_H * BLOCK_SZ
+    });
 
     this._ws = new WebSocket(__WEBSOCKET_URL__);
-
     this._ws.onmessage = ev => this._onServerMessage(ev);
 
     this._scheduler = new Scheduler();

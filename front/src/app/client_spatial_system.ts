@@ -28,11 +28,14 @@ export class ClientSpatialSystem implements ClientSystem {
       }
     }
     else if (packet.mode == SpatialMode.FREE_MODE) {
+      console.log(packet);
+
       const dx = packet.x - c.x;
       const dy = packet.y - c.y;
       const s = Math.sqrt(dx * dx + dy * dy);
       const t = SYNC_INTERVAL_MS / 1000;
       c.setDestination(packet.x, packet.y, s / t);
+      c.setAngle(packet.angle);
     }
   }
 

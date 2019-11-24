@@ -9,6 +9,7 @@ export class ClientSpatialComponent extends Component {
   private _posY = 0;
   private _destX = 0;
   private _destY = 0;
+  private _angle = 0;
   speed = 0;
 
   constructor(entityId: EntityId, em: EntityManager) {
@@ -44,6 +45,12 @@ export class ClientSpatialComponent extends Component {
     this.speed = speed;
   }
 
+  setAngle(angle: number) {
+    this._angle = angle;
+    
+    // TODO: EEntityMoved?
+  }
+
   moving() {
     return this.speed > 0.1;
   }
@@ -62,5 +69,9 @@ export class ClientSpatialComponent extends Component {
 
   get destY() {
     return this._destY;
+  }
+
+  get angle() {
+    return this._angle;
   }
 }

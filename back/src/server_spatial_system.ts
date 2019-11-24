@@ -29,7 +29,7 @@ export class ServerSpatialSystem implements ServerSystem {
     this._em = em;
     this._components = new Map<number, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em, w, h);
-    this._freeModeImpl = new FreeModeImpl(w, h, gravityRegion);
+    this._freeModeImpl = new FreeModeImpl(gravityRegion);
     this._w = w;
     this._h = h;
     this._gravityRegion = gravityRegion;
@@ -45,6 +45,7 @@ export class ServerSpatialSystem implements ServerSystem {
         mode: c.currentMode,
         x: c.x,
         y: c.y,
+        angle: c.freeMode.angle,
         speed: c.gridMode.speed
       });
     });
@@ -147,6 +148,7 @@ export class ServerSpatialSystem implements ServerSystem {
             mode: c.currentMode,
             x: c.x,
             y: c.y,
+            angle: c.freeMode.angle,
             speed: c.gridMode.speed
           });
         }
@@ -157,6 +159,7 @@ export class ServerSpatialSystem implements ServerSystem {
             mode: c.currentMode,
             x: c.x,
             y: c.y,
+            angle: c.freeMode.angle,
             speed: 0
           });
         }

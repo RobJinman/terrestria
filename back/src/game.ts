@@ -24,6 +24,7 @@ import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
 import { Span, Span2d } from "./common/span";
 import { ServerSpatialSystem } from "./server_spatial_system";
+import { ServerSpatialComponent } from "./server_spatial_component";
 
 function noThrow(fn: () => any) {
   try {
@@ -97,6 +98,9 @@ export class Game {
     const entities = this._em.getEntities();
   
     const id = constructPlayer(this._em, pinataId, pinataToken);
+    const spatial =
+      <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+    spatial.setStaticPos(0, (WORLD_H - 1) * BLOCK_SZ);
 
     console.log(`Adding player ${id}`);
   
@@ -139,6 +143,9 @@ export class Game {
     }
 
     const id = constructPlayer(this._em, pinataId, pinataToken);
+    const spatial =
+      <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+    spatial.setStaticPos(0, (WORLD_H - 1) * BLOCK_SZ);
 
     const socket = this._pipe.getConnection(oldId);
     this._pipe.removeConnection(oldId);
@@ -187,19 +194,17 @@ export class Game {
   }
 
   private _createGravRegion() {
-    console.log("Creating gravity region");
+    this._gravRegion.addHorizontalSpan(0, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(1, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(2, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(3, new Span(0, WORLD_W - 1));
+    this._gravRegion.addHorizontalSpan(4, new Span(0, WORLD_W - 1));
 
-    this._gravRegion.addHorizontalSpan(WORLD_H - 1, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(WORLD_H - 2, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(WORLD_H - 3, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(WORLD_H - 4, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(WORLD_H - 5, new Span(0, WORLD_W - 1));
-
-    this._gravRegion.addHorizontalSpan(4, new Span(5, 16));
-    this._gravRegion.addHorizontalSpan(5, new Span(5, 16));
-    this._gravRegion.addHorizontalSpan(6, new Span(4, 17));
-    this._gravRegion.addHorizontalSpan(7, new Span(4, 18));
-    this._gravRegion.addHorizontalSpan(8, new Span(4, 15));
+    this._gravRegion.addHorizontalSpan(11, new Span(7, 16));
+    this._gravRegion.addHorizontalSpan(12, new Span(6, 17));
+    this._gravRegion.addHorizontalSpan(13, new Span(6, 17));
+    this._gravRegion.addHorizontalSpan(14, new Span(7, 18));
+    this._gravRegion.addHorizontalSpan(15, new Span(7, 16));
   }
 
   private _onPlayerKilled(e: GameEvent) {
@@ -253,7 +258,7 @@ export class Game {
     let coords: [number, number][] = [];
     for (let c = 0; c < WORLD_W; ++c) {
       for (let r = 0; r < WORLD_H; ++r) {
-        if (c === 0 && r === 0) {
+        if (c === 0 && r === WORLD_H - 1) {
           continue;
         }
         if (this._gravRegion.contains(c, r)) {

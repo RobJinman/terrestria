@@ -224,23 +224,23 @@ describe("Span2d", () => {
       expect(edges).toEqual(new Set([
         // Top
         {
-          A: { x: 4, y: 10 },
-          B: { x: 5, y: 10 }
+          A: { x: 4, y: 9 },
+          B: { x: 5, y: 9 }
         },
         // Right
         {
-          A: { x: 5, y: 10 },
-          B: { x: 5, y: 9 }
+          A: { x: 5, y: 9 },
+          B: { x: 5, y: 10 }
         },
         // Bottom
         {
-          A: { x: 5, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 5, y: 10 },
+          B: { x: 4, y: 10 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 10 }
+          A: { x: 4, y: 10 },
+          B: { x: 4, y: 9 }
         },
       ]));
     });
@@ -257,23 +257,23 @@ describe("Span2d", () => {
       expect(edges).toEqual(new Set([
         // Top
         {
-          A: { x: 4, y: 10 },
-          B: { x: 5, y: 10 }
+          A: { x: 4, y: 9 },
+          B: { x: 5, y: 9 }
         },
         // Right
         {
-          A: { x: 5, y: 10 },
-          B: { x: 5, y: 9 }
+          A: { x: 5, y: 9 },
+          B: { x: 5, y: 10 }
         },
         // Bottom
         {
-          A: { x: 5, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 5, y: 10 },
+          B: { x: 4, y: 10 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 10 }
+          A: { x: 4, y: 10 },
+          B: { x: 4, y: 9 }
         },
       ]));
     });
@@ -290,23 +290,23 @@ describe("Span2d", () => {
       expect(edges).toEqual(new Set([
         // Top
         {
-          A: { x: 4, y: 10 },
-          B: { x: 7, y: 10 }
+          A: { x: 4, y: 9 },
+          B: { x: 7, y: 9 }
         },
         // Right
         {
-          A: { x: 7, y: 10 },
-          B: { x: 7, y: 9 }
+          A: { x: 7, y: 9 },
+          B: { x: 7, y: 10 }
         },
         // Bottom
         {
-          A: { x: 7, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 7, y: 10 },
+          B: { x: 4, y: 10 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 10 }
+          A: { x: 4, y: 10 },
+          B: { x: 4, y: 9 }
         },
       ]));
     });
@@ -325,44 +325,44 @@ describe("Span2d", () => {
         //
         // Top
         {
-          A: { x: 4, y: 10 },
-          B: { x: 7, y: 10 }
+          A: { x: 4, y: 9 },
+          B: { x: 7, y: 9 }
         },
         // Right
         {
-          A: { x: 7, y: 10 },
-          B: { x: 7, y: 9 }
+          A: { x: 7, y: 9 },
+          B: { x: 7, y: 10 }
         },
         // Bottom
         {
-          A: { x: 7, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 7, y: 10 },
+          B: { x: 4, y: 10 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 10 }
+          A: { x: 4, y: 10 },
+          B: { x: 4, y: 9 }
         },
         // === Right span ===
         // Top
         {
-          A: { x: 9, y: 10 },
-          B: { x: 14, y: 10 }
+          A: { x: 9, y: 9 },
+          B: { x: 14, y: 9 }
         },
         // Right
         {
-          A: { x: 14, y: 10 },
-          B: { x: 14, y: 9 }
+          A: { x: 14, y: 9 },
+          B: { x: 14, y: 10 }
         },
         // Bottom
         {
-          A: { x: 14, y: 9 },
-          B: { x: 9, y: 9 }
+          A: { x: 14, y: 10 },
+          B: { x: 9, y: 10 }
         },
         // Left
         {
-          A: { x: 9, y: 9 },
-          B: { x: 9, y: 10 }
+          A: { x: 9, y: 10 },
+          B: { x: 9, y: 9 }
         },
       ]));
     });
@@ -379,23 +379,23 @@ describe("Span2d", () => {
       expect(edges).toEqual(new Set([
         // Top
         {
-          A: { x: 4, y: 10 },
-          B: { x: 14, y: 10 }
+          A: { x: 4, y: 9 },
+          B: { x: 14, y: 9 }
         },
         // Right
         {
-          A: { x: 14, y: 10 },
-          B: { x: 14, y: 9 }
+          A: { x: 14, y: 9 },
+          B: { x: 14, y: 10 }
         },
         // Bottom
         {
-          A: { x: 14, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 14, y: 10 },
+          B: { x: 4, y: 10 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 10 }
+          A: { x: 4, y: 10 },
+          B: { x: 4, y: 9 }
         }
       ]));
     });
@@ -412,23 +412,23 @@ describe("Span2d", () => {
       expect(edges).toEqual(new Set([
         // Top
         {
-          A: { x: 4, y: 11 },
-          B: { x: 7, y: 11 }
+          A: { x: 4, y: 9 },
+          B: { x: 7, y: 9 }
         },
         // Right
         {
-          A: { x: 7, y: 11 },
-          B: { x: 7, y: 9 }
+          A: { x: 7, y: 9 },
+          B: { x: 7, y: 11 }
         },
         // Bottom
         {
-          A: { x: 7, y: 9 },
-          B: { x: 4, y: 9 }
+          A: { x: 7, y: 11 },
+          B: { x: 4, y: 11 }
         },
         // Left
         {
-          A: { x: 4, y: 9 },
-          B: { x: 4, y: 11 }
+          A: { x: 4, y: 11 },
+          B: { x: 4, y: 9 }
         }
       ]));
     });
