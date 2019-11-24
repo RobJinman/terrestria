@@ -27,7 +27,8 @@ export function constructSoil(em: ServerEntityManager): EntityId {
   };
 
   const freeModeProps = {
-    heavy: false
+    heavy: false,
+    fixedAngle: true
   };
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
@@ -65,7 +66,8 @@ export function constructRock(em: ServerEntityManager): EntityId {
   };
 
   const freeModeProps = {
-    heavy: true
+    heavy: true,
+    fixedAngle: false
   };
 
   const shape = new Circle(BLOCK_SZ * 0.5);
@@ -103,7 +105,8 @@ export function constructGem(em: ServerEntityManager): EntityId {
   };
 
   const freeModeProps = {
-    heavy: true
+    heavy: true,
+    fixedAngle: false
   };
 
   const points = [
@@ -161,7 +164,8 @@ export function constructPlayer(em: ServerEntityManager,
   };
 
   const freeModeProps = {
-    heavy: true
+    heavy: true,
+    fixedAngle: true
   };
 
   const shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);

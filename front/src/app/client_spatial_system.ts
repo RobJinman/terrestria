@@ -28,8 +28,6 @@ export class ClientSpatialSystem implements ClientSystem {
       }
     }
     else if (packet.mode == SpatialMode.FREE_MODE) {
-      console.log(packet);
-
       const dx = packet.x - c.x;
       const dy = packet.y - c.y;
       const s = Math.sqrt(dx * dx + dy * dy);

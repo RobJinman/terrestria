@@ -216,8 +216,8 @@ export class GridModeImpl {
   private _moveAgent(c: GridModeSubcomponent, direction: Direction) {
     const delta = directionToVector(direction);
 
-    const destX = c.x() + delta[0];
-    const destY = c.y() + delta[1];
+    const destX = c.x() + delta.x;
+    const destY = c.y() + delta.y;
 
     if (this.grid.outOfRange(destX, destY)) {
       return false;

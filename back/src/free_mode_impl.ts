@@ -5,6 +5,8 @@ import { FreeModeSubcomponent } from "./free_mode_subcomponent";
 import { SERVER_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 import { Span2d, getPerimeter, EdgeOrientation,
          orientation } from "./common/span";
+import { GameError } from "./common/error";
+import { directionToVector, normalise } from "./common/geometry";
 
 export class FreeModeImpl {
   private _engine = Engine.create();
@@ -58,7 +60,18 @@ export class FreeModeImpl {
   }
 
   moveAgent(id: EntityId, direction: Direction): boolean {
-    // TODO
-    return false;
+    const c = this._components.get(id);
+    if (!c) {
+      throw new GameError(`No component with id ${id}`);
+    }
+
+    const vec = directionToVector(direction);
+    normalise(vec);
+    vec.x *= 0.03;
+    vec.y *= 0.03;
+
+    c.body.force = Vector.create(vec.x, vec.y);
+
+    return true;
   }
 }

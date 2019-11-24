@@ -1,20 +1,20 @@
 import { Direction } from "./definitions";
 import { BLOCK_SZ } from "./constants";
 
-export function directionToVector(dir: Direction) {
-  switch (dir) {
-    case Direction.UP: return [0, -BLOCK_SZ];
-    case Direction.RIGHT: return [BLOCK_SZ, 0];
-    case Direction.DOWN: return [0, BLOCK_SZ];
-    case Direction.LEFT: return [-BLOCK_SZ, 0];
-    default: return [0, 0];
-  }
-}
-
 export type Vec2 = {
   x: number;
   y: number;
 };
+
+export function directionToVector(dir: Direction) {
+  switch (dir) {
+    case Direction.UP: return { x: 0, y: -BLOCK_SZ };
+    case Direction.RIGHT: return { x: BLOCK_SZ, y: 0 };
+    case Direction.DOWN: return { x: 0, y: BLOCK_SZ };
+    case Direction.LEFT: return { x: -BLOCK_SZ, y: 0 };
+    default: return { x: 0, y: 0 };
+  }
+}
 
 export function normalise(v: Vec2) {
   const s = Math.sqrt(v.x * v.x + v.y * v.y);
