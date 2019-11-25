@@ -69,9 +69,8 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
   }
 
   setInstantaneousPos(x: number, y: number) {
-    const perturbation = (Math.random() - 0.5) * 8;
     Body.setPosition(this._body, {
-      x: x + this._offset.x + perturbation,
+      x: x + this._offset.x,
       y: y + this._offset.y
     });
   }
