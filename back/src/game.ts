@@ -102,6 +102,8 @@ export class Game {
       <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(0, (WORLD_H - 1) * BLOCK_SZ);
 
+    this._gameLogic.addPlayer(id);
+
     console.log(`Adding player ${id}`);
   
     this._pipe.addConnection(id, socket);
@@ -151,6 +153,8 @@ export class Game {
     this._pipe.removeConnection(oldId);
     this._pipe.addConnection(id, socket);
 
+    this._gameLogic.addPlayer(id);
+
     console.log(`Respawning player ${oldId} => ${id}`);
 
     const newPlayerResp: RNewEntities = {
@@ -169,6 +173,7 @@ export class Game {
   removePlayer(playerId: EntityId) {
     console.log(`Removing player ${playerId} from game`);
     this._pipe.removeConnection(playerId);
+    this._gameLogic.removePlayer(playerId);
     this._em.removeEntity_onClients(playerId);
   }
 

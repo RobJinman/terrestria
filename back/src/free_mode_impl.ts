@@ -72,6 +72,8 @@ export class FreeModeImpl implements SpatialModeImpl {
   moveAgent(id: EntityId, direction: Direction): boolean {
     const c = this.getComponent(id);
 
+    console.log(`Moving agent ${direction}`);
+
     if (!this._tryLeaveGravRegion(c, direction)) {
       const vec = directionToVector(direction);
       normalise(vec);

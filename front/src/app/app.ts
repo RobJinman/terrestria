@@ -1,17 +1,17 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
-import { ActionType, MoveAction, LogInAction,
-         RespawnAction } from "./common/action";
+import { ActionType, UserInputAction, UserInput, LogInAction,
+         RespawnAction, 
+         InputState} from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted, REvent,
          RNewPlayerId } from "./common/response";
 import { constructEntities } from './factory';
-import { CLIENT_FRAME_RATE, PLAYER_SPEED, BLOCK_SZ, WORLD_W,
+import { CLIENT_FRAME_RATE, BLOCK_SZ, WORLD_W,
          WORLD_H } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
-import { debounce, waitForCondition } from './common/utils';
-import { Direction } from './common/definitions';
+import { waitForCondition } from './common/utils';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
@@ -24,38 +24,24 @@ declare var __WEBSOCKET_URL__: string;
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
-class UserInput {
-  _keyStates: Map<string, boolean>;
-
-  constructor() {
-    this._keyStates = new Map<string, boolean>();
-
-    window.addEventListener("keydown", event => this._onKeyDown(event), false);
-    window.addEventListener("keyup", event => this._onKeyUp(event), false);
+function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
+  switch (event.key) {
+    case "ArrowUp": return UserInput.UP;
+    case "ArrowRight": return UserInput.RIGHT;
+    case "ArrowDown": return UserInput.DOWN;
+    case "ArrowLeft": return UserInput.LEFT;
   }
-
-  keyPressed(key: string): boolean {
-    return this._keyStates.get(key) === true;
-  }
-
-  private _onKeyDown(event: KeyboardEvent) {
-    this._keyStates.set(event.key, true);
-  }
-
-  private _onKeyUp(event: KeyboardEvent) {
-    this._keyStates.set(event.key, false);
-  }
+  return null;
 }
 
 export class App {
   private _pixi: PIXI.Application;
   private _ws: WebSocket;
   private _responseQueue: GameResponse[] = [];
+  private _actionQueue: UserInputAction[] = [];
   private _em: ClientEntityManager;
   private _scheduler: Scheduler;
-  private _userInput: UserInput;
   private _playerId: EntityId = PLAYER_ID_UNSET;
-  private _moveRemoteFn: (direction: Direction) => void;
 
   constructor() {
     this._pixi = new PIXI.Application({
@@ -78,10 +64,8 @@ export class App {
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
 
-    const t = 0.85 * 1000 / PLAYER_SPEED;
-    this._moveRemoteFn = debounce(this, this._movePlayerRemote, t);
-
-    this._userInput = new UserInput();
+    window.addEventListener("keydown", event => this._onKeyDown(event), false);
+    window.addEventListener("keyup", event => this._onKeyUp(event), false);
 
     this._insertElement();
   }
@@ -108,56 +92,58 @@ export class App {
     this._pixi.ticker.add(delta => this._tick(delta));
   }
 
-  private _movePlayerRemote(direction: Direction) {
-    const action: MoveAction = {
-      playerId: PLAYER_ID_UNSET,
-      type: ActionType.MOVE,
-      direction
-    };
-
-    const dataString = JSON.stringify(action);
-    this._ws.send(dataString);
-
-    return true;
-  }
-
-  private _tick(delta: number) {
-    this._handleServerMessages();
-    this._keyboard();
-    this._scheduler.update();
-    this._em.update();
-  }
-
-  private _keyboard() {
+  private _onKeyDown(event: KeyboardEvent) {
     if (this._playerId == PLAYER_ID_UNSET) {
       return;
     }
 
-    if (this._playerId == PLAYER_ID_DEAD &&
-        this._userInput.keyPressed("Enter")) {
-
+    if (this._playerId == PLAYER_ID_DEAD && event.key == "Enter") {
       this._requestRespawn();
       return;
     }
 
-    let direction: Direction|null = null;
+    const input = keyEventToUserInput(event);
+    if (input !== null) {
+      const action: UserInputAction = {
+        type: ActionType.USER_INPUT,
+        playerId: this._playerId,
+        input,
+        state: InputState.PRESSED
+      };
 
-    if (this._userInput.keyPressed("ArrowUp")) {
-      direction = Direction.UP;
+      this._actionQueue.push(action);
     }
-    else if (this._userInput.keyPressed("ArrowRight")) {
-      direction = Direction.RIGHT;
-    }
-    else if (this._userInput.keyPressed("ArrowDown")) {
-      direction = Direction.DOWN;
-    }
-    else if (this._userInput.keyPressed("ArrowLeft")) {
-      direction = Direction.LEFT;
-    }
+  }
 
-    if (direction !== null) {
-      this._moveRemoteFn(direction);
+  private _onKeyUp(event: KeyboardEvent) {
+    const input = keyEventToUserInput(event);
+    if (input !== null) {
+      const action: UserInputAction = {
+        type: ActionType.USER_INPUT,
+        playerId: this._playerId,
+        input,
+        state: InputState.RELEASED
+      };
+
+      this._actionQueue.push(action);
     }
+  }
+
+  private _tick(delta: number) {
+    this._handleServerMessages();
+    this._processUserActions();
+    this._scheduler.update();
+    this._em.update();
+  }
+
+  private _processUserActions() {
+    this._actionQueue.forEach(action => {
+      console.log(action);
+      const dataString = JSON.stringify(action);
+      this._ws.send(dataString);
+    });
+
+    this._actionQueue = [];
   }
 
   private _logIn() {

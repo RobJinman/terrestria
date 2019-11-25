@@ -1,4 +1,5 @@
-import { PlayerAction, ActionType, MoveAction } from "./common/action";
+import { PlayerAction, ActionType, UserInputAction, UserInput,
+         InputState } from "./common/action";
 import { ComponentType } from "./common/component_types";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
@@ -7,11 +8,13 @@ import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { EntityType } from "./common/game_objects";
 import { ServerSpatialSystem } from "./server_spatial_system";
+import { GameError } from "./common/error";
+import { Direction } from "./common/definitions";
 
 export class GameLogic {
   private _em: ServerEntityManager;
-  private _queuedAction: PlayerAction|null = null;
   private _entityId: EntityId = getNextEntityId();
+  private _inputStates = new Map<EntityId, Record<UserInput, InputState>>();
 
   constructor(em: ServerEntityManager) {
     this._em = em;
@@ -27,59 +30,68 @@ export class GameLogic {
     em.addEntity(this._entityId, EntityType.OTHER, [behaviourComp]);
   }
 
+  update(actions: PlayerAction[]) {
+    actions.forEach(action => {
+      this._handlePlayerAction(action);
+    });
+
+    this._processUserInputs();
+  }
+
+  addPlayer(id: EntityId) {
+    this._inputStates.set(id, {
+      [UserInput.UP]: InputState.RELEASED,
+      [UserInput.RIGHT]: InputState.RELEASED,
+      [UserInput.DOWN]: InputState.RELEASED,
+      [UserInput.LEFT]: InputState.RELEASED
+    });
+  }
+
+  removePlayer(id: EntityId) {
+    this._inputStates.delete(id);
+  }
+
   private _onPlayerKilled(e: GameEvent) {
     const event = <EPlayerKilled>e;
 
     console.log(`Player ${event.playerId} killed!`);
 
+    this.removePlayer(event.playerId);
     this._em.removeEntity(event.playerId);
   }
 
-  update(actions: PlayerAction[]) {
-    if (this._queuedAction) {
-      try {
-        if (this._handlePlayerAction(this._queuedAction)) {
-          this._queuedAction = null;
-        }
-      }
-      catch (err) {
-        this._queuedAction = null;
-        throw err;
-      }
-    }
+  private _processUserInputs() {
+    const spatialSys =
+      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    actions.forEach(action => {
-      if (!this._handlePlayerAction(action)) {
-        this._queuedAction = action;
+    this._inputStates.forEach((states, playerId) => {
+      if (states[UserInput.UP] == InputState.PRESSED) {
+        spatialSys.moveAgent(playerId, Direction.UP);
+      }
+      if (states[UserInput.RIGHT] == InputState.PRESSED) {
+        spatialSys.moveAgent(playerId, Direction.RIGHT);
+      }
+      if (states[UserInput.DOWN] == InputState.PRESSED) {
+        spatialSys.moveAgent(playerId, Direction.DOWN);
+      }
+      if (states[UserInput.LEFT] == InputState.PRESSED) {
+        spatialSys.moveAgent(playerId, Direction.LEFT);
       }
     });
   }
 
-  private _movePlayer(action: MoveAction): boolean {
-    const spatialSys =
-      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-
-    // TODO: Free mode
-
-    if (spatialSys.gridMode(action.playerId) &&
-        spatialSys.gm_entityIsMoving(action.playerId)) {
-
-      this._queuedAction = action;
-      return false;
-    }
-    else {
-      spatialSys.moveAgent(action.playerId, action.direction);
-      return true;
-    }
-  }
-
-  private _handlePlayerAction(action: PlayerAction): boolean {
+  private _handlePlayerAction(action: PlayerAction) {
     switch (action.type) {
-      case ActionType.MOVE: {
-        return this._movePlayer(<MoveAction>action);
+      case ActionType.USER_INPUT: {
+        const userInput = <UserInputAction>action;
+        const states = this._inputStates.get(action.playerId);
+        if (!states) {
+          throw new GameError("Error handling player action; Unrecognised " +
+                              "player id");
+        }
+        states[userInput.input] = userInput.state;
+        break;
       }
     }
-
-    return false;
   }
 }

@@ -4,7 +4,6 @@ import { inRange, addSetToSet } from "./common/utils";
 import { EntityId } from "./common/system";
 import { AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { Span2d } from "./common/span";
-import { Direction } from "./common/definitions";
 
 export class Grid {
   private _blockW: number;

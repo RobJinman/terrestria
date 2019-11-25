@@ -1,18 +1,29 @@
 import { GameError, ErrorCode } from "./error";
 import { EntityId } from "./system";
-import { Direction } from "./definitions";
+
+export enum UserInput {
+  UP = "UP",
+  RIGHT = "RIGHT",
+  DOWN = "DOWN",
+  LEFT = "LEFT"
+}
+
+export enum InputState {
+  PRESSED = "PRESSED",
+  RELEASED = "RELEASED"
+}
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
   RESPAWN = "RESPAWN",
-  MOVE = "MOVE"
+  USER_INPUT = "USER_INPUT"
   // ...
 }
 
 const VALIDATORS: ValidatorFnMap = {
   LOG_IN: isLogInAction,
   RESPAWN: isRespawnAction,
-  MOVE: isMoveAction
+  USER_INPUT: isUserInputAction
   // ...
 };
 
@@ -40,16 +51,19 @@ export function isRespawnAction(obj: any): obj is RespawnAction {
 }
 
 // =======================================================
-// MoveAction
+// UserInputAction
 //
-export interface MoveAction extends PlayerAction {
-  direction: Direction;
+export interface UserInputAction extends PlayerAction {
+  input: UserInput;
+  state: InputState;
 }
 
-export function isMoveAction(obj: any): obj is MoveAction {
-  return obj.type === ActionType.MOVE &&
-         obj.direction &&
-         obj.direction in Direction;
+export function isUserInputAction(obj: any): obj is UserInputAction {
+  return obj.type === ActionType.USER_INPUT &&
+         obj.input &&
+         obj.input in UserInput &&
+         obj.state &&
+         obj.state in InputState;
 }
 
 // =======================================================
