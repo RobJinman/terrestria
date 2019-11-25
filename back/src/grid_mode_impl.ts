@@ -3,22 +3,32 @@ import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
 import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
-import { directionToVector } from "./common/geometry";
+import { directionToVector, normalise } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
          AgentActionType } from "./common/event";
 import { Direction } from "./common/definitions";
 import { ServerEntityManager } from "./server_entity_manager";
+import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
+import { Span2d } from "./common/span";
+import { ComponentType } from "./common/component_types";
 
-export class GridModeImpl {
+export class GridModeImpl implements SpatialModeImpl {
   private _em: ServerEntityManager;
   private _components = new Map<number, GridModeSubcomponent>();
   private _grid: Grid;
 
   constructor(entityManager: ServerEntityManager,
               w: number,
-              h: number) {
+              h: number,
+              gravRegion: Span2d,
+              attemptModeTransitionFn: AttemptModeTransitionFn) {
     this._em = entityManager;
-    this._grid = new Grid(entityManager, BLOCK_SZ, BLOCK_SZ, w, h);
+    this._grid = new Grid(BLOCK_SZ,
+                          BLOCK_SZ,
+                          w,
+                          h,
+                          gravRegion,
+                          attemptModeTransitionFn);
   }
 
   get grid() {
@@ -37,9 +47,37 @@ export class GridModeImpl {
     this._gravity();
   }
 
-  addComponent(c: GridModeSubcomponent) {
+  addComponent(c: GridModeSubcomponent,
+               x: number,
+               y: number,
+               direction?: Direction): boolean {
     this._components.set(c.entityId, c);
+
     this._grid.addItem(c);
+
+    if (this._em.getSystem(ComponentType.AGENT).hasComponent(c.entityId)) {
+      if (!direction) {
+        throw new GameError("Must supply direction when entity is agent");
+      }
+
+      const v = directionToVector(direction);
+      normalise(v);
+
+      const gridX = this._grid.toGridX(x) - v.x;
+      const gridY = this._grid.toGridX(y) - v.y;
+
+      c.setGridPos(gridX, gridY, true);
+
+      if (!this.moveAgent(c.entityId, direction)) {
+        this.removeComponent(c);
+        return false;
+      }
+    }
+    else {
+      c.setStaticPos(x, y);
+    }
+
+    return true;
   }
 
   removeComponent(c: GridModeSubcomponent) {
@@ -53,34 +91,32 @@ export class GridModeImpl {
       throw new GameError("Entity is not agent");
     }
 
-    const oldDestGridX = c.gridX;
-    const oldDestGridY = c.gridY;
-
-    let moved = this._moveAgent(c, direction);
-
-    if (moved) {
-      const newDestGridX = c.gridX;
-      const newDestGridY = c.gridY;
-
-      if (newDestGridX != oldDestGridX || newDestGridY != oldDestGridY) {
-        const items = this.grid.idsInCell(newDestGridX, newDestGridY);
-
-        const event: EAgentEnterCell = {
-          type: GameEventType.AGENT_ENTER_CELL,
-          entityId: c.entityId,
-          entities: items,
-          prevGridX: oldDestGridX,
-          prevGridY: oldDestGridY,
-          gridX: newDestGridX,
-          gridY: newDestGridY,
-          direction
-        };
-
-        this._em.postEvent(event);
-      }
+    if (this._moveAgent(c, direction)) {
+      this._postAgentMovedEvent(c, direction);
+      return true;
     }
+    else {
+      return false;
+    }
+  }
 
-    return moved;
+  private _postAgentMovedEvent(c: GridModeSubcomponent,
+                               direction: Direction) {
+    const newDestGridX = c.gridX;
+    const newDestGridY = c.gridY;
+
+    const items = this.grid.idsInCell(newDestGridX, newDestGridY);
+
+    const event: EAgentEnterCell = {
+      type: GameEventType.AGENT_ENTER_CELL,
+      entityId: c.entityId,
+      entities: items,
+      gridX: newDestGridX,
+      gridY: newDestGridY,
+      direction
+    };
+
+    this._em.postEvent(event);
   }
 
   private _gravity() {

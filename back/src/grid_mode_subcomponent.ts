@@ -3,6 +3,27 @@ import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
 import { BLOCK_SZ } from "./common/constants";
 import { SpatialSubcomponent } from "./spatial_subcomponent";
+import { Direction } from "./common/definitions";
+import { GameError } from "./common/error";
+
+function vectorToDirection(x: number, y: number): Direction {
+  if (x * y === 0 && x + y !== 0) {
+    if (x > 0) {
+      return Direction.RIGHT;
+    }
+    if (x < 0) {
+      return Direction.LEFT;
+    }
+    if (y > 0) {
+      return Direction.DOWN;
+    }
+    if (y < 0) {
+      return Direction.UP;
+    }
+  }
+
+  throw new GameError(`Vector ${x}, ${y} is not a valid direction`);
+}
 
 export class GridModeSubcomponent implements SpatialSubcomponent {
   falling = false;
@@ -48,14 +69,24 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
     return now < this._lockedUntil;
   }
 
-  setGridPos(x: number, y: number) {
+  setGridPos(x: number, y: number, noModeTransition = false): boolean {
     if (this.moving()) {
       return false;
     }
 
-    if (x != this._gridX || y != this._gridY) {
+    if (x != this._gridX || y != this._gridY) {     
       const oldX = this._gridX;
       const oldY = this._gridY;
+      
+      const dx = x - oldX;
+      const dy = y - oldY;
+  
+      if (!noModeTransition && this._grid.gravRegion.contains(x, y)) {
+        if (this._grid.attemptModeTransitionFn(this._entityId,
+                                               vectorToDirection(dx, dy))) {
+          return false;
+        }
+      }
 
       this._gridX = x;
       this._gridY = y;

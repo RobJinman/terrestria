@@ -26,8 +26,6 @@ export interface EEntityMoved extends GameEvent {
 
 export interface EAgentEnterCell extends GameEvent {
   entityId: EntityId;
-  prevGridX: number;
-  prevGridY: number;
   gridX: number;
   gridY: number;
   direction: Direction;

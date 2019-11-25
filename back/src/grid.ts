@@ -2,28 +2,31 @@ import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
 import { inRange, addSetToSet } from "./common/utils";
 import { EntityId } from "./common/system";
-import { EntityManager } from "./common/entity_manager";
-import { EEntityMoved, GameEventType } from "./common/event";
-import { BLOCK_SZ } from "./common/constants";
+import { AttemptModeTransitionFn } from "./spatial_mode_impl";
+import { Span2d } from "./common/span";
+import { Direction } from "./common/definitions";
 
 export class Grid {
-  _em: EntityManager;
-  _blockW: number;
-  _blockH: number;
-  _w: number;
-  _h: number;
-  _grid: Set<GridModeSubcomponent>[][];
+  private _blockW: number;
+  private _blockH: number;
+  private _w: number;
+  private _h: number;
+  private _grid: Set<GridModeSubcomponent>[][];
+  private _gravRegion: Span2d;
+  private _attemptModeTransitionFn: AttemptModeTransitionFn;
 
-  constructor(entityManager: EntityManager,
-              blockW: number,
+  constructor(blockW: number,
               blockH: number,
               numBlocksX: number,
-              numBlocksY: number) {
-    this._em = entityManager;
+              numBlocksY: number,
+              gravRegion: Span2d,
+              attemptModeTransitionFn: AttemptModeTransitionFn) {
     this._blockW = blockW;
     this._blockH = blockH;
     this._w = numBlocksX;
     this._h = numBlocksY;
+    this._gravRegion = gravRegion;
+
     this._grid = (new Array(numBlocksX));
     for (let col = 0; col < this._w; ++col) {
       this._grid[col] = (new Array(this._h));
@@ -31,6 +34,16 @@ export class Grid {
         this._grid[col][row] = new Set<GridModeSubcomponent>();
       }
     }
+
+    this._attemptModeTransitionFn = attemptModeTransitionFn;
+  }
+
+  get gravRegion() {
+    return this._gravRegion;
+  }
+
+  get attemptModeTransitionFn() {
+    return this._attemptModeTransitionFn;
   }
 
   toGridX(x: number, w: number = this._blockW) {
@@ -68,18 +81,8 @@ export class Grid {
       throw new GameError(`No such entity at grid position ${oldGridX}, ` +
                           `${oldGridY}`);
     }
-  
+
     this.inCell(newGridX, newGridY).add(item);
-
-    const event: EEntityMoved = {
-      type: GameEventType.ENTITY_MOVED,
-      entities: [ item.entityId ],
-      entityId: item.entityId,
-      x: newGridX * BLOCK_SZ,
-      y: newGridY * BLOCK_SZ
-    };
-
-    this._em.postEvent(event);
   }
 
   removeItem(item: GridModeSubcomponent): boolean {
