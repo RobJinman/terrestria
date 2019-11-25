@@ -6,11 +6,39 @@ import { SERVER_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 import { Span2d, getPerimeter, EdgeOrientation,
          orientation } from "./common/span";
 import { GameError } from "./common/error";
-import { directionToVector, normalise, Vec2 } from "./common/geometry";
+import { directionToVector, normalise } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 
-const PLAYER_VELOCITY_H = 4;
+const PLAYER_VELOCITY_H = 3;
 const PLAYER_VELOCITY_V = 6;
+
+function isInside(rectX: number,
+                  rectY: number,
+                  rectW: number,
+                  rectH: number,
+                  ptX: number,
+                  ptY: number): boolean {
+  return rectX <= ptX && ptX <= rectX + rectW &&
+    rectY <= ptY && ptY <= rectY + rectH;
+}
+
+function isGroundContact(body: Body, contact: any): boolean {
+  const xMin = body.bounds.min.x;
+  const xMax = body.bounds.max.x;
+  const yMax = body.bounds.max.y;
+  const w = xMax - xMin;
+  const hotSpotW = 0.5 * w;
+  const hotSpotH = 8;
+  const hotSpotX = xMin + 0.5 * (w - hotSpotW);
+  const hotSpotY = yMax - 0.5 * hotSpotH;
+
+  return isInside(hotSpotX,
+                  hotSpotY,
+                  hotSpotW,
+                  hotSpotH,
+                  contact.vertex.x,
+                  contact.vertex.y);
+}
 
 export class FreeModeImpl implements SpatialModeImpl {
   private _engine = Engine.create();
@@ -18,6 +46,8 @@ export class FreeModeImpl implements SpatialModeImpl {
   private _componentsByEntityId = new Map<number, FreeModeSubcomponent>();
   private _componentsByBodyId = new Map<number, FreeModeSubcomponent>();
   private _attemptModeTransitionFn: AttemptModeTransitionFn;
+  // EntityId -> contact id
+  private _grounded = new Map<EntityId, string>();
 
   constructor(gravRegion: Span2d,
               attemptModeTransitionFn: AttemptModeTransitionFn) {
@@ -26,13 +56,39 @@ export class FreeModeImpl implements SpatialModeImpl {
 
     this._setupFences();
 
-    Events.on(this._engine, "collisionStart", event => {
+    Events.on(this._engine, "collisionActive", event => {
       event.pairs.forEach(pair => {
         const a = this._componentsByBodyId.get(pair.bodyA.id);
         const b = this._componentsByBodyId.get(pair.bodyB.id);
-        if (a && b) {
-          console.log(`${a.entityId} collided with ${b.entityId}`);
-        }
+
+        Object.values(pair.activeContacts).forEach((contact: any) => {
+          if (a && isGroundContact(a.body, contact)) {
+            this._grounded.set(a.entityId, contact.id);
+          }
+          if (b && isGroundContact(b.body, contact)) {
+            this._grounded.set(b.entityId, contact.id);
+          }
+        });
+      });
+    });
+
+    Events.on(this._engine, "collisionEnd", event => {
+      event.pairs.forEach(pair => {
+        const a = this._componentsByBodyId.get(pair.bodyA.id);
+        const b = this._componentsByBodyId.get(pair.bodyB.id);
+
+        Object.values(pair.contacts).forEach((contact: any) => {
+          if (a) {
+            if (contact.id === this._grounded.get(a.entityId)) {
+              this._grounded.delete(a.entityId);
+            }
+          }
+          if (b) {
+            if (contact.id === this._grounded.get(b.entityId)) {
+              this._grounded.delete(b.entityId);
+            }
+          }
+        });
       });
     });
   }
@@ -72,19 +128,36 @@ export class FreeModeImpl implements SpatialModeImpl {
   moveAgent(id: EntityId, direction: Direction): boolean {
     const c = this.getComponent(id);
 
-    console.log(`Moving agent ${direction}`);
-
     if (!this._tryLeaveGravRegion(c, direction)) {
-      const vec = directionToVector(direction);
-      normalise(vec);
+      if (direction == Direction.UP) {
+        if (!this._bodyGrounded(c.entityId)) {
+          return false;
+        }
+      }
 
-      vec.x *= PLAYER_VELOCITY_H;
-      vec.y *= PLAYER_VELOCITY_V;
-  
-      Body.setVelocity(c.body, Vector.create(vec.x, vec.y));
+      const dir = directionToVector(direction);
+      normalise(dir);
+
+      // Only 1 component is non-zero
+      const vec = {
+        x: dir.x * PLAYER_VELOCITY_H,
+        y: dir.y * PLAYER_VELOCITY_V
+      };
+
+      // Let the non-zero component override the body's existing velocity
+      const velocity = {
+        x: vec.x !== 0 ? vec.x : c.body.velocity.x,
+        y: vec.y !== 0 ? vec.y : c.body.velocity.y
+      };
+
+      Body.setVelocity(c.body, Vector.create(velocity.x, velocity.y));
     }
   
     return true;
+  }
+
+  private _bodyGrounded(entityId: EntityId): boolean {
+    return this._grounded.has(entityId);
   }
 
   private _tryLeaveGravRegion(c: FreeModeSubcomponent,
