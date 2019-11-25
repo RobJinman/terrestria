@@ -9,7 +9,8 @@ import { GameError } from "./common/error";
 import { directionToVector, normalise, Vec2 } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 
-const PLAYER_VELOCITY = 8;
+const PLAYER_VELOCITY_H = 4;
+const PLAYER_VELOCITY_V = 6;
 
 export class FreeModeImpl implements SpatialModeImpl {
   private _engine = Engine.create();
@@ -75,8 +76,8 @@ export class FreeModeImpl implements SpatialModeImpl {
       const vec = directionToVector(direction);
       normalise(vec);
 
-      vec.x *= PLAYER_VELOCITY;
-      vec.y *= PLAYER_VELOCITY;
+      vec.x *= PLAYER_VELOCITY_H;
+      vec.y *= PLAYER_VELOCITY_V;
   
       Body.setVelocity(c.body, Vector.create(vec.x, vec.y));
     }

@@ -32,6 +32,11 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
       shape = new Circle(BLOCK_SZ * 0.5);
     }
 
+    // Workaround for https://github.com/liabru/matter-js/issues/800
+    if (properties.fixedAngle && shape.type != ShapeType.CIRCLE) {
+      throw new GameError("Fixed angle only permitted on circles");
+    }
+
     this._body = this._createBodyFromShape(shape);
     this._offset = Vector.sub(this._body.position, this._body.bounds.min);
 
@@ -47,6 +52,10 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
 
   get body() {
     return this._body;
+  }
+
+  get fixedAngle() {
+    return this._properties.fixedAngle;
   }
 
   isDirty() {
@@ -127,9 +136,13 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
     body.position.x += delta.x;
     body.position.y += delta.y;
 
+    // This is the recommended method, but has problems.
+    // See https://github.com/liabru/matter-js/issues/800
+    /*
     if (this._properties.fixedAngle) {
       Body.setInertia(body, Infinity);
     }
+    */
 
     return body;
   }

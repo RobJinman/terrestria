@@ -11,7 +11,7 @@ import { InventorySystem, CCollector, CCollectable,
 import { ServerEntityManager } from "./server_entity_manager";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
-import { Circle, Polygon, Rectangle } from "./common/geometry";
+import { Circle, Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
 
 export function constructSoil(em: ServerEntityManager): EntityId {
@@ -168,7 +168,7 @@ export function constructPlayer(em: ServerEntityManager,
     fixedAngle: true
   };
 
-  const shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);
+  const shape = new Circle(BLOCK_SZ * 0.5);
 
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
 

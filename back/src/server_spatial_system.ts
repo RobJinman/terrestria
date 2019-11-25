@@ -56,7 +56,9 @@ export class ServerSpatialSystem implements ServerSystem {
         mode: c.currentMode,
         x: c.x,
         y: c.y,
-        angle: c.freeMode.angle,
+        // Ignore angle if fixed. Workaround for
+        // https://github.com/liabru/matter-js/issues/800
+        angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
         speed: c.gridMode.speed
       });
     });
@@ -154,7 +156,7 @@ export class ServerSpatialSystem implements ServerSystem {
             mode: c.currentMode,
             x: c.x,
             y: c.y,
-            angle: c.freeMode.angle,
+            angle: 0,
             speed: c.gridMode.speed
           });
         }
@@ -165,7 +167,9 @@ export class ServerSpatialSystem implements ServerSystem {
             mode: c.currentMode,
             x: c.x,
             y: c.y,
-            angle: c.freeMode.angle,
+            // Ignore angle if fixed. Workaround for
+            // https://github.com/liabru/matter-js/issues/800
+            angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
             speed: 0
           });
         }
