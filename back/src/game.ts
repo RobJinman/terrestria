@@ -238,6 +238,8 @@ export class Game {
   }
 
   private _tick() {
+    this._em.update();
+
     try {
       this._gameLogic.update(this._actionQueue);
     }
@@ -245,10 +247,7 @@ export class Game {
       this._actionQueue = [];
       throw e;
     }
-
     this._actionQueue = [];
-
-    this._em.update();
 
     this._doSyncFn();
   }

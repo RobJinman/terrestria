@@ -250,6 +250,10 @@ export class GridModeImpl implements SpatialModeImpl {
   }
 
   private _moveAgent(c: GridModeSubcomponent, direction: Direction) {
+    if (c.moving()) {
+      return false;
+    }
+
     const delta = directionToVector(direction);
 
     const destX = c.x() + delta.x;

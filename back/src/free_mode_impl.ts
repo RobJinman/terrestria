@@ -135,6 +135,12 @@ export class FreeModeImpl implements SpatialModeImpl {
         }
       }
 
+      if (direction == Direction.DOWN) {
+        // Moving down doesn't mean anything in free mode, but still return
+        // true for success.
+        return true;
+      }
+
       const dir = directionToVector(direction);
       normalise(dir);
 
@@ -169,8 +175,8 @@ export class FreeModeImpl implements SpatialModeImpl {
 
     const probeLen = BLOCK_SZ * 0.25;
     const probe = {
-      x: v.x + u.x * probeLen,
-      y: v.y + u.x * probeLen
+      x: 0.5 * v.x + u.x * probeLen,
+      y: 0.5 * v.y + u.x * probeLen
     };
 
     const centreX = c.x() + 0.5 * BLOCK_SZ;

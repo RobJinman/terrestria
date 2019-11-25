@@ -138,9 +138,10 @@ export class App {
 
   private _processUserActions() {
     this._actionQueue.forEach(action => {
-      console.log(action);
-      const dataString = JSON.stringify(action);
-      this._ws.send(dataString);
+      if (this._playerId != PLAYER_ID_DEAD) {
+        const dataString = JSON.stringify(action);
+        this._ws.send(dataString);
+      }
     });
 
     this._actionQueue = [];

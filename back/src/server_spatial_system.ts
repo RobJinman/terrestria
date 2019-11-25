@@ -27,11 +27,7 @@ export class ServerSpatialSystem implements ServerSystem {
               h: number,
               gravityRegion: Span2d) {
 
-    const attemptTransitionToGridModeFn =
-      this._attemptModeTransition.bind(this, SpatialMode.FREE_MODE);
-
-    const attemptTransitionToFreeModeFn =
-      this._attemptModeTransition.bind(this, SpatialMode.GRID_MODE);
+    const attemptTransitionFn = this._attemptModeTransition.bind(this);
 
     this._em = em;
     this._components = new Map<number, ServerSpatialComponent>();
@@ -39,9 +35,9 @@ export class ServerSpatialSystem implements ServerSystem {
                                           w,
                                           h,
                                           gravityRegion,
-                                          attemptTransitionToFreeModeFn);
+                                          attemptTransitionFn);
     this._freeModeImpl = new FreeModeImpl(gravityRegion,
-                                          attemptTransitionToGridModeFn);
+                                          attemptTransitionFn);
     this._w = w;
     this._h = h;
   }
@@ -199,46 +195,37 @@ export class ServerSpatialSystem implements ServerSystem {
                             x: number,
                             y: number,
                             direction: Direction): boolean {
+    const initMode = c.currentMode;
+
     if (c.currentMode == SpatialMode.GRID_MODE) {
+      c.currentMode = SpatialMode.FREE_MODE;
+
       if (this._freeModeImpl.addComponent(c.freeMode, x, y, direction)) {
         this._gridModeImpl.removeComponent(c.gridMode);
-        c.currentMode = SpatialMode.FREE_MODE;
         return true;
       }
     }
     else if (c.currentMode == SpatialMode.FREE_MODE) {
+      c.currentMode = SpatialMode.GRID_MODE;
+
       if (this._gridModeImpl.addComponent(c.gridMode, x, y, direction)) {
         this._freeModeImpl.removeComponent(c.freeMode);
-        c.currentMode = SpatialMode.GRID_MODE;
         return true;
       }
     }
 
+    c.currentMode = initMode;
     return false;
   }
 
-  private _attemptModeTransition(currentMode: SpatialMode,
-                                 entityId: EntityId,
+  private _attemptModeTransition(entityId: EntityId,
                                  direction: Direction): boolean {
     const c = this.getComponent(entityId);
-
-    if (currentMode != c.currentMode) {
-      // A transition must be underway already. Prevent re-entering this
-      // function recursively.
-      return false;
-    }
 
     const v = directionToVector(direction);
     const destX = c.x + v.x;
     const destY = c.y + v.y;
 
-    if (c.currentMode == SpatialMode.GRID_MODE) {
-      return this._doModeTransition(c, destX, destY, direction);
-    }
-    else if (c.currentMode == SpatialMode.FREE_MODE) {
-      return this._doModeTransition(c, destX, destY, direction);
-    }
-
-    return false;
+    return this._doModeTransition(c, destX, destY, direction);
   }
 }
