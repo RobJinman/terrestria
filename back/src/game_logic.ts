@@ -10,6 +10,7 @@ import { EntityType } from "./common/game_objects";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
+import { SpatialMode } from "./common/spatial_component_packet";
 
 export class GameLogic {
   private _em: ServerEntityManager;
@@ -65,6 +66,9 @@ export class GameLogic {
       <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     this._inputStates.forEach((states, playerId) => {
+      const player = spatialSys.getComponent(playerId);
+      const mode = player.currentMode;
+
       if (states[UserInput.UP] == InputState.PRESSED) {
         spatialSys.moveAgent(playerId, Direction.UP);
       }
@@ -76,6 +80,15 @@ export class GameLogic {
       }
       if (states[UserInput.LEFT] == InputState.PRESSED) {
         spatialSys.moveAgent(playerId, Direction.LEFT);
+      }
+
+      if (player.currentMode == SpatialMode.FREE_MODE &&
+        player.currentMode != mode) {
+
+        states[UserInput.UP] = InputState.RELEASED;
+        states[UserInput.RIGHT] = InputState.RELEASED;
+        states[UserInput.DOWN] = InputState.RELEASED;
+        states[UserInput.LEFT] = InputState.RELEASED;
       }
     });
   }
