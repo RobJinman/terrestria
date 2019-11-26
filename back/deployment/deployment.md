@@ -258,3 +258,10 @@ the SSL certificate for terrestria.io (refer to front/deployment.md).
 ```
 
 In Route53, create a type A record pointing to the load balancer.
+
+
+Redeploying after code changes
+------------------------------
+
+Simply run ./deployment/deploy.sh from pinata_demo_1/back. This will build the
+docker image, push it to the ECR repo, and redeploy the service.
