@@ -4,7 +4,7 @@
   "description": "Pinata demo 1 back-end",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "./build.sh",
     "test": "jasmine-ts --config=jasmine.json"
   },
   "author": "Rob Jinman",
