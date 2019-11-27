@@ -73,6 +73,8 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
       x: x + this._offset.x,
       y: y + this._offset.y
     });
+    Body.setVelocity(this._body, Vector.create(0, 0));
+    Body.setAngularVelocity(this._body, 0);
   }
 
   setStaticPos(x: number, y: number) {

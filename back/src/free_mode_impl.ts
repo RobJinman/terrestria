@@ -176,7 +176,7 @@ export class FreeModeImpl implements SpatialModeImpl {
     const probeLen = BLOCK_SZ * 0.25;
     const probe = {
       x: 0.5 * v.x + u.x * probeLen,
-      y: 0.5 * v.y + u.x * probeLen
+      y: 0.5 * v.y + u.y * probeLen
     };
 
     const centreX = c.x() + 0.5 * BLOCK_SZ;
