@@ -123,6 +123,7 @@ export class FreeModeImpl implements SpatialModeImpl {
     World.remove(this._engine.world, c.body);
     this._componentsByEntityId.delete(c.entityId);
     this._componentsByBodyId.delete(c.body.id);
+    this._grounded.delete(c.entityId);
   }
 
   moveAgent(id: EntityId, direction: Direction): boolean {
