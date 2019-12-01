@@ -8,6 +8,7 @@ import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
 import { BLOCK_SZ } from './common/constants';
+import { Span2d } from './common/span';
 
 export interface AnimationDesc {
   duration: number;
@@ -27,12 +28,32 @@ interface Animation {
   setEndFrameFnHandle: ScheduledFnHandle; // Set to -1 by default
 }
 
+export enum RenderComponentType {
+  SPRITE,
+  TILED_REGION
+}
+
 export class RenderComponent extends Component {
-  _animDescs: AnimationDesc[];
-  _staticImages: StaticImage[];
-  _initialImage: string;
-  staticSprites: Map<string, PIXI.Sprite>;
-  animatedSprites: Map<string, Animation>;
+  readonly renderComponentType: RenderComponentType;
+  readonly staticImages: StaticImage[];
+  readonly initialImage: string;
+
+  constructor(entityId: EntityId,
+              type: RenderComponentType,
+              staticImages: StaticImage[],
+              initialImage: string) {
+    super(entityId, ComponentType.RENDER);
+
+    this.renderComponentType = type;
+    this.staticImages = staticImages;
+    this.initialImage = initialImage;
+  }
+}
+
+export class SpriteRenderComponent extends RenderComponent {
+  readonly animDescs: AnimationDesc[];
+  readonly staticSprites: Map<string, PIXI.Sprite>;
+  readonly animatedSprites: Map<string, Animation>;
   stagedSprite: PIXI.Sprite|null = null;
   activeAnimation: Animation|null = null;
 
@@ -40,26 +61,33 @@ export class RenderComponent extends Component {
               staticImages: StaticImage[],
               animations: AnimationDesc[],
               initialImage: string) {
-    super(entityId, ComponentType.RENDER);
+    super(entityId,
+          RenderComponentType.SPRITE,
+          staticImages,
+          initialImage);
 
-    this._staticImages = staticImages;
-    this._initialImage = initialImage;
-    this._animDescs = animations;
-
+    this.animDescs = animations;
     this.staticSprites = new Map<string, PIXI.Sprite>();
     this.animatedSprites = new Map<string, Animation>();
   }
+}
 
-  get staticImages() {
-    return this._staticImages;
-  }
+export class TiledRegionRenderComponent extends RenderComponent {
+  readonly region: Span2d;
+  readonly sprites: Map<string, PIXI.Sprite[]>;
+  stagedSprites: string|null = null; // Key into the sprites map
 
-  get initialImage() {
-    return this._initialImage;
-  }
+  constructor(entityId: EntityId,
+              region: Span2d,
+              staticImages: StaticImage[],
+              initialImage: string) {
+    super(entityId,
+          RenderComponentType.TILED_REGION,
+          staticImages,
+          initialImage);
 
-  get animDescs() {
-    return this._animDescs;
+    this.region = region;
+    this.sprites = new Map<string, PIXI.Sprite[]>();
   }
 }
 
@@ -89,17 +117,25 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
+  getSpriteComponent(id: EntityId): SpriteRenderComponent {
+    const c = this.getComponent(id);
+    if (c.renderComponentType != RenderComponentType.SPRITE) {
+      throw new GameError(`Render component (id=${id}) is not of type SPRITE`);
+    }
+    return <SpriteRenderComponent>c;
+  }
+
   playAnimation(entityId: EntityId,
                 name: string,
                 onFinish?: () => void): boolean {
-    const c = this.getComponent(entityId);
+    const c = this.getSpriteComponent(entityId);
 
     const anim = c.animatedSprites.get(name); 
     if (!anim) {
       throw new GameError(`Entity ${entityId} has no animation '${name}'`);
     }
 
-    this._setActiveSprite(c, name, true);
+    this._spriteCompSetActiveSprite(c, name, true);
 
     anim.sprite.loop = false;
     anim.sprite.gotoAndPlay(0);
@@ -122,44 +158,33 @@ export class RenderSystem implements ClientSystem {
 
   setCurrentImage(entityId: EntityId, name: string) {
     const c = this.getComponent(entityId);
-    this._setActiveSprite(c, name, false);
+    switch (c.renderComponentType) {
+      case RenderComponentType.SPRITE: {
+        const c_ = <SpriteRenderComponent>c;
+        this._spriteCompSetActiveSprite(c_, name, false);
+        break;
+      }
+      case RenderComponentType.TILED_REGION: {
+        const c_ = <TiledRegionRenderComponent>c;
+        this._tiledRegionCompSetActiveSprite(c_, name);
+        break;
+      }
+    }
   }
 
   addComponent(component: RenderComponent) {
     this._components.set(component.entityId, component);
 
-    component.animDescs.forEach(anim => {
-      if (!this._spriteSheet) {
-        throw new GameError("Sprite sheet not set");
+    switch (component.renderComponentType) {
+      case RenderComponentType.SPRITE: {
+        this._addSpriteComponent(<SpriteRenderComponent>component);
+        break;
       }
-
-      const textures = this._spriteSheet.animations[anim.name];
-      const sprite = new PIXI.AnimatedSprite(textures);
-
-      const defaultDuration = sprite.textures.length / 60;
-      const speedUp = defaultDuration / anim.duration;
-      sprite.animationSpeed = speedUp;
-
-      component.animatedSprites.set(anim.name, {
-        sprite,
-        endFrame: anim.endFrame,
-        endFrameDelayMs: anim.endFrameDelayMs,
-        setEndFrameFnHandle: -1
-      });
-    });
-
-    component.staticImages.forEach(imgDesc => {
-      if (!this._spriteSheet) {
-        throw new GameError("Sprite sheet not set");
+      case RenderComponentType.TILED_REGION: {
+        this._addTiledRegionComponent(<TiledRegionRenderComponent>component);
+        break;
       }
-
-      const texture = this._spriteSheet.textures[imgDesc.name];
-      const sprite = new PIXI.Sprite(texture);
-
-      component.staticSprites.set(imgDesc.name, sprite);
-    });
-
-    this._setActiveSprite(component, component.initialImage, false);
+    }
   }
 
   hasComponent(id: EntityId) {
@@ -175,12 +200,17 @@ export class RenderSystem implements ClientSystem {
   }
 
   removeComponent(id: EntityId) {
-    const c = this._components.get(id);
-    if (c && c.stagedSprite) {
-      this._pixi.stage.removeChild(c.stagedSprite);
+    const c = this.getComponent(id);
+    switch (c.renderComponentType) {
+      case RenderComponentType.SPRITE: {
+        this._removeSpriteComponent(<SpriteRenderComponent>c);
+        break;
+      }
+      case RenderComponentType.TILED_REGION: {
+        this._removeTiledRegionComponent(<TiledRegionRenderComponent>c);
+        break;
+      }
     }
-
-    this._components.delete(id);
   }
 
   handleEvent(event: GameEvent) {
@@ -194,8 +224,87 @@ export class RenderSystem implements ClientSystem {
 
   update() {}
 
-  getDirties() {
-    return [];
+  private _addSpriteComponent(c: SpriteRenderComponent) {
+    c.animDescs.forEach(anim => {
+      if (!this._spriteSheet) {
+        throw new GameError("Sprite sheet not set");
+      }
+
+      const textures = this._spriteSheet.animations[anim.name];
+      const sprite = new PIXI.AnimatedSprite(textures);
+
+      const defaultDuration = sprite.textures.length / 60;
+      const speedUp = defaultDuration / anim.duration;
+      sprite.animationSpeed = speedUp;
+
+      c.animatedSprites.set(anim.name, {
+        sprite,
+        endFrame: anim.endFrame,
+        endFrameDelayMs: anim.endFrameDelayMs,
+        setEndFrameFnHandle: -1
+      });
+    });
+
+    c.staticImages.forEach(imgDesc => {
+      if (!this._spriteSheet) {
+        throw new GameError("Sprite sheet not set");
+      }
+
+      const texture = this._spriteSheet.textures[imgDesc.name];
+      const sprite = new PIXI.Sprite(texture);
+
+      c.staticSprites.set(imgDesc.name, sprite);
+    });
+    
+    this._spriteCompSetActiveSprite(c, c.initialImage, false);
+  }
+
+  private _removeSpriteComponent(c: SpriteRenderComponent) {
+    if (c.stagedSprite) {
+      this._pixi.stage.removeChild(c.stagedSprite);
+    }
+    this._components.delete(c.entityId);
+  }
+
+  private _removeTiledRegionComponent(c: TiledRegionRenderComponent) {
+    if (c.stagedSprites !== null) {
+      const sprites = c.sprites.get(c.stagedSprites);
+
+      if (sprites) {
+        sprites.forEach(sprite => {
+          this._pixi.stage.removeChild(sprite);
+        });
+      }
+    }
+
+    this._components.delete(c.entityId);
+  }
+
+  private _addTiledRegionComponent(c: TiledRegionRenderComponent) {
+    c.staticImages.forEach(imgDesc => {
+      if (!this._spriteSheet) {
+        throw new GameError("Sprite sheet not set");
+      }
+
+      const texture = this._spriteSheet.textures[imgDesc.name];
+      const sprites: PIXI.TilingSprite[] = [];
+
+      for (const [j, spans] of c.region.spans) {
+        for (const span of spans) {
+          const x = span.a * BLOCK_SZ;
+          const y = j * BLOCK_SZ;
+          const n = span.b - span.a + 1;
+
+          const sprite = new PIXI.TilingSprite(texture, n * BLOCK_SZ, BLOCK_SZ);
+          sprite.position.set(x, y);
+          sprites.push(sprite);
+        }
+      }
+
+      c.sprites.set(imgDesc.name, sprites);
+    });
+
+    this._tiledRegionCompSetActiveSprite(c, c.initialImage);
   }
 
   private _onEntityMoved(id: EntityId) {
@@ -203,27 +312,33 @@ export class RenderSystem implements ClientSystem {
       const spatialComp =
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       id);
+      const c_ = this.getComponent(id);
+      if (c_.renderComponentType == RenderComponentType.SPRITE) {
+        const c = <SpriteRenderComponent>c_;
 
-      const c = this.getComponent(id);
-      if (c.stagedSprite) {
-        c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-        c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                    spatialComp.y + BLOCK_SZ * 0.5);
-        c.stagedSprite.rotation = spatialComp.angle;
+        if (c.stagedSprite) {
+          c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+          c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                      spatialComp.y + BLOCK_SZ * 0.5);
+          c.stagedSprite.rotation = spatialComp.angle;
+        }
       }
     }
   }
 
-  private _setActiveSprite(c: RenderComponent,
-                           name: string,
-                           animated: boolean) {
+  private _spriteCompSetActiveSprite(c: SpriteRenderComponent,
+                                     name: string,
+                                     animated: boolean) {
     if (c.stagedSprite) {
       this._pixi.stage.removeChild(c.stagedSprite);
     }
+
     if (c.activeAnimation) {
-      this._scheduler.removeFunction(c.activeAnimation.setEndFrameFnHandle);
+      const endFrameFnHandle = c.activeAnimation.setEndFrameFnHandle;
+      this._scheduler.removeFunction(endFrameFnHandle);
     }
-    if (animated) {
+
+    if (animated) {       
       const anim = c.animatedSprites.get(name);
       if (!anim) {
         throw new GameError("Component has no sprite with name " + name);
@@ -242,5 +357,26 @@ export class RenderSystem implements ClientSystem {
     }
 
     this._onEntityMoved(c.entityId);
+  }
+
+  private _tiledRegionCompSetActiveSprite(c: TiledRegionRenderComponent,
+                                          name: string) {
+    if (c.stagedSprites !== null) {
+      const sprites = c.sprites.get(c.stagedSprites);
+      if (sprites) {
+        sprites.forEach(sprite => {
+          this._pixi.stage.removeChild(sprite);
+        });
+      }
+    }
+
+    const sprites = c.sprites.get(name);
+    if (!sprites) {
+      throw new GameError("Component has no sprite with name " + name);
+    }
+    sprites.forEach(sprite => {
+      this._pixi.stage.addChild(sprite);
+    });
+    c.stagedSprites = name;
   }
 }

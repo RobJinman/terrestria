@@ -1,8 +1,8 @@
 import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
-import { constructSoil, constructRock, constructGem,
-         constructPlayer } from "./factory";
+import { constructSoil, constructRock, constructGem, constructPlayer, 
+         constructEarth } from "./factory";
 import { AgentSystem } from "./agent_system";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
@@ -280,6 +280,8 @@ export class Game {
     const gemCoords = coords.slice(idx, idx + numGems);
     idx += numGems;
     const soilCoords = coords.slice(idx);
+
+    constructEarth(this._em);
 
     rockCoords.forEach(([c, r]) => {
       const id = constructRock(this._em);

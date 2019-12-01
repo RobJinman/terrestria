@@ -1,8 +1,8 @@
 import { EntityManager } from "./common/entity_manager";
 import { RNewEntities } from "./common/response";
 import { EntityType } from "./common/game_objects";
-import { RenderComponent, StaticImage, AnimationDesc,
-         RenderSystem } from "./render_system";
+import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
+         TiledRegionRenderComponent} from "./render_system";
 import { EntityId } from "./common/system";
 import { PLAYER_SPEED } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
@@ -10,6 +10,7 @@ import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
 import { ClientSpatialComponent } from "./client_spatial_component";
+import { Span2d, Span } from "./common/span";
 
 function constructGem(em: EntityManager, id: EntityId) {
   const staticImages: StaticImage[] = [
@@ -25,10 +26,10 @@ function constructGem(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id,
-                                         staticImages,
-                                         animations,
-                                         "gem.png");
+  const renderComp = new SpriteRenderComponent(id,
+                                               staticImages,
+                                               animations,
+                                               "gem.png");
 
   const spatialComp = new ClientSpatialComponent(id, em);
 
@@ -62,10 +63,10 @@ function constructRock(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id,
-                                         staticImages,
-                                         animations,
-                                         "rock.png");
+  const renderComp = new SpriteRenderComponent(id,
+                                               staticImages,
+                                               animations,
+                                               "rock.png");
 
   const spatialComp = new ClientSpatialComponent(id, em);
 
@@ -99,10 +100,10 @@ function constructSoil(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id,
-                                         staticImages,
-                                         animations,
-                                         "soil.png");
+  const renderComp = new SpriteRenderComponent(id,
+                                               staticImages,
+                                               animations,
+                                               "soil.png");
 
   const spatialComp = new ClientSpatialComponent(id, em);
 
@@ -126,6 +127,25 @@ function constructSoil(em: EntityManager, id: EntityId) {
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
   em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp, behaviourComp ]);
+}
+
+function constructEarth(em: EntityManager, id: EntityId) {
+  const span = new Span2d();
+  span.addHorizontalSpan(3, new Span(1, 4));
+  span.addHorizontalSpan(4, new Span(2, 5));
+
+  const images: StaticImage[] = [
+    {
+      name: "earth.png"
+    }
+  ];
+
+  const renderComp = new TiledRegionRenderComponent(id,
+                                                    span,
+                                                    images,
+                                                    "earth.png");
+
+  em.addEntity(id, EntityType.EARTH, [ renderComp ]);
 }
 
 function directionToLetter(direction: Direction): string {
@@ -225,10 +245,10 @@ function constructPlayer(em: EntityManager, id: EntityId) {
     }
   ];
 
-  const renderComp = new RenderComponent(id,
-                                         staticImages,
-                                         animations,
-                                         "man_run_d0.png");
+  const renderComp = new SpriteRenderComponent(id,
+                                               staticImages,
+                                               animations,
+                                               "man_run_d0.png");
 
   const spatialComp = new ClientSpatialComponent(id, em);
 
@@ -279,6 +299,9 @@ export function constructEntities(entityManager: EntityManager,
         break;
       case EntityType.SOIL:
         constructSoil(entityManager, entity.id);
+        break;
+      case EntityType.EARTH:
+        constructEarth(entityManager, entity.id);
         break;
     }
   });

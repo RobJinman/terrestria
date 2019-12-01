@@ -181,6 +181,19 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">earth.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>8,8,16,16</rect>
+                <key>scale9Paddings</key>
+                <rect>8,8,16,16</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">explosion0.png</key>
             <key type="filename">explosion1.png</key>
             <key type="filename">explosion2.png</key>
@@ -314,6 +327,7 @@
             <filename>gem_burn1.png</filename>
             <filename>gem_burn2.png</filename>
             <filename>gem_burn3.png</filename>
+            <filename>earth.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

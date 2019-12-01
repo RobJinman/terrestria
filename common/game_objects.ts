@@ -3,5 +3,6 @@ export enum EntityType {
   GEM = "GEM",
   ROCK = "ROCK",
   SOIL = "SOIL",
+  EARTH = "EARTH",
   OTHER = "OTHER"
 }

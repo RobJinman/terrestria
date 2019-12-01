@@ -41,24 +41,25 @@ export class Span {
 }
 
 export class Span2d {
-  private _spans = new Map<number, Span[]>();
+  readonly spans = new Map<number, Span[]>();
   private _minX = Infinity;
   private _maxX = -Infinity;
   private _minY = Infinity;
   private _maxY = -Infinity;
 
   addHorizontalSpan(y: number, span: Span) {
-    let row = this._spans.get(y);
+    let row = this.spans.get(y);
     if (row && this._overlap(row, span)) {
       throw new GameError("Error adding span; Span overlaps other spans");
     }
 
     if (!row) {
       row = [];
-      this._spans.set(y, row);
+      this.spans.set(y, row);
     }
 
     row.push(span);
+    row.sort((A, B) => A.a - B.a);
 
     if (span.a < this._minX) {
       this._minX = span.a;
@@ -91,7 +92,7 @@ export class Span2d {
   }
 
   contains(x: number, y: number): boolean {
-    const row = this._spans.get(y);
+    const row = this.spans.get(y);
     if (row && this._contain(row, x)) {
       return true;
     }
@@ -99,7 +100,7 @@ export class Span2d {
   }
 
   [Symbol.iterator]() {
-    const mapIt = this._spans[Symbol.iterator]();
+    const mapIt = this.spans[Symbol.iterator]();
     let spansIt: IterableIterator<Span>|null = null;
     let spanIt: Iterator<number>|null = null;
     let currentY: number = NaN;
@@ -308,4 +309,25 @@ export function getPerimeter(span2d: Span2d): Edge[] {
   }
 
   return perimeter;
+}
+
+export function inverse(span2d: Span2d): Span2d {
+  const inverse = new Span2d();
+  for (let y = span2d.minY; y <= span2d.maxY; ++y) {
+    const spans = span2d.spans.get(y) || [];
+
+    let x = span2d.minX;
+    for (const span of spans) {
+      if (span.a > 0) {
+        inverse.addHorizontalSpan(y, new Span(x, span.a - 1));
+      }
+      x = span.b + 1;
+    }
+
+    if (x < span2d.maxX) {
+      inverse.addHorizontalSpan(y, new Span(x, span2d.maxX));
+    }
+  }
+
+  return inverse;
 }

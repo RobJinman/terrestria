@@ -14,6 +14,14 @@ import { ServerSpatialComponent } from "./server_spatial_component";
 import { Circle, Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
 
+export function constructEarth(em: ServerEntityManager): EntityId {
+  const id = getNextEntityId();
+
+  em.addEntity(id, EntityType.EARTH, []);
+
+  return id;
+}
+
 export function constructSoil(em: ServerEntityManager): EntityId {
   const id = getNextEntityId();
 
