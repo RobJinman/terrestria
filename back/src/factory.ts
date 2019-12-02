@@ -13,8 +13,9 @@ import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
 import { Circle, Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
+import { EntityDesc } from "./map_data";
 
-export function constructEarth(em: ServerEntityManager): EntityId {
+export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   em.addEntity(id, EntityType.EARTH, []);
@@ -22,7 +23,7 @@ export function constructEarth(em: ServerEntityManager): EntityId {
   return id;
 }
 
-export function constructSoil(em: ServerEntityManager): EntityId {
+export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -58,10 +59,12 @@ export function constructSoil(em: ServerEntityManager): EntityId {
 
   em.addEntity(id, EntityType.SOIL, [ spatialComp, behaviourComp ]);
 
+  spatialSys.positionEntity(id, desc.col, desc.row);
+
   return id;
 }
 
-export function constructRock(em: ServerEntityManager): EntityId {
+export function constructRock(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -97,10 +100,12 @@ export function constructRock(em: ServerEntityManager): EntityId {
 
   em.addEntity(id, EntityType.ROCK, [ spatialComp, behaviourComp ]);
 
+  spatialSys.positionEntity(id, desc.col, desc.row);
+
   return id;
 }
 
-export function constructGem(em: ServerEntityManager): EntityId {
+export function constructGem(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -151,6 +156,8 @@ export function constructGem(em: ServerEntityManager): EntityId {
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
   em.addEntity(id, EntityType.GEM, [ spatialComp, invComp, behaviourComp ]);
+
+  spatialSys.positionEntity(id, desc.col, desc.row);
 
   return id;
 }
@@ -222,4 +229,25 @@ export function constructPlayer(em: ServerEntityManager,
                                         behaviourComp ]);
 
   return id;
+}
+
+export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
+  switch (desc.type) {
+    case EntityType.EARTH: {
+      constructEarth(em, desc.data);
+      break;
+    }
+    case EntityType.GEM: {
+      constructGem(em, desc.data);
+      break;
+    }
+    case EntityType.ROCK: {
+      constructRock(em, desc.data);
+      break;
+    }
+    case EntityType.SOIL: {
+      constructSoil(em, desc.data);
+      break;
+    }
+  }
 }

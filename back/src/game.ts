@@ -1,30 +1,25 @@
 import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
-import { constructSoil, constructRock, constructGem, constructPlayer, 
-         constructEarth } from "./factory";
-import { AgentSystem } from "./agent_system";
+import { constructPlayer } from "./factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities,
          RPlayerKilled } from "./common/response";
 import { GameLogic } from "./game_logic";
-import { WORLD_W, WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
+import { WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
-import { BehaviourSystem, BehaviourComponent,
-         EventHandlerFn } from "./common/behaviour_system";
+import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { debounce } from "./common/utils";
-import { InventorySystem } from "./inventory_system";
 import { getNextEntityId } from "./common/entity_manager";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
-import { Span, Span2d } from "./common/span";
-import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
+import { loadMap } from "./map_loader";
 
 function noThrow(fn: () => any) {
   try {
@@ -47,7 +42,6 @@ export class Game {
   private _gameLogic: GameLogic;
   private _entityId: EntityId;
   private _doSyncFn: () => void;
-  private _gravRegion = new Span2d();
 
   constructor(appConfig: AppConfig) {
     this._appConfig = appConfig;
@@ -55,20 +49,7 @@ export class Game {
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
 
-    this._createGravRegion();
-
-    const serverSpatialSystem = new ServerSpatialSystem(this._em,
-                                                        WORLD_W,
-                                                        WORLD_H,
-                                                        this._gravRegion);
-    const agentSystem = new AgentSystem(this._em);
-    const behaviourSystem = new BehaviourSystem();
-    const inventorySystem = new InventorySystem();
-
-    this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
-    this._em.addSystem(ComponentType.AGENT, agentSystem);
-    this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
-    this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
+    loadMap(this._em);
 
     this._gameLogic = new GameLogic(this._em);
 
@@ -85,8 +66,6 @@ export class Game {
     this._em.addEntity(this._entityId, EntityType.OTHER, [behaviourComp]);
 
     console.log(`Starting game ${this._id}`);
-
-    this._populate();
 
     this._loopTimeout = setInterval(() => noThrow(this._tick.bind(this)),
                                     SERVER_FRAME_DURATION_MS);
@@ -198,20 +177,6 @@ export class Game {
     clearInterval(this._loopTimeout);
   }
 
-  private _createGravRegion() {
-    this._gravRegion.addHorizontalSpan(0, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(1, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(2, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(3, new Span(0, WORLD_W - 1));
-    this._gravRegion.addHorizontalSpan(4, new Span(0, WORLD_W - 1));
-
-    this._gravRegion.addHorizontalSpan(11, new Span(7, 16));
-    this._gravRegion.addHorizontalSpan(12, new Span(6, 17));
-    this._gravRegion.addHorizontalSpan(13, new Span(6, 17));
-    this._gravRegion.addHorizontalSpan(14, new Span(7, 18));
-    this._gravRegion.addHorizontalSpan(15, new Span(7, 16));
-  }
-
   private _onPlayerKilled(e: GameEvent) {
     const event = <EPlayerKilled>e;
 
@@ -250,52 +215,5 @@ export class Game {
     this._actionQueue = [];
 
     this._doSyncFn();
-  }
-
-  private _populate() {
-    const spatialSys =
-      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
-
-    const numRocks = 20;
-    const numGems = 10;
-
-    let coords: [number, number][] = [];
-    for (let c = 0; c < WORLD_W; ++c) {
-      for (let r = 0; r < WORLD_H; ++r) {
-        if (c === 0 && r === WORLD_H - 1) {
-          continue;
-        }
-        if (this._gravRegion.contains(c, r)) {
-          continue;
-        }
-        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
-      }
-    }
-
-    coords = _.shuffle(coords);
-
-    let idx = 0;
-    const rockCoords = coords.slice(0, numRocks);
-    idx += numRocks;
-    const gemCoords = coords.slice(idx, idx + numGems);
-    idx += numGems;
-    const soilCoords = coords.slice(idx);
-
-    constructEarth(this._em);
-
-    rockCoords.forEach(([c, r]) => {
-      const id = constructRock(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
-
-    gemCoords.forEach(([c, r]) => {
-      const id = constructGem(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
-
-    soilCoords.forEach(([c, r]) => {
-      const id = constructSoil(this._em);
-      spatialSys.positionEntity(id, c, r);
-    });
   }
 }
