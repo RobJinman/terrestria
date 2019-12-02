@@ -176,16 +176,6 @@ export class ServerSpatialSystem implements ServerSystem {
     return dirties;
   }
 
-  gridMode(entityId: EntityId): boolean {
-    const c = this.getComponent(entityId);
-    return c.currentMode == SpatialMode.GRID_MODE;
-  }
-
-  freeMode(entityId: EntityId): boolean {
-    const c = this.getComponent(entityId);
-    return c.currentMode == SpatialMode.FREE_MODE;
-  }
-
   gm_entityIsMoving(id: EntityId): boolean {
     const c = this.getComponent(id);
     return c.gridMode.moving();

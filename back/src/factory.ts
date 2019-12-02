@@ -14,6 +14,9 @@ import { ServerSpatialComponent } from "./server_spatial_component";
 import { Circle, Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
 import { EntityDesc } from "./common/map_data";
+import { DEFAULT_GRID_MODE_PROPS } from "./grid_mode_properties";
+import { FreeModeProperties } from "./free_mode_properties";
+import { SpatialMode } from "./common/spatial_component_packet";
 
 export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -231,6 +234,30 @@ export function constructPlayer(em: ServerEntityManager,
   return id;
 }
 
+function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
+  const id = getNextEntityId();
+
+  const freeModeProps: FreeModeProperties = {
+    heavy: false,
+    fixedAngle: false
+  };
+
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 spatialSys.grid,
+                                                 DEFAULT_GRID_MODE_PROPS,
+                                                 freeModeProps);
+
+  spatialComp.currentMode = SpatialMode.FREE_MODE;
+
+  em.addEntity(id, EntityType.BLIMP, [ spatialComp ]);
+
+  spatialSys.positionEntity(id, desc.x, desc.y);
+
+  return id;
+}
+
 export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
   switch (desc.type) {
     case EntityType.EARTH: {
@@ -248,6 +275,9 @@ export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
     case EntityType.SOIL: {
       constructSoil(em, desc.data);
       break;
+    }
+    case EntityType.BLIMP: {
+      constructBlimp(em, desc.data);
     }
   }
 }

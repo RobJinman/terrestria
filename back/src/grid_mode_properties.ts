@@ -12,3 +12,12 @@ export interface GridModeProperties {
   // If the entity is an agent
   isAgent: boolean;
 }
+
+export const DEFAULT_GRID_MODE_PROPS: GridModeProperties = {
+  solid: false,
+  blocking: false,
+  heavy: false,
+  movable: false,
+  stackable: false,
+  isAgent: false
+};

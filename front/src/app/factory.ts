@@ -309,23 +309,48 @@ function constructSky(em: EntityManager, mapData: ClientMapData) {
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 }
 
+function constructBlimp(em: EntityManager, entity: Entity) {
+  const staticImages: StaticImage[] = [
+    {
+      name: "blimp.png"
+    }
+  ];
+
+  const renderComp = new SpriteRenderComponent(entity.id,
+                                               staticImages,
+                                               [],
+                                               "blimp.png");
+
+  const spatialComp = new ClientSpatialComponent(entity.id, em);
+
+  em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
+}
+
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
     switch (entity.type) {
-      case EntityType.PLAYER:
+      case EntityType.PLAYER: {
         constructPlayer(entityManager, entity);
         break;
-      case EntityType.GEM:
+      }
+      case EntityType.GEM: {
         constructGem(entityManager, entity);
         break;
-      case EntityType.ROCK:
+      }
+      case EntityType.ROCK: {
         constructRock(entityManager, entity);
         break;
-      case EntityType.SOIL:
+      }
+      case EntityType.SOIL: {
         constructSoil(entityManager, entity);
         break;
+      }
+      case EntityType.BLIMP: {
+        constructBlimp(entityManager, entity);
+        break;
+      }
     }
   });
 }

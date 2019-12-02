@@ -90,6 +90,14 @@ export function loadMapData(): MapData {
     });
   });
 
+  entities.push({
+    type: EntityType.BLIMP,
+    data: {
+      x: 20,
+      y: 20
+    }
+  });
+
   return {
     width: WORLD_W,
     height: WORLD_H,
