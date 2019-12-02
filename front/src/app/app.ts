@@ -1,12 +1,11 @@
 import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, UserInputAction, UserInput, LogInAction,
-         RespawnAction, 
-         InputState} from "./common/action";
+         RespawnAction, InputState } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
-         RLoginSuccess, REntitiesDeleted, REvent,
-         RNewPlayerId } from "./common/response";
-import { constructEntities } from './factory';
+         RLoginSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
+         ClientMapData } from "./common/response";
+import { constructEntities, initialiseGame } from './factory';
 import { CLIENT_FRAME_RATE, BLOCK_SZ, WORLD_W,
          WORLD_H } from "./common/constants";
 import { RenderSystem } from './render_system';
@@ -42,6 +41,7 @@ export class App {
   private _em: ClientEntityManager;
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
+  private _mapData: ClientMapData|null = null;
 
   constructor() {
     this._pixi = new PIXI.Application({
@@ -203,34 +203,49 @@ export class App {
 
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
-      case GameResponseType.NEW_ENTITIES:
-        constructEntities(this._em, <RNewEntities>msg);
+      case GameResponseType.MAP_DATA:{
+        const m = <RMapData>msg;
+        this._mapData = m.mapData;
+        initialiseGame(this._em, this._mapData);
         break;
-      case GameResponseType.ENTITIES_DELETED:
+      }
+      case GameResponseType.NEW_ENTITIES: {
+        if (!this._mapData) {
+          throw new GameError("Received NEW_ENTITIES response before MAP_DATA");
+        }
+        constructEntities(this._em, this._mapData, <RNewEntities>msg);
+        break;
+      }
+      case GameResponseType.ENTITIES_DELETED: {
         this._deleteEntities(<REntitiesDeleted>msg);
         break;
-      case GameResponseType.GAME_STATE:
+      }
+      case GameResponseType.GAME_STATE: {
         this._updateGameState(<RGameState>msg);
         break;
-      case GameResponseType.EVENT:
+      }
+      case GameResponseType.EVENT: {
         this._em.postEvent((<REvent>msg).event);
         break;
+      }
       case GameResponseType.LOGIN_SUCCESS: {
         const m = <RLoginSuccess>msg;
         this._startGame(m.playerId);
         break;
       }
-      case GameResponseType.PLAYER_KILLED:
+      case GameResponseType.PLAYER_KILLED: {
         this._onPlayerKilled();
         break;
+      }
       case GameResponseType.NEW_PLAYER_ID: {
         const m = <RNewPlayerId>msg;
         this._startGame(m.playerId);
         break;
       }
-      case GameResponseType.ERROR:
+      case GameResponseType.ERROR: {
         this._handleServerError(<RError>msg);
         break;
+      }
       // ...
     }
   }

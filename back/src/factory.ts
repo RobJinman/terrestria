@@ -13,7 +13,7 @@ import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
 import { Circle, Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
-import { EntityDesc } from "./map_data";
+import { EntityDesc } from "./common/map_data";
 
 export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();

@@ -1,5 +1,6 @@
 import { GameError } from "./error";
 import { Vec2 } from "./geometry";
+import { Span2dDesc, SpanDesc } from "./map_data";
 
 // Represents a range from A to B, inclusive
 export class Span {
@@ -13,6 +14,10 @@ export class Span {
 
     this.a = a;
     this.b = b;
+  }
+
+  static fromDesc(desc: SpanDesc): Span {
+    return new Span(desc.a, desc.b);
   }
 
   contains(x: number): boolean {
@@ -46,6 +51,43 @@ export class Span2d {
   private _maxX = -Infinity;
   private _minY = Infinity;
   private _maxY = -Infinity;
+
+  static fromDesc(desc: Span2dDesc): Span2d {
+    const span2d = new Span2d();
+
+    for (let y = 0; y < desc.length; ++y) {
+      const spanDescs = desc[y];
+      if (spanDescs.length > 0) {
+        spanDescs.forEach(spanDesc => {
+          const span = Span.fromDesc(spanDesc);
+          span2d.addHorizontalSpan(y, span);
+        });
+      }
+    }
+
+    return span2d;
+  }
+
+  static inverse(span2d: Span2d, maxX: number, maxY: number): Span2d {
+    const inverse = new Span2d();
+    for (let y = span2d.minY; y <= maxY; ++y) {
+      const spans = span2d.spans.get(y) || [];
+  
+      let x = span2d.minX;
+      for (const span of spans) {
+        if (span.a > 0) {
+          inverse.addHorizontalSpan(y, new Span(x, span.a - 1));
+        }
+        x = span.b + 1;
+      }
+  
+      if (x < maxX) {
+        inverse.addHorizontalSpan(y, new Span(x, maxX));
+      }
+    }
+  
+    return inverse;
+  }
 
   addHorizontalSpan(y: number, span: Span) {
     let row = this.spans.get(y);
@@ -309,25 +351,4 @@ export function getPerimeter(span2d: Span2d): Edge[] {
   }
 
   return perimeter;
-}
-
-export function inverse(span2d: Span2d): Span2d {
-  const inverse = new Span2d();
-  for (let y = span2d.minY; y <= span2d.maxY; ++y) {
-    const spans = span2d.spans.get(y) || [];
-
-    let x = span2d.minX;
-    for (const span of spans) {
-      if (span.a > 0) {
-        inverse.addHorizontalSpan(y, new Span(x, span.a - 1));
-      }
-      x = span.b + 1;
-    }
-
-    if (x < span2d.maxX) {
-      inverse.addHorizontalSpan(y, new Span(x, span2d.maxX));
-    }
-  }
-
-  return inverse;
 }

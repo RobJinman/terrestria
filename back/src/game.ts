@@ -5,7 +5,7 @@ import { constructPlayer } from "./factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities,
-         RPlayerKilled } from "./common/response";
+         RPlayerKilled, RMapData, ClientMapData } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SYNC_INTERVAL_MS } from "./common/constants";
@@ -19,7 +19,8 @@ import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
 import { ServerSpatialComponent } from "./server_spatial_component";
-import { loadMap } from "./map_loader";
+import { loadMap, loadMapData } from "./map_loader";
+import { MapData } from "./common/map_data";
 
 function noThrow(fn: () => any) {
   try {
@@ -34,6 +35,7 @@ export class Game {
   private static nextGameId: number = 0;
 
   private _appConfig: AppConfig;
+  private _mapData: MapData;
   private _id: number;
   private _pipe: Pipe;
   private _em: ServerEntityManager;
@@ -49,7 +51,8 @@ export class Game {
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
 
-    loadMap(this._em);
+    this._mapData = loadMapData();
+    loadMap(this._em, this._mapData);
 
     this._gameLogic = new GameLogic(this._em);
 
@@ -87,6 +90,11 @@ export class Game {
   
     this._pipe.addConnection(id, socket);
 
+    const mapDataResp: RMapData = {
+      type: GameResponseType.MAP_DATA,
+      mapData: _.omit(this._mapData, "entities")
+    };
+
     const newEntitiesResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
       entities: entities
@@ -105,6 +113,7 @@ export class Game {
       }]
     };
 
+    this._pipe.send(id, mapDataResp);
     this._pipe.send(id, newEntitiesResp);
     this._pipe.sendToAll(newPlayerResp);
     this._pipe.send(id, stateUpdateResp);

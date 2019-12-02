@@ -1,4 +1,4 @@
-import { EntityType } from "./common/game_objects";
+import { EntityType } from "./game_objects";
 
 export type SpanDesc = {
   a: number;

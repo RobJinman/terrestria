@@ -1,18 +1,20 @@
-import { EntityManager } from "./common/entity_manager";
-import { RNewEntities } from "./common/response";
+import { EntityManager, Entity,
+         getNextEntityId } from "./common/entity_manager";
+import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
-         TiledRegionRenderComponent} from "./render_system";
-import { EntityId } from "./common/system";
+         TiledRegionRenderComponent } from "./render_system";
 import { PLAYER_SPEED } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
 import { ClientSpatialComponent } from "./client_spatial_component";
-import { Span2d, Span } from "./common/span";
+import { Span2d } from "./common/span";
 
-function constructGem(em: EntityManager, id: EntityId) {
+function constructGem(em: EntityManager, entity: Entity) {
+  const id = entity.id;
+
   const staticImages: StaticImage[] = [
     {
       name: "gem.png"
@@ -49,7 +51,9 @@ function constructGem(em: EntityManager, id: EntityId) {
                                      behaviourComp ]);
 }
 
-function constructRock(em: EntityManager, id: EntityId) {
+function constructRock(em: EntityManager, entity: Entity) {
+  const id = entity.id;
+
   const staticImages: StaticImage[] = [
     {
       name: "rock.png"
@@ -86,7 +90,9 @@ function constructRock(em: EntityManager, id: EntityId) {
                                       behaviourComp ]);
 }
 
-function constructSoil(em: EntityManager, id: EntityId) {
+function constructSoil(em: EntityManager, entity: Entity) {
+  const id = entity.id;
+
   const staticImages: StaticImage[] = [
     {
       name: "soil.png"
@@ -129,25 +135,6 @@ function constructSoil(em: EntityManager, id: EntityId) {
   em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp, behaviourComp ]);
 }
 
-function constructEarth(em: EntityManager, id: EntityId) {
-  const span = new Span2d();
-  span.addHorizontalSpan(3, new Span(1, 4));
-  span.addHorizontalSpan(4, new Span(2, 5));
-
-  const images: StaticImage[] = [
-    {
-      name: "earth.png"
-    }
-  ];
-
-  const renderComp = new TiledRegionRenderComponent(id,
-                                                    span,
-                                                    images,
-                                                    "earth.png");
-
-  em.addEntity(id, EntityType.EARTH, [ renderComp ]);
-}
-
 function directionToLetter(direction: Direction): string {
   switch (direction) {
     case Direction.UP: return "u";
@@ -158,7 +145,9 @@ function directionToLetter(direction: Direction): string {
   return "";
 }
 
-function constructPlayer(em: EntityManager, id: EntityId) {
+function constructPlayer(em: EntityManager, entity: Entity) {
+  const id = entity.id;
+
   const staticImages: StaticImage[] = [
     {
       name: "man_run_u0.png"
@@ -284,25 +273,49 @@ function constructPlayer(em: EntityManager, id: EntityId) {
                                         behaviourComp ]);
 }
 
+function constructEarth(em: EntityManager, mapData: ClientMapData) {
+  const id = getNextEntityId();
+
+  const gravRegion = Span2d.fromDesc(mapData.gravityRegion);
+  const digRegion = Span2d.inverse(gravRegion, mapData.width, mapData.height);
+
+  const images: StaticImage[] = [
+    {
+      name: "earth.png"
+    }
+  ];
+
+  const renderComp = new TiledRegionRenderComponent(id,
+                                                    digRegion,
+                                                    images,
+                                                    "earth.png");
+
+  em.addEntity(id, EntityType.EARTH, [ renderComp ]);
+}
+
 export function constructEntities(entityManager: EntityManager,
+                                  mapData: ClientMapData,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
     switch (entity.type) {
       case EntityType.PLAYER:
-        constructPlayer(entityManager, entity.id);
+        constructPlayer(entityManager, entity);
         break;
       case EntityType.GEM:
-        constructGem(entityManager, entity.id);
+        constructGem(entityManager, entity);
         break;
       case EntityType.ROCK:
-        constructRock(entityManager, entity.id);
+        constructRock(entityManager, entity);
         break;
       case EntityType.SOIL:
-        constructSoil(entityManager, entity.id);
-        break;
-      case EntityType.EARTH:
-        constructEarth(entityManager, entity.id);
+        constructSoil(entityManager, entity);
         break;
     }
   });
+}
+
+// Construct any client-side only entities from map data
+export function initialiseGame(entityManager: EntityManager,
+                               mapData: ClientMapData) {
+  constructEarth(entityManager, mapData);
 }

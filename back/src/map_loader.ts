@@ -8,11 +8,11 @@ import { AgentSystem } from "./agent_system";
 import { BehaviourSystem } from "./common/behaviour_system";
 import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
-import { MapData, Span2dDesc, EntityDesc } from "./map_data";
+import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
 import { constructEntity } from "./factory";
 
 // TODO: This will come from JSON. For now, generate the data here
-function loadMapData(): MapData {
+export function loadMapData(): MapData {
   const gravRegion: Span2dDesc = [
     [{ a: 0, b: WORLD_W - 1 }],
     [{ a: 0, b: WORLD_W - 1 }],
@@ -110,9 +110,7 @@ function constructGravRegion(desc: Span2dDesc) {
   return gravRegion;
 }
 
-export function loadMap(em: ServerEntityManager) {
-  const mapData = loadMapData();
-
+export function loadMap(em: ServerEntityManager, mapData: MapData) {
   const gravRegion = constructGravRegion(mapData.gravityRegion);
 
   const serverSpatialSystem = new ServerSpatialSystem(em,
