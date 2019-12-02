@@ -42,6 +42,10 @@ export function inRange(x: number, min: number, max: number) {
   return x >= min && x <= max;
 }
 
+export function clamp(x: number, min: number, max: number) {
+  return Math.min(Math.max(x, min), max);
+}
+
 export function union<T>(A: Set<T>, B: Set<T>): Set<T> {
   const C = new Set<T>(A);
 

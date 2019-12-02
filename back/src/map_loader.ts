@@ -25,11 +25,11 @@ export function loadMapData(): MapData {
     [],
     [],
     [],
-    [{ a: 7, b: 16 }],
-    [{ a: 6, b: 17 }],
-    [{ a: 6, b: 17 }],
-    [{ a: 7, b: 18 }],
-    [{ a: 7, b: 16 }],
+    [{ a: 6, b: 18 }],
+    [{ a: 6, b: 18 }],
+    [{ a: 6, b: 18 }],
+    [{ a: 6, b: 18 }],
+    [{ a: 6, b: 18 }],
   ];
 
   const entities: EntityDesc[] = [];

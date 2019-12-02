@@ -3,14 +3,16 @@ import { EntityManager, Entity,
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
-         TiledRegionRenderComponent } from "./render_system";
-import { PLAYER_SPEED } from "./common/constants";
+         TiledRegionRenderComponent, ShapeRenderComponent,
+         Colour } from "./render_system";
+import { PLAYER_SPEED, BLOCK_SZ } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { Span2d } from "./common/span";
+import { Rectangle } from "./common/geometry";
 
 function constructGem(em: EntityManager, entity: Entity) {
   const id = entity.id;
@@ -293,6 +295,20 @@ function constructEarth(em: EntityManager, mapData: ClientMapData) {
   em.addEntity(id, EntityType.EARTH, [ renderComp ]);
 }
 
+function constructSky(em: EntityManager, mapData: ClientMapData) {
+  const id = getNextEntityId();
+
+  const shape = new Rectangle(mapData.width * BLOCK_SZ, 5 * BLOCK_SZ);
+  const colour = new Colour(0.4, 0.4, 1.0);
+
+  const renderComp = new ShapeRenderComponent(id, shape, colour);
+
+  const spatialComp = new ClientSpatialComponent(id, em);
+  spatialComp.setStaticPos(0, 0);
+
+  em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
+}
+
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
@@ -318,4 +334,5 @@ export function constructEntities(entityManager: EntityManager,
 export function initialiseGame(entityManager: EntityManager,
                                mapData: ClientMapData) {
   constructEarth(entityManager, mapData);
+  constructSky(entityManager, mapData);
 }

@@ -9,6 +9,60 @@ import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
 import { BLOCK_SZ } from './common/constants';
 import { Span2d } from './common/span';
+import { Shape, ShapeType, Circle, Rectangle, Polygon } from './common/geometry';
+import { clamp } from './common/utils';
+
+export class Colour {
+  private _r: number = 0;
+  private _g: number = 0;
+  private _b: number = 0;
+  private _a: number = 1;
+
+  constructor(r: number, g: number, b: number, a: number = 1.0) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = a;
+  }
+
+  set r(value: number) {
+    this._r = clamp(value, 0, 1);
+  }
+
+  set g(value: number) {
+    this._g = clamp(value, 0, 1);
+  }
+
+  set b(value: number) {
+    this._b = clamp(value, 0, 1);
+  }
+
+  set a(value: number) {
+    this._a = clamp(value, 0, 1);
+  }
+
+  get r() {
+    return this._r;
+  }
+
+  get g() {
+    return this._g;
+  }
+
+  get b() {
+    return this._b;
+  }
+
+  get a() {
+    return this._a;
+  }
+
+  get value(): number {
+    return Math.floor(this.r * 256) * 16 * 16 +
+           Math.floor(this.g * 256) * 16 +
+           Math.floor(this.b * 256);
+  }
+}
 
 export interface AnimationDesc {
   duration: number;
@@ -29,28 +83,38 @@ interface Animation {
 }
 
 export enum RenderComponentType {
+  SHAPE,
   SPRITE,
   TILED_REGION
 }
 
 export class RenderComponent extends Component {
   readonly renderComponentType: RenderComponentType;
-  readonly staticImages: StaticImage[];
-  readonly initialImage: string;
 
   constructor(entityId: EntityId,
-              type: RenderComponentType,
-              staticImages: StaticImage[],
-              initialImage: string) {
+              type: RenderComponentType) {
     super(entityId, ComponentType.RENDER);
 
     this.renderComponentType = type;
-    this.staticImages = staticImages;
-    this.initialImage = initialImage;
+  }
+}
+
+export class ShapeRenderComponent extends RenderComponent {
+  readonly shape: Shape;
+  readonly colour: Colour;
+  readonly graphics = new PIXI.Graphics();
+
+  constructor(entityId: EntityId, shape: Shape, colour: Colour) {
+    super(entityId, RenderComponentType.SHAPE);
+
+    this.shape = shape;
+    this.colour = colour;
   }
 }
 
 export class SpriteRenderComponent extends RenderComponent {
+  readonly staticImages: StaticImage[];
+  readonly initialImage: string;
   readonly animDescs: AnimationDesc[];
   readonly staticSprites: Map<string, PIXI.Sprite>;
   readonly animatedSprites: Map<string, Animation>;
@@ -62,10 +126,10 @@ export class SpriteRenderComponent extends RenderComponent {
               animations: AnimationDesc[],
               initialImage: string) {
     super(entityId,
-          RenderComponentType.SPRITE,
-          staticImages,
-          initialImage);
+          RenderComponentType.SPRITE);
 
+    this.staticImages = staticImages;
+    this.initialImage = initialImage;
     this.animDescs = animations;
     this.staticSprites = new Map<string, PIXI.Sprite>();
     this.animatedSprites = new Map<string, Animation>();
@@ -73,6 +137,8 @@ export class SpriteRenderComponent extends RenderComponent {
 }
 
 export class TiledRegionRenderComponent extends RenderComponent {
+  readonly staticImages: StaticImage[];
+  readonly initialImage: string;
   readonly region: Span2d;
   readonly sprites: Map<string, PIXI.Sprite[]>;
   stagedSprites: string|null = null; // Key into the sprites map
@@ -82,9 +148,10 @@ export class TiledRegionRenderComponent extends RenderComponent {
               staticImages: StaticImage[],
               initialImage: string) {
     super(entityId,
-          RenderComponentType.TILED_REGION,
-          staticImages,
-          initialImage);
+          RenderComponentType.TILED_REGION);
+
+    this.staticImages = staticImages;
+    this.initialImage = initialImage;
 
     this.region = region;
     this.sprites = new Map<string, PIXI.Sprite[]>();
@@ -169,6 +236,10 @@ export class RenderSystem implements ClientSystem {
         this._tiledRegionCompSetActiveSprite(c_, name);
         break;
       }
+      default: {
+        throw new GameError(`Cannot set image on component of type ` +
+                            `${c.renderComponentType}`);
+      }
     }
   }
 
@@ -182,6 +253,10 @@ export class RenderSystem implements ClientSystem {
       }
       case RenderComponentType.TILED_REGION: {
         this._addTiledRegionComponent(<TiledRegionRenderComponent>component);
+        break;
+      }
+      case RenderComponentType.SHAPE: {
+        this._addShapeComponent(<ShapeRenderComponent>component);
         break;
       }
     }
@@ -210,6 +285,9 @@ export class RenderSystem implements ClientSystem {
         this._removeTiledRegionComponent(<TiledRegionRenderComponent>c);
         break;
       }
+      case RenderComponentType.SHAPE: {
+        this._removeShapeComponent(<ShapeRenderComponent>c);
+      }
     }
   }
 
@@ -223,6 +301,37 @@ export class RenderSystem implements ClientSystem {
   }
 
   update() {}
+
+  private _addShapeComponent(c: ShapeRenderComponent) {
+    c.graphics.beginFill(c.colour.value);
+
+    switch (c.shape.type) {
+      case ShapeType.CIRCLE: {
+        const circle = <Circle>c.shape;
+        c.graphics.drawCircle(0, 0, circle.radius);
+        break;
+      }
+      case ShapeType.RECTANGLE: {
+        const rect = <Rectangle>c.shape;
+        c.graphics.drawRect(0, 0, rect.width, rect.height);
+        break;
+      }
+      default: {
+        throw new GameError(`Render system doesn't support shapes of type ` +
+                            `${c.shape.type}`);
+      }
+    }
+
+    c.graphics.endFill();
+    this._pixi.stage.addChild(c.graphics);
+
+    this._onEntityMoved(c.entityId);
+  }
+
+  private _removeShapeComponent(c: ShapeRenderComponent) {
+    this._pixi.stage.removeChild(c.graphics);
+    this._components.delete(c.entityId);
+  }
 
   private _addSpriteComponent(c: SpriteRenderComponent) {
     c.animDescs.forEach(anim => {
@@ -313,14 +422,25 @@ export class RenderSystem implements ClientSystem {
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       id);
       const c_ = this.getComponent(id);
-      if (c_.renderComponentType == RenderComponentType.SPRITE) {
-        const c = <SpriteRenderComponent>c_;
+      switch (c_.renderComponentType) {
+        case RenderComponentType.SPRITE: {
+          const c = <SpriteRenderComponent>c_;
+          if (c.stagedSprite) {
+            c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+            c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                        spatialComp.y + BLOCK_SZ * 0.5);
+            c.stagedSprite.rotation = spatialComp.angle;
+          }
+          break;
+        }
+        case RenderComponentType.SHAPE: {
+          const c = <ShapeRenderComponent>c_;
+          c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+          c.graphics.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                  spatialComp.y + BLOCK_SZ * 0.5);
+          c.graphics.rotation = spatialComp.angle;
 
-        if (c.stagedSprite) {
-          c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-          c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                      spatialComp.y + BLOCK_SZ * 0.5);
-          c.stagedSprite.rotation = spatialComp.angle;
+          break;
         }
       }
     }
