@@ -58,9 +58,9 @@ export class Colour {
   }
 
   get value(): number {
-    return Math.floor(this.r * 256) * 16 * 16 +
-           Math.floor(this.g * 256) * 16 +
-           Math.floor(this.b * 256);
+    return Math.round(this.r * 255) * 16 * 16 * 16 * 16 +
+           Math.round(this.g * 255) * 16 * 16 +
+           Math.round(this.b * 255);
   }
 }
 
@@ -303,7 +303,7 @@ export class RenderSystem implements ClientSystem {
   update() {}
 
   private _addShapeComponent(c: ShapeRenderComponent) {
-    c.graphics.beginFill(c.colour.value);
+    c.graphics.beginFill(c.colour.value, Math.floor(c.colour.a * 256));
 
     switch (c.shape.type) {
       case ShapeType.CIRCLE: {

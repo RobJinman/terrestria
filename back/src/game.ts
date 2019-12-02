@@ -5,7 +5,7 @@ import { constructPlayer } from "./factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities,
-         RPlayerKilled, RMapData, ClientMapData } from "./common/response";
+         RPlayerKilled, RMapData } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
          SYNC_INTERVAL_MS } from "./common/constants";

@@ -299,7 +299,7 @@ function constructSky(em: EntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const shape = new Rectangle(mapData.width * BLOCK_SZ, 5 * BLOCK_SZ);
-  const colour = new Colour(0.4, 0.4, 1.0);
+  const colour = new Colour(0.5, 0.5, 0.99);
 
   const renderComp = new ShapeRenderComponent(id, shape, colour);
 

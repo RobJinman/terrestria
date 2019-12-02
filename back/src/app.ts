@@ -235,7 +235,7 @@ export class App {
     this._sendResponse(user.ws, newIdMsg);
   }
 
-  // When a message comes in from the client, pass it onto the game instance
+  // When a message comes in from the client, pass it on to the game instance
   private async _handleClientMessage(sock: ExtWebSocket,
                                      msg: string) {
     const action = deserialiseMessage(msg);
