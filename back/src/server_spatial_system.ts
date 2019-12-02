@@ -55,7 +55,7 @@ export class ServerSpatialSystem implements ServerSystem {
         // Ignore angle if fixed. Workaround for
         // https://github.com/liabru/matter-js/issues/800
         angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
-        speed: c.gridMode.speed
+        speed: 0
       });
     });
 
