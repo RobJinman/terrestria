@@ -6,7 +6,7 @@ import { ActionType, LogInAction, deserialiseMessage,
          RespawnAction } from "./common/action";
 import { GameResponse, GameResponseType, RError, RLoginSuccess, 
          RNewPlayerId } from "./common/response";
-import { pinataAuth } from "./pinata";
+import { Pinata } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
 
@@ -35,6 +35,7 @@ export class App {
   private _wss: WebSocket.Server;
   private _users: Map<EntityId, UserConnection>;
   private _games: Set<Game>;
+  private _pinata: Pinata;
 
   constructor() {
     this._config = makeAppConfig();
@@ -42,6 +43,9 @@ export class App {
     this._server = http.createServer((req, res) => {
       this._handleHttpRequest(req, res);
     });
+
+    this._pinata = new Pinata(this._config.pinataApiBase,
+                              this._config.productKey);
 
     this._wss = new WebSocket.Server({ server: this._server });;
     this._games = new Set<Game>();
@@ -176,7 +180,7 @@ export class App {
     let pinataToken: string = "";
 
     try {
-      const auth = await pinataAuth(this._config.pinataApiBase, data);
+      const auth = await this._pinata.pinataAuth(data);
       pinataId = auth.accountId;
       pinataToken = auth.token;
 

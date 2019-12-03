@@ -7,14 +7,22 @@ export interface PinataAuthResponse {
   token: string;
 }
 
-export async function pinataAuth(pinataApiBase: string, logInReq: LogInAction):
-  Promise<PinataAuthResponse> {
+export class Pinata {
+  private _apiBase: string;
+  private _productKey: string;
 
-  const web = pinataApiBase.startsWith("https") ? https: http;
+  constructor(apiBase: string, productKey: string) {
+    this._apiBase = apiBase;
+    this._productKey = productKey;
+  }
 
-  console.log("Authenticating");
+  async getAdSpaces() {
+    // TODO
+  }
 
-  return new Promise<PinataAuthResponse>((resolve, reject) => {
+  pinataAuth(logInReq: LogInAction): Promise<PinataAuthResponse> {
+    console.log("Authenticating");
+
     const email = logInReq.email;
     const password = logInReq.password;
 
@@ -24,7 +32,6 @@ export async function pinataAuth(pinataApiBase: string, logInReq: LogInAction):
     };
 
     const payload = JSON.stringify(body);
-    console.log(payload);
 
     const options: http.RequestOptions = {
       method: "POST",
@@ -35,41 +42,44 @@ export async function pinataAuth(pinataApiBase: string, logInReq: LogInAction):
       agent: false
     };
 
-    const url = `${pinataApiBase}/gamer/log-in`;
+    const url = `${this._apiBase}/gamer/log-in`;
 
-    // TODO: Remove this
-    resolve({
-      accountId: "DUMMY_ACCOUNT_ID",
-      token: "DUMMY_TOKEN"
-    });
-    return;
+    return this._sendRequest(url, options, payload);
+  }
 
-    let req = web.request(url, options, res => {
-      let json = "";
+  private async _sendRequest(url: string,
+                             options: http.RequestOptions,
+                             payloadJson: string): Promise<any> {
+    const web = this._apiBase.startsWith("https") ? https: http;
 
-      res.on("data", chunk => {
-        json += chunk;
-      })
+    return new Promise((resolve, reject) => {
+      let req = web.request(url, options, res => {
+        let responseJson = "";
 
-      res.on("end", () => {
-        try {
-          if (res.statusCode != 200) {
-            reject(`Error authenticating user: Status ${res.statusCode}`);
+        res.on("data", chunk => {
+          responseJson += chunk;
+        });
+
+        res.on("end", () => {
+          try {
+            if (res.statusCode != 200) {
+              reject(`Error authenticating user: Status ${res.statusCode}`);
+            }
+            const data = JSON.parse(responseJson);
+            resolve(data);
           }
-          const data = JSON.parse(json);
-          resolve(data);
-        }
-        catch (err) {
-          reject("Error authenticating user: " + err);
-        }
+          catch (err) {
+            reject("Error authenticating user: " + err);
+          }
+        });
       });
-    });
 
-    req.on("error", err => {
-      reject("Error authenticating user: " + err);
-    });
+      req.on("error", err => {
+        reject("Error authenticating user: " + err);
+      });
 
-    req.write(payload);
-    req.end();
-  });
+      req.write(payloadJson);
+      req.end();
+    });
+  }
 }
