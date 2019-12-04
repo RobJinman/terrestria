@@ -181,6 +181,33 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">blimp.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>64,26,129,51</rect>
+                <key>scale9Paddings</key>
+                <rect>64,26,129,51</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">blimp_ad_placeholder.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>32,16,64,32</rect>
+                <key>scale9Paddings</key>
+                <rect>32,16,64,32</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">earth.png</key>
             <key type="filename">explosion0.png</key>
             <key type="filename">explosion1.png</key>
             <key type="filename">explosion2.png</key>
@@ -252,10 +279,35 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">foliage.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>100,43,200,87</rect>
+                <key>scale9Paddings</key>
+                <rect>100,43,200,87</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
         </map>
         <key>fileList</key>
         <array>
+            <filename>blimp.png</filename>
+            <filename>blimp_ad_placeholder.png</filename>
+            <filename>earth.png</filename>
+            <filename>explosion0.png</filename>
+            <filename>explosion1.png</filename>
+            <filename>explosion2.png</filename>
+            <filename>explosion3.png</filename>
+            <filename>foliage.png</filename>
             <filename>gem.png</filename>
+            <filename>gem_burn0.png</filename>
+            <filename>gem_burn1.png</filename>
+            <filename>gem_burn2.png</filename>
+            <filename>gem_burn3.png</filename>
             <filename>man_dig_d0.png</filename>
             <filename>man_dig_d1.png</filename>
             <filename>man_dig_d2.png</filename>
@@ -297,23 +349,15 @@
             <filename>man_run_u2.png</filename>
             <filename>man_run_u3.png</filename>
             <filename>rock.png</filename>
+            <filename>rock_burn0.png</filename>
+            <filename>rock_burn1.png</filename>
+            <filename>rock_burn2.png</filename>
+            <filename>rock_burn3.png</filename>
             <filename>soil.png</filename>
             <filename>soil_puff0.png</filename>
             <filename>soil_puff1.png</filename>
             <filename>soil_puff2.png</filename>
             <filename>soil_puff3.png</filename>
-            <filename>rock_burn0.png</filename>
-            <filename>rock_burn1.png</filename>
-            <filename>rock_burn2.png</filename>
-            <filename>rock_burn3.png</filename>
-            <filename>explosion0.png</filename>
-            <filename>explosion1.png</filename>
-            <filename>explosion2.png</filename>
-            <filename>explosion3.png</filename>
-            <filename>gem_burn0.png</filename>
-            <filename>gem_burn1.png</filename>
-            <filename>gem_burn2.png</filename>
-            <filename>gem_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

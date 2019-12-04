@@ -26,14 +26,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="218.83527"
-     inkscape:cy="629.33368"
+     inkscape:cx="200.97813"
+     inkscape:cy="515.04797"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1280"
-     inkscape:window-height="975"
-     inkscape:window-x="0"
+     inkscape:window-height="999"
+     inkscape:window-x="1280"
      inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
@@ -59,9 +59,9 @@
        height="60"
        x="30.91346"
        y="85.733551"
-       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
-       inkscape:export-xdpi="13.546666"
-       inkscape:export-ydpi="13.546666" />
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/64/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="27.093332"
+       inkscape:export-ydpi="27.093332" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot817"
@@ -121,8 +121,8 @@
        x="31.848213"
        y="161.54465"
        inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
-       inkscape:export-xdpi="13.546666"
-       inkscape:export-ydpi="13.546666" />
+       inkscape:export-xdpi="27.093332"
+       inkscape:export-ydpi="27.093332" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot817-6"

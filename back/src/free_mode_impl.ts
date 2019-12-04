@@ -9,8 +9,8 @@ import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 
-const PLAYER_VELOCITY_H = 3;
-const PLAYER_VELOCITY_V = 6;
+const PLAYER_VELOCITY_H = 6;
+const PLAYER_VELOCITY_V = 10;
 
 function isInside(rectX: number,
                   rectY: number,

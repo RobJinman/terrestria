@@ -127,11 +127,11 @@ export function constructGem(em: ServerEntityManager, desc: any): EntityId {
   };
 
   const points = [
-    { x: 0, y: 10 },
-    { x: 16, y: 32 },
-    { x: 32, y: 10 },
-    { x: 27, y: 0 },
-    { x: 5, y: 0 }
+    { x: 0, y: 20 },
+    { x: 32, y: 64 },
+    { x: 64, y: 20 },
+    { x: 54, y: 0 },
+    { x: 10, y: 0 }
   ];
   const shape = new Polygon(points);
 

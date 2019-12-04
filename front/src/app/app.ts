@@ -25,7 +25,7 @@ declare var __WEBSOCKET_URL__: string;
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
-const VERTICAL_RESOLUTION = 1000;
+const VERTICAL_RESOLUTION = 1024;
 
 function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
   switch (event.key) {
