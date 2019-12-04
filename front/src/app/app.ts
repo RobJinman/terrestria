@@ -7,7 +7,7 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          ClientMapData } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
-import { CLIENT_FRAME_RATE, BLOCK_SZ } from "./common/constants";
+import { CLIENT_FRAME_RATE } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { waitForCondition } from './common/utils';
@@ -18,11 +18,14 @@ import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 import { ClientAdSystem } from './client_ad_system';
+import { ClientSpatialComponent } from './client_spatial_component';
 
 declare var __WEBSOCKET_URL__: string;
 
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
+
+const VERTICAL_RESOLUTION = 1000;
 
 function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
   switch (event.key) {
@@ -43,13 +46,20 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData: ClientMapData|null = null;
+  private _windowW = 800;
+  private _windowH = 600;
+  private _viewW = 0;
+  private readonly _viewH = VERTICAL_RESOLUTION;
+  private _cameraX = 0;
+  private _cameraY = 0;
 
   constructor() {
     this._pixi = new PIXI.Application({
-      antialias: true
+      antialias: false
     });
 
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.ROUND_PIXELS = true;
 
     window.onresize = this._onWindowResize.bind(this);
 
@@ -89,19 +99,6 @@ export class App {
 
     this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
     this._pixi.ticker.add(delta => this._tick(delta));
-  }
-
-  private _onWindowResize() {
-    if (this._mapData) {
-      this._pixi.renderer.resize(window.innerWidth, window.innerHeight);
-
-      const scaleW = window.innerWidth / (this._mapData.width * BLOCK_SZ);
-      const scaleH = window.innerHeight / (this._mapData.height * BLOCK_SZ);
-
-      const scaleFactor = Math.min(scaleW, scaleH);
-      this._pixi.stage.scale.x = scaleFactor;
-      this._pixi.stage.scale.y = scaleFactor;
-    }
   }
 
   private _onKeyDown(event: KeyboardEvent) {
@@ -146,6 +143,43 @@ export class App {
     this._processUserActions();
     this._scheduler.update();
     this._em.update();
+    this._centreStage();
+  }
+
+  private _onWindowResize() {
+    if (this._mapData) {
+      this._windowW = window.innerWidth;
+      this._windowH = window.innerHeight;
+
+      this._pixi.renderer.resize(this._windowW, this._windowH);
+      const scale = this._windowH / this._viewH;
+
+      const aspect = this._windowW / this._windowH;
+      this._viewW = this._viewH * aspect;
+
+      this._pixi.stage.scale.x = scale;
+      this._pixi.stage.scale.y = scale;
+    }
+  }
+
+  private _centreStage() {
+    if (this._playerId >= 0) {
+      const player =
+        <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
+                                                      this._playerId);
+
+      this._cameraX = player.x;
+      this._cameraY = player.y;
+
+      // Screen origin in world space
+      const viewX = this._cameraX - 0.5 * this._viewW;
+      const viewY = this._cameraY - 0.5 * this._viewH;
+
+      const scale = this._windowH / this._viewH;
+
+      this._pixi.stage.x = -viewX * scale;
+      this._pixi.stage.y = -viewY * scale;
+    }
   }
 
   private _processUserActions() {
