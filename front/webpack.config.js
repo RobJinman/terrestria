@@ -11,7 +11,7 @@ const rootDir = path.resolve(__dirname, "src");
 const distDir = path.resolve(__dirname, "dist");
 
 let websocketUrl = isProduction ? "wss://api.terrestria.io:3001"
-                                : "ws://localhost:3001";
+                                : "ws://192.168.0.125:3001";
 
 const baseConfig = {
   context: rootDir,

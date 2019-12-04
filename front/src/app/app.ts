@@ -47,8 +47,14 @@ export class App {
   constructor() {
     this._pixi = new PIXI.Application({
       width: WORLD_W * BLOCK_SZ,
-      height: WORLD_H * BLOCK_SZ
+      height: WORLD_H * BLOCK_SZ,
+      antialias: false
     });
+
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+
+    window.onresize = this._onWindowResize.bind(this);
+    this._onWindowResize();
 
     this._ws = new WebSocket(__WEBSOCKET_URL__);
     this._ws.onmessage = ev => this._onServerMessage(ev);
@@ -86,6 +92,17 @@ export class App {
 
     this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
     this._pixi.ticker.add(delta => this._tick(delta));
+  }
+
+  private _onWindowResize() {
+    this._pixi.renderer.resize(window.innerWidth, window.innerHeight);
+
+    const scaleW = window.innerWidth / (WORLD_W * BLOCK_SZ);
+    const scaleH = window.innerHeight / (WORLD_H * BLOCK_SZ);
+
+    const scaleFactor = Math.min(scaleW, scaleH);
+    this._pixi.stage.scale.x = scaleFactor;
+    this._pixi.stage.scale.y = scaleFactor;
   }
 
   private _onKeyDown(event: KeyboardEvent) {

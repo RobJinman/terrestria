@@ -280,7 +280,9 @@ function constructEarth(em: EntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const gravRegion = Span2d.fromDesc(mapData.gravityRegion);
-  const digRegion = Span2d.inverse(gravRegion, mapData.width, mapData.height);
+  const digRegion = Span2d.inverse(gravRegion,
+                                   mapData.width - 1,
+                                   mapData.height - 1);
 
   const images: StaticImage[] = [
     {
