@@ -1,5 +1,3 @@
-export const WORLD_W = 34;
-export const WORLD_H = 19;
 export const BLOCK_SZ = 32;
 export const SERVER_FRAME_RATE = 60;
 export const SERVER_FRAME_DURATION_MS = 1000 / SERVER_FRAME_RATE;

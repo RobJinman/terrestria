@@ -7,7 +7,7 @@ import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities,
          RPlayerKilled, RMapData } from "./common/response";
 import { GameLogic } from "./game_logic";
-import { WORLD_H, BLOCK_SZ, SERVER_FRAME_DURATION_MS, 
+import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
@@ -97,7 +97,8 @@ export class Game {
     const id = constructPlayer(this._em, pinataId, pinataToken);
     const spatial =
       <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
-    spatial.setStaticPos(0, (WORLD_H - 1) * BLOCK_SZ);
+    spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
+                         this._mapData.spawnPoint.y * BLOCK_SZ);
 
     this._gameLogic.addPlayer(id);
 
@@ -150,7 +151,8 @@ export class Game {
     const id = constructPlayer(this._em, pinataId, pinataToken);
     const spatial =
       <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
-    spatial.setStaticPos(0, (WORLD_H - 1) * BLOCK_SZ);
+    spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
+                         this._mapData.spawnPoint.y * BLOCK_SZ);
 
     const socket = this._pipe.getConnection(oldId);
     this._pipe.removeConnection(oldId);

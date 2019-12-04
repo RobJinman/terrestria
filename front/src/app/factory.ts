@@ -384,8 +384,8 @@ export function constructEntities(entityManager: EntityManager,
 }
 
 // Construct any client-side only entities from map data
-export function initialiseGame(entityManager: EntityManager,
-                               mapData: ClientMapData) {
-  constructEarth(entityManager, mapData);
-  constructSky(entityManager, mapData);
+export function constructInitialEntitiesFromMapData(em: EntityManager,
+                                                    mapData: ClientMapData) {
+  constructEarth(em, mapData);
+  constructSky(em, mapData);
 }

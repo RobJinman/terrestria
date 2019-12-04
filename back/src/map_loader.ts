@@ -1,7 +1,7 @@
 import _ from "underscore";
 import { ComponentType } from "./common/component_types";
 import { ServerEntityManager } from "./server_entity_manager";
-import { WORLD_W, WORLD_H, BLOCK_SZ } from "./common/constants";
+import { BLOCK_SZ } from "./common/constants";
 import { Span, Span2d } from "./common/span";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { AgentSystem } from "./agent_system";
@@ -14,6 +14,9 @@ import { ServerAdSystem } from "./server_ad_system";
 
 // TODO: This will come from JSON. For now, generate the data here
 export function loadMapData(): MapData {
+  const WORLD_W = 40;
+  const WORLD_H = 25;
+
   const gravRegion: Span2dDesc = [
     [{ a: 0, b: WORLD_W - 1 }],
     [{ a: 0, b: WORLD_W - 1 }],
@@ -112,6 +115,7 @@ export function loadMapData(): MapData {
     width: WORLD_W,
     height: WORLD_H,
     gravityRegion: gravRegion,
+    spawnPoint: { x: 0, y: WORLD_H - 1 },
     entities
   };
 }

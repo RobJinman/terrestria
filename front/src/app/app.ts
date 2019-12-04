@@ -5,9 +5,9 @@ import { ActionType, UserInputAction, UserInput, LogInAction,
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
          ClientMapData } from "./common/response";
-import { constructEntities, initialiseGame } from './factory';
-import { CLIENT_FRAME_RATE, BLOCK_SZ, WORLD_W,
-         WORLD_H } from "./common/constants";
+import { constructEntities,
+         constructInitialEntitiesFromMapData } from './factory';
+import { CLIENT_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { waitForCondition } from './common/utils';
@@ -46,15 +46,12 @@ export class App {
 
   constructor() {
     this._pixi = new PIXI.Application({
-      width: WORLD_W * BLOCK_SZ,
-      height: WORLD_H * BLOCK_SZ,
-      antialias: false
+      antialias: true
     });
 
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     window.onresize = this._onWindowResize.bind(this);
-    this._onWindowResize();
 
     this._ws = new WebSocket(__WEBSOCKET_URL__);
     this._ws.onmessage = ev => this._onServerMessage(ev);
@@ -95,14 +92,16 @@ export class App {
   }
 
   private _onWindowResize() {
-    this._pixi.renderer.resize(window.innerWidth, window.innerHeight);
+    if (this._mapData) {
+      this._pixi.renderer.resize(window.innerWidth, window.innerHeight);
 
-    const scaleW = window.innerWidth / (WORLD_W * BLOCK_SZ);
-    const scaleH = window.innerHeight / (WORLD_H * BLOCK_SZ);
+      const scaleW = window.innerWidth / (this._mapData.width * BLOCK_SZ);
+      const scaleH = window.innerHeight / (this._mapData.height * BLOCK_SZ);
 
-    const scaleFactor = Math.min(scaleW, scaleH);
-    this._pixi.stage.scale.x = scaleFactor;
-    this._pixi.stage.scale.y = scaleFactor;
+      const scaleFactor = Math.min(scaleW, scaleH);
+      this._pixi.stage.scale.x = scaleFactor;
+      this._pixi.stage.scale.y = scaleFactor;
+    }
   }
 
   private _onKeyDown(event: KeyboardEvent) {
@@ -214,12 +213,17 @@ export class App {
     this._playerId = PLAYER_ID_DEAD;
   }
 
+  private _initialiseGame(mapData: ClientMapData) {
+    this._onWindowResize();
+    constructInitialEntitiesFromMapData(this._em, mapData);
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.MAP_DATA:{
         const m = <RMapData>msg;
         this._mapData = m.mapData;
-        initialiseGame(this._em, this._mapData);
+        this._initialiseGame(this._mapData);
         break;
       }
       case GameResponseType.NEW_ENTITIES: {
