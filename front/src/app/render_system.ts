@@ -9,7 +9,7 @@ import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
 import { BLOCK_SZ } from './common/constants';
 import { Span2d } from './common/span';
-import { Shape, ShapeType, Circle, Rectangle, Polygon } from './common/geometry';
+import { Shape, ShapeType, Circle, Rectangle } from './common/geometry';
 import { clamp } from './common/utils';
 
 export class Colour {
@@ -164,6 +164,7 @@ export class RenderSystem implements ClientSystem {
   private _scheduler: Scheduler;
   private _pixi: PIXI.Application;
   private _spriteSheet?: PIXI.Spritesheet;
+  private _textures = new Map<string, PIXI.Texture>();
 
   constructor(entityManager: EntityManager,
               scheduler: Scheduler,
@@ -174,8 +175,22 @@ export class RenderSystem implements ClientSystem {
     this._components = new Map<number, RenderComponent>();
   }
 
-  setSpriteSheet(spriteSheet: PIXI.Spritesheet) {
-    this._spriteSheet = spriteSheet;
+  async init() {
+    const resource = await this._loadResource("sprite_sheet",
+                                              "assets/sprite_sheet.json");
+    if (!resource || !resource.spritesheet) {
+      throw new GameError("Sprite sheet not loaded");
+    }
+    this._spriteSheet = resource.spritesheet;
+  }
+
+  async addImage(name: string, url: string) {
+    if (!this._textures.has(name)) {
+      const resource = await this._loadResource(name,
+                                                url,
+                                                PIXI.LoaderResource.LOAD_TYPE.IMAGE);
+      this._textures.set(name, resource.texture);
+    }
   }
 
   updateComponent(packet: ComponentPacket) {}
@@ -221,6 +236,18 @@ export class RenderSystem implements ClientSystem {
     }
 
     return true;
+  }
+
+  addStaticImage(entityId: EntityId, image: StaticImage) {
+    const c = this.getSpriteComponent(entityId);
+    if (!c.staticImages.find(i => i.name === image.name)) {
+      c.staticImages.push(image);
+
+      const texture = this._findTexture(image.name);
+      const sprite = new PIXI.Sprite(texture);
+  
+      c.staticSprites.set(image.name, sprite);
+    }
   }
 
   setCurrentImage(entityId: EntityId, name: string) {
@@ -328,6 +355,17 @@ export class RenderSystem implements ClientSystem {
     this._onEntityMoved(c.entityId);
   }
 
+  private _loadResource(name: string,
+                        url: string,
+                        type?: PIXI.LoaderResource.LOAD_TYPE):
+    Promise<PIXI.LoaderResource> {
+
+    return new Promise((resolve, reject) => {
+      this._pixi.loader.add(name, url, type ? { loadType: type } : {})
+                       .load((loader, resources) => resolve(resources[name]));
+    });
+  }
+
   private _removeShapeComponent(c: ShapeRenderComponent) {
     this._pixi.stage.removeChild(c.graphics);
     this._components.delete(c.entityId);
@@ -355,17 +393,31 @@ export class RenderSystem implements ClientSystem {
     });
 
     c.staticImages.forEach(imgDesc => {
-      if (!this._spriteSheet) {
-        throw new GameError("Sprite sheet not set");
-      }
-
-      const texture = this._spriteSheet.textures[imgDesc.name];
+      const texture = this._findTexture(imgDesc.name);
       const sprite = new PIXI.Sprite(texture);
 
       c.staticSprites.set(imgDesc.name, sprite);
     });
-    
+
     this._spriteCompSetActiveSprite(c, c.initialImage, false);
+  }
+
+  private _findTexture(name: string): PIXI.Texture {
+    let texture: PIXI.Texture|null = null;
+
+    if (this._spriteSheet) {
+      texture = this._spriteSheet.textures[name];
+    }
+
+    if (!texture) {
+      texture = this._textures.get(name) || null;
+    }
+
+    if (!texture) {
+      throw new GameError(`Texture with name ${name} not loaded`);
+    }
+
+    return texture;
   }
 
   private _removeSpriteComponent(c: SpriteRenderComponent) {
@@ -391,11 +443,7 @@ export class RenderSystem implements ClientSystem {
 
   private _addTiledRegionComponent(c: TiledRegionRenderComponent) {
     c.staticImages.forEach(imgDesc => {
-      if (!this._spriteSheet) {
-        throw new GameError("Sprite sheet not set");
-      }
-
-      const texture = this._spriteSheet.textures[imgDesc.name];
+      const texture = this._findTexture(imgDesc.name);
       const sprites: PIXI.TilingSprite[] = [];
 
       for (const [j, spans] of c.region.spans) {

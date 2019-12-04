@@ -14,7 +14,7 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:version="0.92.4 (unknown)"
    sodipodi:docname="blimp_ad_placeholder.svg">
   <defs
      id="defs2" />
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="363.95427"
-     inkscape:cy="786.29858"
+     inkscape:zoom="0.7"
+     inkscape:cx="218.83527"
+     inkscape:cy="629.33368"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -44,7 +44,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -53,17 +53,23 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#6696bc;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46623677;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#6696bc;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.41701484;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        id="rect815"
        width="120"
-       height="75"
+       height="60"
        x="30.91346"
-       y="70.733551" />
+       y="85.733551"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot817"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       transform="matrix(0.3899358,0,0,0.3899358,-23.394076,-17.675256)"><flowRegion
+       transform="matrix(0.3899358,0,0,0.3899358,-23.394076,-10.493708)"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666"><flowRegion
          id="flowRegion819"><rect
            id="rect821"
            width="375"
@@ -75,25 +81,100 @@
        style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        id="path825"
        cx="34.261047"
-       cy="74.081139"
-       r="3.3475857" />
+       cy="89.200188"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
     <circle
        style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        id="path825-3"
        cx="146.65477"
-       cy="74.372025"
-       r="3.3475857" />
+       cy="89.491074"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
     <circle
        style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        id="path825-6"
        cx="34.962799"
        cy="142.02977"
-       r="3.3475857" />
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
     <circle
        style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        id="path825-7"
        cx="147.22173"
        cy="141.84077"
-       r="3.3475857" />
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/blimp_ad_placeholder.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
+    <rect
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#008000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.41701484;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       id="rect815-3"
+       width="120"
+       height="60"
+       x="31.848213"
+       y="161.54465"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot817-6"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="matrix(2.0640604,0,0,2.0640604,-294.13313,-471.53941)"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666"><flowRegion
+         id="flowRegion819-7"
+         style="fill:#ff0000;fill-opacity:1"><rect
+           id="rect821-5"
+           width="375"
+           height="177.14285"
+           x="162.14285"
+           y="310.37683"
+           style="fill:#ff0000;fill-opacity:1" /></flowRegion><flowPara
+         id="flowPara823-3"
+         style="fill:#ff0000;fill-opacity:1">ACME</flowPara></flowRoot>    <circle
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ff28ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       id="path825-5"
+       cx="35.195801"
+       cy="165.01128"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
+    <circle
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ff28ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       id="path825-3-6"
+       cx="147.58952"
+       cy="165.30217"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
+    <circle
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ff28ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       id="path825-6-2"
+       cx="35.897552"
+       cy="217.84087"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
+    <circle
+       style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#ff28ff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.46899998;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       id="path825-7-9"
+       cx="148.15649"
+       cy="217.65187"
+       r="3.3475857"
+       inkscape:export-filename="/home/rob/code/projects/pinata/pinata_demo_1/front/assets/32/acme.png"
+       inkscape:export-xdpi="13.546666"
+       inkscape:export-ydpi="13.546666" />
   </g>
 </svg>

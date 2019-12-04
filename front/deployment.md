@@ -1,5 +1,5 @@
-Pinata Demo 1 - Front-End Deployment
-====================================
+Terrestria - Front-End Deployment
+=================================
 
 S3 bucket
 ---------
@@ -8,19 +8,30 @@ Create an S3 bucket with name terrestria.io. Enable static web hosting and add
 the following bucket policy.
 
 ```
-{
-    "Version": "2012-10-17",
-    "Id": "PolicyForPublicWebsite",
-    "Statement": [
-        {
-            "Sid": "AddPerm",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::terrestria.io/*"
-        }
-    ]
-}
+    {
+        "Version": "2012-10-17",
+        "Id": "PolicyForPublicWebsite",
+        "Statement": [
+            {
+                "Sid": "AddPerm",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::terrestria.io/*"
+            }
+        ]
+    }
+```
+
+And the following CORS configuration.
+
+```
+    <CORSConfiguration>
+        <CORSRule>
+            <AllowedOrigin>*</AllowedOrigin>
+            <AllowedMethod>GET</AllowedMethod>
+        </CORSRule>
+    </CORSConfiguration>
 ```
 
 

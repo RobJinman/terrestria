@@ -1,10 +1,32 @@
 import https from "https";
 import http from "http";
-import { LogInAction } from "./common/action";
 
-export interface PinataAuthResponse {
+export interface AuthResponse {
   accountId: string;
   token: string;
+}
+
+export interface AdSpace {
+  id: string;
+  name: string;
+  currentAd?: {
+    id: string;
+    finalAsset?: {
+      id: string;
+      fileName: string;
+      sizeInKb: number;
+      key: string;
+      url: string;
+    }
+  }
+}
+
+export type AdSpaceResponse = AdSpace[];
+
+function authHeader(token: string): http.OutgoingHttpHeaders {
+  return {
+    "Authorization": "Bearer " + token
+  };
 }
 
 export class Pinata {
@@ -16,15 +38,18 @@ export class Pinata {
     this._productKey = productKey;
   }
 
-  async getAdSpaces() {
-    // TODO
+  getAdSpaces(): Promise<AdSpaceResponse> {
+    const url = `${this._apiBase}/gamer/ad-space`;
+
+    const headers = {
+      "productKey": this._productKey
+    };
+
+    return this._sendGetRequest(url, headers);
   }
 
-  pinataAuth(logInReq: LogInAction): Promise<PinataAuthResponse> {
+  logIn(email: string, password: string): Promise<AuthResponse> {
     console.log("Authenticating");
-
-    const email = logInReq.email;
-    const password = logInReq.password;
 
     const body = {
       email,
@@ -32,24 +57,50 @@ export class Pinata {
     };
 
     const payload = JSON.stringify(body);
+    const url = `${this._apiBase}/gamer/log-in`;
+
+    return this._sendPostRequest(url, payload);
+  }
+
+  private async _sendPostRequest(url: string,
+                                 payloadJson: string,
+                                 headers: http.OutgoingHttpHeaders = {}) {
+    const defaultHeaders = {
+      "Content-Type": "application/json",
+      "Content-Length": payloadJson.length,
+    };
+
+    const allHeaders = {...defaultHeaders, ...headers};
 
     const options: http.RequestOptions = {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": payload.length,
-      },
+      headers: allHeaders,
       agent: false
     };
 
-    const url = `${this._apiBase}/gamer/log-in`;
+    return this._sendRequest(url, options, payloadJson);
+  }
 
-    return this._sendRequest(url, options, payload);
+  private async _sendGetRequest(url: string,
+                                headers: http.OutgoingHttpHeaders = {}) {
+    const defaultHeaders = {
+      "Content-Type": "application/json"
+    };
+
+    const allHeaders = {...defaultHeaders, ...headers};
+
+    const options: http.RequestOptions = {
+      method: "GET",
+      headers: allHeaders,
+      agent: false
+    };
+
+    return this._sendRequest(url, options);
   }
 
   private async _sendRequest(url: string,
                              options: http.RequestOptions,
-                             payloadJson: string): Promise<any> {
+                             payloadJson?: string): Promise<any> {
     const web = this._apiBase.startsWith("https") ? https: http;
 
     return new Promise((resolve, reject) => {
@@ -78,7 +129,9 @@ export class Pinata {
         reject("Error authenticating user: " + err);
       });
 
-      req.write(payloadJson);
+      if (payloadJson) {
+        req.write(payloadJson);
+      }
       req.end();
     });
   }

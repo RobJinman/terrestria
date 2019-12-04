@@ -17,6 +17,7 @@ import { ClientSpatialSystem } from './client_spatial_system';
 import { GameError } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
+import { ClientAdSystem } from './client_ad_system';
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -60,9 +61,11 @@ export class App {
                                           this._scheduler,
                                           this._pixi);
     const behaviourSystem = new BehaviourSystem();
+    const adSystem = new ClientAdSystem(this._em, this._scheduler);
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
+    this._em.addSystem(ComponentType.AD, adSystem);
 
     window.addEventListener("keydown", event => this._onKeyDown(event), false);
     window.addEventListener("keyup", event => this._onKeyUp(event), false);
@@ -71,15 +74,8 @@ export class App {
   }
 
   async start() {
-    const resources = await this._loadAssets();
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-
-    const resource = resources["sprite_sheet"];
-    if (!resource || !resource.spritesheet) {
-      throw new GameError("Sprite sheet not loaded");
-    }
-    const sheet = resource.spritesheet;
-    renderSys.setSpriteSheet(sheet);
+    await renderSys.init();
 
     await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
                            500,
@@ -268,12 +264,5 @@ export class App {
       throw new Error("Could not find #pinata-demo-app");
     }
     parentElement.appendChild(this._pixi.view);
-  }
-
-  private _loadAssets(): Promise<Partial<Record<string, PIXI.LoaderResource>>> {
-    return new Promise((resolve, reject) => {
-      this._pixi.loader.add("sprite_sheet", "assets/sprite_sheet.json")
-                       .load((loader, resources) => resolve(resources));
-    });
   }
 }

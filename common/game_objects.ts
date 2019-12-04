@@ -5,5 +5,6 @@ export enum EntityType {
   SOIL = "SOIL",
   EARTH = "EARTH",
   BLIMP = "BLIMP",
+  AD = "AD",
   OTHER = "OTHER"
 }

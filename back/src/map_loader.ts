@@ -10,6 +10,7 @@ import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
 import { constructEntity } from "./factory";
+import { ServerAdSystem } from "./server_ad_system";
 
 // TODO: This will come from JSON. For now, generate the data here
 export function loadMapData(): MapData {
@@ -98,6 +99,15 @@ export function loadMapData(): MapData {
     }
   });
 
+  entities.push({
+    type: EntityType.AD,
+    data: {
+      x: 80,
+      y: 40,
+      adName: "blimp"
+    }
+  });
+
   return {
     width: WORLD_W,
     height: WORLD_H,
@@ -128,11 +138,13 @@ export function loadMap(em: ServerEntityManager, mapData: MapData) {
   const agentSystem = new AgentSystem(em);
   const behaviourSystem = new BehaviourSystem();
   const inventorySystem = new InventorySystem();
+  const adSystem = new ServerAdSystem();
 
   em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
   em.addSystem(ComponentType.AGENT, agentSystem);
   em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
   em.addSystem(ComponentType.INVENTORY, inventorySystem);
+  em.addSystem(ComponentType.AD, adSystem);
 
   for (const entity of mapData.entities) {
     constructEntity(em, entity);

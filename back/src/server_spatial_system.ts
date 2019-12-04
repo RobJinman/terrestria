@@ -16,7 +16,7 @@ import { directionToVector } from "./common/geometry";
 
 export class ServerSpatialSystem implements ServerSystem {
   private _em: EntityManager;
-  private _components: Map<number, ServerSpatialComponent>;
+  private _components: Map<EntityId, ServerSpatialComponent>;
   private _w = 0;
   private _h = 0;
   private _gridModeImpl: GridModeImpl;
@@ -30,7 +30,7 @@ export class ServerSpatialSystem implements ServerSystem {
     const attemptTransitionFn = this._attemptModeTransition.bind(this);
 
     this._em = em;
-    this._components = new Map<number, ServerSpatialComponent>();
+    this._components = new Map<EntityId, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em,
                                           w,
                                           h,

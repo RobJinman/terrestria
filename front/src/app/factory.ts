@@ -13,6 +13,7 @@ import { Direction } from "./common/definitions";
 import { ClientSpatialComponent } from "./client_spatial_component";
 import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
+import { ClientAdComponent } from "./client_ad_system";
 
 function constructGem(em: EntityManager, entity: Entity) {
   const id = entity.id;
@@ -326,6 +327,27 @@ function constructBlimp(em: EntityManager, entity: Entity) {
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
 }
 
+function constructAd(em: EntityManager, entity: Entity) {
+  const staticImages: StaticImage[] = [
+    {
+      name: "blimp_ad_placeholder.png"
+    }
+  ];
+
+  const renderComp = new SpriteRenderComponent(entity.id,
+                                               staticImages,
+                                               [],
+                                               "blimp_ad_placeholder.png");
+
+  const spatialComp = new ClientSpatialComponent(entity.id, em);
+
+  const adComp = new ClientAdComponent(entity.id);
+
+  em.addEntity(entity.id, EntityType.OTHER, [ spatialComp,
+                                              renderComp,
+                                              adComp ]);  
+}
+
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
@@ -349,6 +371,10 @@ export function constructEntities(entityManager: EntityManager,
       }
       case EntityType.BLIMP: {
         constructBlimp(entityManager, entity);
+        break;
+      }
+      case EntityType.AD: {
+        constructAd(entityManager, entity);
         break;
       }
     }

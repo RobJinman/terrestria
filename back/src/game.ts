@@ -21,6 +21,8 @@ import { AppConfig } from "./config";
 import { ServerSpatialComponent } from "./server_spatial_component";
 import { loadMap, loadMapData } from "./map_loader";
 import { MapData } from "./common/map_data";
+import { Pinata } from "./pinata";
+import { ServerAdSystem } from "./server_ad_system";
 
 function noThrow(fn: () => any) {
   try {
@@ -35,6 +37,7 @@ export class Game {
   private static nextGameId: number = 0;
 
   private _appConfig: AppConfig;
+  private _pinata: Pinata;
   private _mapData: MapData;
   private _id: number;
   private _pipe: Pipe;
@@ -45,8 +48,9 @@ export class Game {
   private _entityId: EntityId;
   private _doSyncFn: () => void;
 
-  constructor(appConfig: AppConfig) {
+  constructor(appConfig: AppConfig, pinata: Pinata) {
     this._appConfig = appConfig;
+    this._pinata = pinata;
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
@@ -74,6 +78,17 @@ export class Game {
                                     SERVER_FRAME_DURATION_MS);
 
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
+
+    const adSystem = <ServerAdSystem>this._em.getSystem(ComponentType.AD);
+
+    this._pinata.getAdSpaces().then(adSpaces => {
+      adSpaces.forEach(adSpace => {
+        if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
+          adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
+        }
+        console.log(adSpace);
+      });
+    });
   }
 
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {

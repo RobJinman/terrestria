@@ -167,7 +167,7 @@ export class App {
       }
     }
 
-    const game = new Game(this._config);
+    const game = new Game(this._config, this._pinata);
     this._games.add(game);
 
     return game;
@@ -180,7 +180,7 @@ export class App {
     let pinataToken: string = "";
 
     try {
-      const auth = await this._pinata.pinataAuth(data);
+      const auth = await this._pinata.logIn(data.email, data.password);
       pinataId = auth.accountId;
       pinataToken = auth.token;
 
