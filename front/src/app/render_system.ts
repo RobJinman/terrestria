@@ -84,20 +84,9 @@ interface Animation {
   setEndFrameFnHandle: ScheduledFnHandle; // Set to -1 by default
 }
 
-export enum RenderComponentType {
-  SHAPE,
-  SPRITE,
-  TILED_REGION
-}
-
 export class RenderComponent extends Component {
-  readonly renderComponentType: RenderComponentType;
-
-  constructor(entityId: EntityId,
-              type: RenderComponentType) {
+  constructor(entityId: EntityId) {
     super(entityId, ComponentType.RENDER);
-
-    this.renderComponentType = type;
   }
 }
 
@@ -107,7 +96,7 @@ export class ShapeRenderComponent extends RenderComponent {
   readonly graphics = new PIXI.Graphics();
 
   constructor(entityId: EntityId, shape: Shape, colour: Colour) {
-    super(entityId, RenderComponentType.SHAPE);
+    super(entityId);
 
     this.shape = shape;
     this.colour = colour;
@@ -127,8 +116,7 @@ export class SpriteRenderComponent extends RenderComponent {
               staticImages: StaticImage[],
               animations: AnimationDesc[],
               initialImage: string) {
-    super(entityId,
-          RenderComponentType.SPRITE);
+    super(entityId);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -149,8 +137,7 @@ export class TiledRegionRenderComponent extends RenderComponent {
               region: Span2d,
               staticImages: StaticImage[],
               initialImage: string) {
-    super(entityId,
-          RenderComponentType.TILED_REGION);
+    super(entityId);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -204,7 +191,7 @@ export class RenderSystem implements ClientSystem {
 
   getSpriteComponent(id: EntityId): SpriteRenderComponent {
     const c = this.getComponent(id);
-    if (c.renderComponentType != RenderComponentType.SPRITE) {
+    if (!(c instanceof SpriteRenderComponent)) {
       throw new GameError(`Render component (id=${id}) is not of type SPRITE`);
     }
     return <SpriteRenderComponent>c;
@@ -261,40 +248,30 @@ export class RenderSystem implements ClientSystem {
 
   setCurrentImage(entityId: EntityId, name: string) {
     const c = this.getComponent(entityId);
-    switch (c.renderComponentType) {
-      case RenderComponentType.SPRITE: {
-        const c_ = <SpriteRenderComponent>c;
-        this._spriteCompSetActiveSprite(c_, name, false);
-        break;
-      }
-      case RenderComponentType.TILED_REGION: {
-        const c_ = <TiledRegionRenderComponent>c;
-        this._tiledRegionCompSetActiveSprite(c_, name);
-        break;
-      }
-      default: {
-        throw new GameError(`Cannot set image on component of type ` +
-                            `${c.renderComponentType}`);
-      }
+    if (c instanceof SpriteRenderComponent) {
+      const c_ = <SpriteRenderComponent>c;
+      this._spriteCompSetActiveSprite(c_, name, false);
+    }
+    else if (c instanceof TiledRegionRenderComponent) {
+      const c_ = <TiledRegionRenderComponent>c;
+      this._tiledRegionCompSetActiveSprite(c_, name);
+    }
+    else {
+      throw new GameError(`Cannot set image on component of type ${typeof c}`);
     }
   }
 
   addComponent(component: RenderComponent) {
     this._components.set(component.entityId, component);
 
-    switch (component.renderComponentType) {
-      case RenderComponentType.SPRITE: {
-        this._addSpriteComponent(<SpriteRenderComponent>component);
-        break;
-      }
-      case RenderComponentType.TILED_REGION: {
-        this._addTiledRegionComponent(<TiledRegionRenderComponent>component);
-        break;
-      }
-      case RenderComponentType.SHAPE: {
-        this._addShapeComponent(<ShapeRenderComponent>component);
-        break;
-      }
+    if (component instanceof SpriteRenderComponent) {
+      this._addSpriteComponent(<SpriteRenderComponent>component);
+    }
+    else if (component instanceof TiledRegionRenderComponent) {
+      this._addTiledRegionComponent(<TiledRegionRenderComponent>component);
+    }
+    else if (component instanceof ShapeRenderComponent) {
+      this._addShapeComponent(<ShapeRenderComponent>component);
     }
   }
 
@@ -312,18 +289,14 @@ export class RenderSystem implements ClientSystem {
 
   removeComponent(id: EntityId) {
     const c = this.getComponent(id);
-    switch (c.renderComponentType) {
-      case RenderComponentType.SPRITE: {
-        this._removeSpriteComponent(<SpriteRenderComponent>c);
-        break;
-      }
-      case RenderComponentType.TILED_REGION: {
-        this._removeTiledRegionComponent(<TiledRegionRenderComponent>c);
-        break;
-      }
-      case RenderComponentType.SHAPE: {
-        this._removeShapeComponent(<ShapeRenderComponent>c);
-      }
+    if (c instanceof SpriteRenderComponent) {
+      this._removeSpriteComponent(<SpriteRenderComponent>c);
+    }
+    else if (c instanceof TiledRegionRenderComponent) {
+      this._removeTiledRegionComponent(<TiledRegionRenderComponent>c);
+    }
+    else if (c instanceof ShapeRenderComponent) {
+      this._removeShapeComponent(<ShapeRenderComponent>c);
     }
   }
 
@@ -485,26 +458,21 @@ export class RenderSystem implements ClientSystem {
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       id);
       const c_ = this.getComponent(id);
-      switch (c_.renderComponentType) {
-        case RenderComponentType.SPRITE: {
-          const c = <SpriteRenderComponent>c_;
-          if (c.stagedSprite) {
-            c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-            c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                        spatialComp.y + BLOCK_SZ * 0.5);
-            c.stagedSprite.rotation = spatialComp.angle;
-          }
-          break;
+      if (c_ instanceof SpriteRenderComponent) {
+        const c = <SpriteRenderComponent>c_;
+        if (c.stagedSprite) {
+          c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+          c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                      spatialComp.y + BLOCK_SZ * 0.5);
+          c.stagedSprite.rotation = spatialComp.angle;
         }
-        case RenderComponentType.SHAPE: {
-          const c = <ShapeRenderComponent>c_;
-          c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-          c.graphics.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                  spatialComp.y + BLOCK_SZ * 0.5);
-          c.graphics.rotation = spatialComp.angle;
-
-          break;
-        }
+      }
+      else if (c_ instanceof ShapeRenderComponent) {
+        const c = <ShapeRenderComponent>c_;
+        c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+        c.graphics.position.set(spatialComp.x + BLOCK_SZ * 0.5,
+                                spatialComp.y + BLOCK_SZ * 0.5);
+        c.graphics.rotation = spatialComp.angle;
       }
     }
   }
