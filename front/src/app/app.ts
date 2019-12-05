@@ -18,21 +18,12 @@ import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 import { ClientAdSystem } from './client_ad_system';
 import { ClientSpatialComponent } from './client_spatial_component';
+import { UserInputManager } from "./user_input_manager";
 
 declare var __WEBSOCKET_URL__: string;
 
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
-
-function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
-  switch (event.key) {
-    case "ArrowUp": return UserInput.UP;
-    case "ArrowRight": return UserInput.RIGHT;
-    case "ArrowDown": return UserInput.DOWN;
-    case "ArrowLeft": return UserInput.LEFT;
-  }
-  return null;
-}
 
 export class App {
   private _ws: WebSocket;
@@ -42,6 +33,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData: ClientMapData|null = null;
+  private _userInputManager = new UserInputManager();
 
   constructor() {
     window.onresize = this._onWindowResize.bind(this);
@@ -63,8 +55,11 @@ export class App {
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
 
-    window.addEventListener("keydown", event => this._onKeyDown(event), false);
-    window.addEventListener("keyup", event => this._onKeyUp(event), false);
+    this._userInputManager.onDirectionPressHandler =
+      this._onDirectionKeyDown.bind(this);
+    this._userInputManager.onDirectionReleaseHandler =
+      this._onDirectionKeyUp.bind(this);
+    this._userInputManager.onEnterHandler = this._onEnterKeyPress.bind(this);
 
     this._insertElement();
   }
@@ -81,17 +76,17 @@ export class App {
     this._logIn();
   }
 
-  private _onKeyDown(event: KeyboardEvent) {
+  private _onEnterKeyPress() {
+    if (this._playerId == PLAYER_ID_DEAD) {
+      this._requestRespawn();
+    }
+  }
+
+  private _onDirectionKeyDown(input: UserInput) {
     if (this._playerId == PLAYER_ID_UNSET) {
       return;
     }
 
-    if (this._playerId == PLAYER_ID_DEAD && event.key == "Enter") {
-      this._requestRespawn();
-      return;
-    }
-
-    const input = keyEventToUserInput(event);
     if (input !== null) {
       const action: UserInputAction = {
         type: ActionType.USER_INPUT,
@@ -104,8 +99,7 @@ export class App {
     }
   }
 
-  private _onKeyUp(event: KeyboardEvent) {
-    const input = keyEventToUserInput(event);
+  private _onDirectionKeyUp(input: UserInput) {
     if (input !== null) {
       const action: UserInputAction = {
         type: ActionType.USER_INPUT,
