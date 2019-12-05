@@ -121,7 +121,7 @@ export function loadMapData(): MapData {
         y: BLOCK_SZ * (11 + (16 - 11) / 2)
       },
       image: "cave.png",
-      depth: 1
+      depth: 2
     }
   });
 

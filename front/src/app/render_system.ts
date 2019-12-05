@@ -14,6 +14,7 @@ import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
 import { clamp } from './common/utils';
 
 const DEFAULT_Z_INDEX = 1000;
+export const MAX_PARALLAX_DEPTH = 10;
 
 export class Colour {
   private _r: number = 0;
@@ -136,7 +137,6 @@ export class SpriteRenderComponent extends RenderComponent {
 
 export class ParallaxRenderComponent extends SpriteRenderComponent {
   readonly depth: number;
-  offset: Vec2 = { x: 0, y: 0 };
 
   constructor(entityId: EntityId,
               staticImages: StaticImage[],
@@ -402,8 +402,19 @@ export class RenderSystem implements ClientSystem {
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       c.entityId);
       if (c.stagedSprite) {
-        //c.stagedSprite.x = spatial.x;
-        //c.stagedSprite.y = spatial.y;
+        const x = spatial.x;
+        const y = spatial.y;
+        const w = c.stagedSprite.width;
+        const h = c.stagedSprite.height;
+        const centreX = x + 0.5 * w;
+        const centreY = y + 0.5 * h;
+        const dx = this._camera.x - centreX;
+        const dy = this._camera.y - centreY;
+        const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
+        const newCentreX = this._camera.x - m * dx;
+        const newCentreY = this._camera.y - m * dy;
+        c.stagedSprite.x = newCentreX - 0.5 * w + c.stagedSprite.pivot.x;
+        c.stagedSprite.y = newCentreY - 0.5 * h + c.stagedSprite.pivot.y;
         c.stagedSprite.zIndex = DEFAULT_Z_INDEX - 100 * c.depth + c.zIndex;
       }
     });
@@ -552,16 +563,18 @@ export class RenderSystem implements ClientSystem {
       const c = this.getComponent(id);
       if (c instanceof SpriteRenderComponent) {
         if (c.stagedSprite) {
+          // TODO: Shouldn't always assume pivot point
           c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-          c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                      spatialComp.y + BLOCK_SZ * 0.5);
+          // The pivot needs to be added here to keep the position the same
+          c.stagedSprite.position.set(spatialComp.x + c.stagedSprite.pivot.x,
+                                      spatialComp.y + c.stagedSprite.pivot.y);
           c.stagedSprite.rotation = spatialComp.angle;
         }
       }
       else if (c instanceof ShapeRenderComponent) {
         c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-        c.graphics.position.set(spatialComp.x + BLOCK_SZ * 0.5,
-                                spatialComp.y + BLOCK_SZ * 0.5);
+        c.graphics.position.set(spatialComp.x + c.graphics.pivot.x,
+                                spatialComp.y + c.graphics.pivot.y);
         c.graphics.rotation = spatialComp.angle;
       }
     }
