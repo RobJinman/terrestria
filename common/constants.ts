@@ -1,4 +1,5 @@
 export const BLOCK_SZ = 64;
+export const VERTICAL_RESOLUTION = 1024;
 export const SERVER_FRAME_RATE = 60;
 export const SERVER_FRAME_DURATION_MS = 1000 / SERVER_FRAME_RATE;
 export const SYNC_RATE = 10;

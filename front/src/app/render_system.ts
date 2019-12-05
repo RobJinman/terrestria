@@ -7,9 +7,10 @@ import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
-import { BLOCK_SZ } from './common/constants';
+import { BLOCK_SZ, CLIENT_FRAME_RATE,
+         VERTICAL_RESOLUTION } from './common/constants';
 import { Span2d } from './common/span';
-import { Shape, ShapeType, Circle, Rectangle } from './common/geometry';
+import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
 import { clamp } from './common/utils';
 
 export class Colour {
@@ -126,6 +127,21 @@ export class SpriteRenderComponent extends RenderComponent {
   }
 }
 
+export class ParallaxRenderComponent extends SpriteRenderComponent {
+  readonly depth: number;
+  offset: Vec2 = { x: 0, y: 0 };
+
+  constructor(entityId: EntityId,
+              staticImages: StaticImage[],
+              animations: AnimationDesc[],
+              initialImage: string,
+              depth: number) {
+    super(entityId, staticImages, animations, initialImage);
+
+    this.depth = depth;
+  }
+}
+
 export class TiledRegionRenderComponent extends RenderComponent {
   readonly staticImages: StaticImage[];
   readonly initialImage: string;
@@ -154,14 +170,24 @@ export class RenderSystem implements ClientSystem {
   private _pixi: PIXI.Application;
   private _spriteSheet?: PIXI.Spritesheet;
   private _textures = new Map<string, PIXI.Texture>();
+  private _viewW = 0;
+  private _viewH = VERTICAL_RESOLUTION;
+  private _windowW = 0;
+  private _windowH = 0;
+  private _camera: Vec2 = { x: 0, y: 0 };
 
   constructor(entityManager: EntityManager,
               scheduler: Scheduler,
-              pixi: PIXI.Application) {
+              updateFn: (delta: number) => void) {
     this._em = entityManager;
     this._scheduler = scheduler;
-    this._pixi = pixi;
     this._components = new Map<number, RenderComponent>();
+
+    this._pixi = new PIXI.Application({
+      antialias: false
+    });
+    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
+    this._pixi.ticker.add(updateFn);
   }
 
   async init() {
@@ -171,6 +197,38 @@ export class RenderSystem implements ClientSystem {
       throw new GameError("Sprite sheet not loaded");
     }
     this._spriteSheet = resource.spritesheet;
+  }
+
+  getCanvas() {
+    return this._pixi.view;
+  }
+
+  setCameraPosition(x: number, y: number) {
+    this._camera = { x, y };
+
+    // Screen origin in world space
+    const viewX = this._camera.x - 0.5 * this._viewW;
+    const viewY = this._camera.y - 0.5 * this._viewH;
+
+    const scale = this._windowH / this._viewH;
+
+    this._pixi.stage.x = -viewX * scale;
+    this._pixi.stage.y = -viewY * scale;
+  }
+
+  onWindowResize(w: number, h: number) {
+    this._windowW = w;
+    this._windowH = h;
+
+    const aspect = w / this._windowH;
+    this._viewW = this._viewH * aspect;
+
+    this._pixi.renderer.resize(w, h);
+
+    const scale = h / VERTICAL_RESOLUTION;
+
+    this._pixi.stage.scale.x = scale;
+    this._pixi.stage.scale.y = scale;
   }
 
   async addImage(name: string, url: string) {

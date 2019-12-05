@@ -1,4 +1,3 @@
-import * as PIXI from 'pixi.js';
 import "../styles/styles.scss";
 import { ActionType, UserInputAction, UserInput, LogInAction,
          RespawnAction, InputState } from "./common/action";
@@ -25,8 +24,6 @@ declare var __WEBSOCKET_URL__: string;
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
-const VERTICAL_RESOLUTION = 1024;
-
 function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
   switch (event.key) {
     case "ArrowUp": return UserInput.UP;
@@ -38,7 +35,6 @@ function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
 }
 
 export class App {
-  private _pixi: PIXI.Application;
   private _ws: WebSocket;
   private _responseQueue: GameResponse[] = [];
   private _actionQueue: UserInputAction[] = [];
@@ -46,18 +42,8 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData: ClientMapData|null = null;
-  private _windowW = 800;
-  private _windowH = 600;
-  private _viewW = 0;
-  private readonly _viewH = VERTICAL_RESOLUTION;
-  private _cameraX = 0;
-  private _cameraY = 0;
 
   constructor() {
-    this._pixi = new PIXI.Application({
-      antialias: false
-    });
-
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     PIXI.settings.ROUND_PIXELS = true;
 
@@ -72,7 +58,7 @@ export class App {
     const spatialSystem = new ClientSpatialSystem(CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,
-                                          this._pixi);
+                                          this._tick.bind(this));
     const behaviourSystem = new BehaviourSystem();
     const adSystem = new ClientAdSystem(this._em, this._scheduler);
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
@@ -96,9 +82,6 @@ export class App {
 
     // TODO
     this._logIn();
-
-    this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
-    this._pixi.ticker.add(delta => this._tick(delta));
   }
 
   private _onKeyDown(event: KeyboardEvent) {
@@ -147,19 +130,11 @@ export class App {
   }
 
   private _onWindowResize() {
-    if (this._mapData) {
-      this._windowW = window.innerWidth;
-      this._windowH = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
 
-      this._pixi.renderer.resize(this._windowW, this._windowH);
-      const scale = this._windowH / this._viewH;
-
-      const aspect = this._windowW / this._windowH;
-      this._viewW = this._viewH * aspect;
-
-      this._pixi.stage.scale.x = scale;
-      this._pixi.stage.scale.y = scale;
-    }
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    renderSys.onWindowResize(w, h);
   }
 
   private _centreStage() {
@@ -168,17 +143,8 @@ export class App {
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       this._playerId);
 
-      this._cameraX = player.x;
-      this._cameraY = player.y;
-
-      // Screen origin in world space
-      const viewX = this._cameraX - 0.5 * this._viewW;
-      const viewY = this._cameraY - 0.5 * this._viewH;
-
-      const scale = this._windowH / this._viewH;
-
-      this._pixi.stage.x = -viewX * scale;
-      this._pixi.stage.y = -viewY * scale;
+      const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+      renderSys.setCameraPosition(player.x, player.y);
     }
   }
 
@@ -318,6 +284,7 @@ export class App {
     if (!parentElement) {
       throw new Error("Could not find #pinata-demo-app");
     }
-    parentElement.appendChild(this._pixi.view);
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    parentElement.appendChild(renderSys.getCanvas());
   }
 }

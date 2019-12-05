@@ -2,8 +2,8 @@ import { Entity, getNextEntityId } from "./common/entity_manager";
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
-         TiledRegionRenderComponent, ShapeRenderComponent,
-         Colour } from "./render_system";
+         TiledRegionRenderComponent, ShapeRenderComponent, Colour, 
+         ParallaxRenderComponent } from "./render_system";
 import { PLAYER_SPEED, BLOCK_SZ } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
@@ -359,17 +359,12 @@ function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(entity.id,
-                                               staticImages,
-                                               [],
-                                               entity.desc.image);
-/*
   const renderComp = new ParallaxRenderComponent(entity.id,
                                                  staticImages,
                                                  [],
                                                  entity.desc.image,
                                                  entity.desc.depth);
-*/
+
   const spatialComp = new ClientSpatialComponent(entity.id, em);
 
   em.addEntity(entity.id, EntityType.PARALLAX_SPRITE, [ spatialComp,
