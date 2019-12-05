@@ -44,9 +44,6 @@ export class App {
   private _mapData: ClientMapData|null = null;
 
   constructor() {
-    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-    PIXI.settings.ROUND_PIXELS = true;
-
     window.onresize = this._onWindowResize.bind(this);
 
     this._ws = new WebSocket(__WEBSOCKET_URL__);

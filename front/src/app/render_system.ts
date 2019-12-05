@@ -183,6 +183,9 @@ export class RenderSystem implements ClientSystem {
     this._scheduler = scheduler;
     this._components = new Map<number, RenderComponent>();
 
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.ROUND_PIXELS = true;
+
     this._pixi = new PIXI.Application({
       antialias: false
     });
