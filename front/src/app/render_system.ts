@@ -13,6 +13,8 @@ import { Span2d } from './common/span';
 import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
 import { clamp } from './common/utils';
 
+const DEFAULT_Z_INDEX = 1000;
+
 export class Colour {
   private _r: number = 0;
   private _g: number = 0;
@@ -86,8 +88,11 @@ interface Animation {
 }
 
 export class RenderComponent extends Component {
-  constructor(entityId: EntityId) {
+  readonly zIndex: number;
+
+  constructor(entityId: EntityId, zIndex: number) {
     super(entityId, ComponentType.RENDER);
+    this.zIndex = zIndex;
   }
 }
 
@@ -96,11 +101,12 @@ export class ShapeRenderComponent extends RenderComponent {
   readonly colour: Colour;
   readonly graphics = new PIXI.Graphics();
 
-  constructor(entityId: EntityId, shape: Shape, colour: Colour) {
-    super(entityId);
+  constructor(entityId: EntityId, shape: Shape, colour: Colour, zIndex = 0) {
+    super(entityId, zIndex);
 
     this.shape = shape;
     this.colour = colour;
+    this.graphics.zIndex = DEFAULT_Z_INDEX + zIndex;
   }
 }
 
@@ -116,8 +122,9 @@ export class SpriteRenderComponent extends RenderComponent {
   constructor(entityId: EntityId,
               staticImages: StaticImage[],
               animations: AnimationDesc[],
-              initialImage: string) {
-    super(entityId);
+              initialImage: string,
+              zIndex = 0) {
+    super(entityId, zIndex);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -135,8 +142,9 @@ export class ParallaxRenderComponent extends SpriteRenderComponent {
               staticImages: StaticImage[],
               animations: AnimationDesc[],
               initialImage: string,
-              depth: number) {
-    super(entityId, staticImages, animations, initialImage);
+              depth: number,
+              zIndex = 0) {
+    super(entityId, staticImages, animations, initialImage, zIndex);
 
     this.depth = depth;
   }
@@ -152,8 +160,9 @@ export class TiledRegionRenderComponent extends RenderComponent {
   constructor(entityId: EntityId,
               region: Span2d,
               staticImages: StaticImage[],
-              initialImage: string) {
-    super(entityId);
+              initialImage: string,
+              zIndex = 0) {
+    super(entityId, zIndex);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -164,7 +173,8 @@ export class TiledRegionRenderComponent extends RenderComponent {
 }
 
 export class RenderSystem implements ClientSystem {
-  private _components: Map<number, RenderComponent>;
+  private _components: Map<EntityId, RenderComponent>;
+  private _parallaxComponents: Map<EntityId, ParallaxRenderComponent>;
   private _em: EntityManager;
   private _scheduler: Scheduler;
   private _pixi: PIXI.Application;
@@ -181,10 +191,12 @@ export class RenderSystem implements ClientSystem {
               updateFn: (delta: number) => void) {
     this._em = entityManager;
     this._scheduler = scheduler;
-    this._components = new Map<number, RenderComponent>();
+    this._components = new Map<EntityId, RenderComponent>();
+    this._parallaxComponents = new Map<EntityId, ParallaxRenderComponent>();
 
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     PIXI.settings.ROUND_PIXELS = true;
+    PIXI.settings.SORTABLE_CHILDREN = true;
 
     this._pixi = new PIXI.Application({
       antialias: false
@@ -217,6 +229,8 @@ export class RenderSystem implements ClientSystem {
 
     this._pixi.stage.x = -viewX * scale;
     this._pixi.stage.y = -viewY * scale;
+
+    this._computeParallaxOffsets();
   }
 
   onWindowResize(w: number, h: number) {
@@ -293,29 +307,18 @@ export class RenderSystem implements ClientSystem {
     const c = this.getSpriteComponent(entityId);
     if (!c.staticImages.find(i => i.name === image.name)) {
       c.staticImages.push(image);
-
-      const texture = this._findTexture(image.name);
-      const sprite = new PIXI.Sprite(texture);
-      if (image.width) {
-        sprite.width = image.width;
-      }
-      if (image.height) {
-        sprite.height = image.height;
-      }
-  
-      c.staticSprites.set(image.name, sprite);
+      c.staticSprites.set(image.name,
+                          this._makeSpriteFromImageDesc(image, c.zIndex));
     }
   }
 
   setCurrentImage(entityId: EntityId, name: string) {
     const c = this.getComponent(entityId);
     if (c instanceof SpriteRenderComponent) {
-      const c_ = <SpriteRenderComponent>c;
-      this._spriteCompSetActiveSprite(c_, name, false);
+      this._spriteCompSetActiveSprite(c, name, false);
     }
     else if (c instanceof TiledRegionRenderComponent) {
-      const c_ = <TiledRegionRenderComponent>c;
-      this._tiledRegionCompSetActiveSprite(c_, name);
+      this._tiledRegionCompSetActiveSprite(c, name);
     }
     else {
       throw new GameError(`Cannot set image on component of type ${typeof c}`);
@@ -326,13 +329,17 @@ export class RenderSystem implements ClientSystem {
     this._components.set(component.entityId, component);
 
     if (component instanceof SpriteRenderComponent) {
-      this._addSpriteComponent(<SpriteRenderComponent>component);
+      this._addSpriteComponent(component);
+
+      if (component instanceof ParallaxRenderComponent) {
+        this._parallaxComponents.set(component.entityId, component);
+      }
     }
     else if (component instanceof TiledRegionRenderComponent) {
-      this._addTiledRegionComponent(<TiledRegionRenderComponent>component);
+      this._addTiledRegionComponent(component);
     }
     else if (component instanceof ShapeRenderComponent) {
-      this._addShapeComponent(<ShapeRenderComponent>component);
+      this._addShapeComponent(component);
     }
   }
 
@@ -351,13 +358,17 @@ export class RenderSystem implements ClientSystem {
   removeComponent(id: EntityId) {
     const c = this.getComponent(id);
     if (c instanceof SpriteRenderComponent) {
-      this._removeSpriteComponent(<SpriteRenderComponent>c);
+      this._removeSpriteComponent(c);
+
+      if (c instanceof ParallaxRenderComponent) {
+        this._parallaxComponents.delete(id);
+      }
     }
     else if (c instanceof TiledRegionRenderComponent) {
-      this._removeTiledRegionComponent(<TiledRegionRenderComponent>c);
+      this._removeTiledRegionComponent(c);
     }
     else if (c instanceof ShapeRenderComponent) {
-      this._removeShapeComponent(<ShapeRenderComponent>c);
+      this._removeShapeComponent(c);
     }
   }
 
@@ -371,6 +382,32 @@ export class RenderSystem implements ClientSystem {
   }
 
   update() {}
+
+  private _makeSpriteFromImageDesc(image: StaticImage, zIndex: number) {
+    const texture = this._findTexture(image.name);
+    const sprite = new PIXI.Sprite(texture);
+    sprite.zIndex = DEFAULT_Z_INDEX + zIndex;
+    if (image.width) {
+      sprite.width = image.width;
+    }
+    if (image.height) {
+      sprite.height = image.height;
+    }
+    return sprite;
+  }
+
+  private _computeParallaxOffsets() {
+    this._parallaxComponents.forEach(c => {
+      const spatial =
+        <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
+                                                      c.entityId);
+      if (c.stagedSprite) {
+        //c.stagedSprite.x = spatial.x;
+        //c.stagedSprite.y = spatial.y;
+        c.stagedSprite.zIndex = DEFAULT_Z_INDEX - 100 * c.depth + c.zIndex;
+      }
+    });
+  }
 
   private _addShapeComponent(c: ShapeRenderComponent) {
     c.graphics.beginFill(c.colour.value, Math.floor(c.colour.a * 256));
@@ -422,6 +459,7 @@ export class RenderSystem implements ClientSystem {
 
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
+      sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
 
       const defaultDuration = sprite.textures.length / 60;
       const speedUp = defaultDuration / anim.duration;
@@ -436,16 +474,8 @@ export class RenderSystem implements ClientSystem {
     });
 
     c.staticImages.forEach(imgDesc => {
-      const texture = this._findTexture(imgDesc.name);
-      const sprite = new PIXI.Sprite(texture);
-      if (imgDesc.width) {
-        sprite.width = imgDesc.width;
-      }
-      if (imgDesc.height) {
-        sprite.height = imgDesc.height;
-      }
-
-      c.staticSprites.set(imgDesc.name, sprite);
+      c.staticSprites.set(imgDesc.name,
+                          this._makeSpriteFromImageDesc(imgDesc, c.zIndex));
     });
 
     this._spriteCompSetActiveSprite(c, c.initialImage, false);
@@ -502,6 +532,7 @@ export class RenderSystem implements ClientSystem {
           const n = span.b - span.a + 1;
 
           const sprite = new PIXI.TilingSprite(texture, n * BLOCK_SZ, BLOCK_SZ);
+          sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
           sprite.position.set(x, y);
           sprites.push(sprite);
         }
@@ -518,9 +549,8 @@ export class RenderSystem implements ClientSystem {
       const spatialComp =
         <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
                                                       id);
-      const c_ = this.getComponent(id);
-      if (c_ instanceof SpriteRenderComponent) {
-        const c = <SpriteRenderComponent>c_;
+      const c = this.getComponent(id);
+      if (c instanceof SpriteRenderComponent) {
         if (c.stagedSprite) {
           c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
           c.stagedSprite.position.set(spatialComp.x + BLOCK_SZ * 0.5,
@@ -528,8 +558,7 @@ export class RenderSystem implements ClientSystem {
           c.stagedSprite.rotation = spatialComp.angle;
         }
       }
-      else if (c_ instanceof ShapeRenderComponent) {
-        const c = <ShapeRenderComponent>c_;
+      else if (c instanceof ShapeRenderComponent) {
         c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
         c.graphics.position.set(spatialComp.x + BLOCK_SZ * 0.5,
                                 spatialComp.y + BLOCK_SZ * 0.5);
