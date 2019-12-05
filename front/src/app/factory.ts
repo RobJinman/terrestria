@@ -1,5 +1,4 @@
-import { EntityManager, Entity,
-         getNextEntityId } from "./common/entity_manager";
+import { Entity, getNextEntityId } from "./common/entity_manager";
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
@@ -14,8 +13,9 @@ import { ClientSpatialComponent } from "./client_spatial_component";
 import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
 import { ClientAdComponent } from "./client_ad_system";
+import { ClientEntityManager } from "./client_entity_manager";
 
-function constructGem(em: EntityManager, entity: Entity) {
+function constructGem(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -54,7 +54,7 @@ function constructGem(em: EntityManager, entity: Entity) {
                                      behaviourComp ]);
 }
 
-function constructRock(em: EntityManager, entity: Entity) {
+function constructRock(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -93,7 +93,7 @@ function constructRock(em: EntityManager, entity: Entity) {
                                       behaviourComp ]);
 }
 
-function constructSoil(em: EntityManager, entity: Entity) {
+function constructSoil(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -148,7 +148,7 @@ function directionToLetter(direction: Direction): string {
   return "";
 }
 
-function constructPlayer(em: EntityManager, entity: Entity) {
+function constructPlayer(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -276,7 +276,7 @@ function constructPlayer(em: EntityManager, entity: Entity) {
                                         behaviourComp ]);
 }
 
-function constructEarth(em: EntityManager, mapData: ClientMapData) {
+function constructEarth(em: ClientEntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const gravRegion = Span2d.fromDesc(mapData.gravityRegion);
@@ -298,7 +298,7 @@ function constructEarth(em: EntityManager, mapData: ClientMapData) {
   em.addEntity(id, EntityType.EARTH, [ renderComp ]);
 }
 
-function constructSky(em: EntityManager, mapData: ClientMapData) {
+function constructSky(em: ClientEntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const shape = new Rectangle(mapData.width * BLOCK_SZ, 5 * BLOCK_SZ);
@@ -312,7 +312,7 @@ function constructSky(em: EntityManager, mapData: ClientMapData) {
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 }
 
-function constructBlimp(em: EntityManager, entity: Entity) {
+function constructBlimp(em: ClientEntityManager, entity: Entity) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp.png"
@@ -329,7 +329,7 @@ function constructBlimp(em: EntityManager, entity: Entity) {
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
 }
 
-function constructAd(em: EntityManager, entity: Entity) {
+function constructAd(em: ClientEntityManager, entity: Entity) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp_ad_placeholder.png"
@@ -350,7 +350,38 @@ function constructAd(em: EntityManager, entity: Entity) {
                                               adComp ]);  
 }
 
-export function constructEntities(entityManager: EntityManager,
+function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
+  const staticImages: StaticImage[] = [
+    {
+      name: entity.desc.image,
+      width: entity.desc.width,
+      height: entity.desc.height
+    }
+  ];
+
+  const renderComp = new SpriteRenderComponent(entity.id,
+                                               staticImages,
+                                               [],
+                                               entity.desc.image);
+/*
+  const renderComp = new ParallaxRenderComponent(entity.id,
+                                                 staticImages,
+                                                 [],
+                                                 entity.desc.image,
+                                                 entity.desc.depth);
+*/
+  const spatialComp = new ClientSpatialComponent(entity.id, em);
+
+  em.addEntity(entity.id, EntityType.PARALLAX_SPRITE, [ spatialComp,
+                                                        renderComp ]);
+
+  const x = entity.desc.centre.x - 0.5 * entity.desc.width;
+  const y = entity.desc.centre.y - 0.5 * entity.desc.height;
+
+  spatialComp.setStaticPos(x, y);
+}
+
+export function constructEntities(entityManager: ClientEntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
@@ -379,12 +410,16 @@ export function constructEntities(entityManager: EntityManager,
         constructAd(entityManager, entity);
         break;
       }
+      case EntityType.PARALLAX_SPRITE: {
+        constructParallaxSprite(entityManager, entity);
+        break;
+      }
     }
   });
 }
 
 // Construct any client-side only entities from map data
-export function constructInitialEntitiesFromMapData(em: EntityManager,
+export function constructInitialEntitiesFromMapData(em: ClientEntityManager,
                                                     mapData: ClientMapData) {
   constructEarth(em, mapData);
   constructSky(em, mapData);

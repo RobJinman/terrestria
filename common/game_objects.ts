@@ -6,5 +6,6 @@ export enum EntityType {
   EARTH = "EARTH",
   BLIMP = "BLIMP",
   AD = "AD",
+  PARALLAX_SPRITE = "PARALLAX_SPRITE",
   OTHER = "OTHER"
 }

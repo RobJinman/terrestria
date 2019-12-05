@@ -41,7 +41,8 @@ export class ServerEntityManager extends EntityManager {
         type: GameResponseType.ENTITIES_DELETED,
         entities: [{
           id,
-          type: e.type
+          type: e.type,
+          desc: {}
         }]
       };
 

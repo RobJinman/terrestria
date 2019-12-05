@@ -73,6 +73,8 @@ export interface AnimationDesc {
 
 export interface StaticImage {
   name: string;
+  width?: number;
+  height?: number;
 }
 
 interface Animation {
@@ -188,7 +190,8 @@ export class RenderSystem implements ClientSystem {
     if (!this._textures.has(name)) {
       const resource = await this._loadResource(name,
                                                 url,
-                                                PIXI.LoaderResource.LOAD_TYPE.IMAGE);
+                                                PIXI.LoaderResource
+                                                    .LOAD_TYPE.IMAGE);
       this._textures.set(name, resource.texture);
     }
   }
@@ -245,6 +248,12 @@ export class RenderSystem implements ClientSystem {
 
       const texture = this._findTexture(image.name);
       const sprite = new PIXI.Sprite(texture);
+      if (image.width) {
+        sprite.width = image.width;
+      }
+      if (image.height) {
+        sprite.height = image.height;
+      }
   
       c.staticSprites.set(image.name, sprite);
     }
@@ -395,6 +404,12 @@ export class RenderSystem implements ClientSystem {
     c.staticImages.forEach(imgDesc => {
       const texture = this._findTexture(imgDesc.name);
       const sprite = new PIXI.Sprite(texture);
+      if (imgDesc.width) {
+        sprite.width = imgDesc.width;
+      }
+      if (imgDesc.height) {
+        sprite.height = imgDesc.height;
+      }
 
       c.staticSprites.set(imgDesc.name, sprite);
     });

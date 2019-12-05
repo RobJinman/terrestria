@@ -22,7 +22,7 @@ import { ServerAdComponent } from "./server_ad_system";
 export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
-  em.addEntity(id, EntityType.EARTH, []);
+  em.addEntity(id, EntityType.EARTH, desc, []);
 
   return id;
 }
@@ -61,7 +61,7 @@ export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
-  em.addEntity(id, EntityType.SOIL, [ spatialComp, behaviourComp ]);
+  em.addEntity(id, EntityType.SOIL, desc, [ spatialComp, behaviourComp ]);
 
   spatialSys.positionEntity(id, desc.col, desc.row);
 
@@ -102,7 +102,7 @@ export function constructRock(em: ServerEntityManager, desc: any): EntityId {
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
-  em.addEntity(id, EntityType.ROCK, [ spatialComp, behaviourComp ]);
+  em.addEntity(id, EntityType.ROCK, desc, [ spatialComp, behaviourComp ]);
 
   spatialSys.positionEntity(id, desc.col, desc.row);
 
@@ -159,7 +159,9 @@ export function constructGem(em: ServerEntityManager, desc: any): EntityId {
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
-  em.addEntity(id, EntityType.GEM, [ spatialComp, invComp, behaviourComp ]);
+  em.addEntity(id, EntityType.GEM, desc, [ spatialComp,
+                                           invComp,
+                                           behaviourComp ]);
 
   spatialSys.positionEntity(id, desc.col, desc.row);
 
@@ -227,10 +229,10 @@ export function constructPlayer(em: ServerEntityManager,
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
-  em.addEntity(id, EntityType.PLAYER, [ spatialComp,
-                                        agentComp,
-                                        invComp,
-                                        behaviourComp ]);
+  em.addEntity(id, EntityType.PLAYER, {}, [ spatialComp,
+                                            agentComp,
+                                            invComp,
+                                            behaviourComp ]);
 
   return id;
 }
@@ -252,7 +254,7 @@ function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
 
   spatialComp.currentMode = SpatialMode.FREE_MODE;
 
-  em.addEntity(id, EntityType.BLIMP, [ spatialComp ]);
+  em.addEntity(id, EntityType.BLIMP, desc, [ spatialComp ]);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 
@@ -278,9 +280,17 @@ function constructAd(em: ServerEntityManager, desc: any): EntityId {
 
   const adComp = new ServerAdComponent(id, desc.adName);
 
-  em.addEntity(id, EntityType.AD, [ spatialComp, adComp ]);
+  em.addEntity(id, EntityType.AD, desc, [ spatialComp, adComp ]);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
+
+  return id;
+}
+
+function constructParallaxSprite(em: ServerEntityManager, desc: any) {
+  const id = getNextEntityId();
+
+  em.addEntity(id, EntityType.PARALLAX_SPRITE, desc, []);
 
   return id;
 }
@@ -309,6 +319,10 @@ export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
     }
     case EntityType.AD: {
       constructAd(em, desc.data);
+      break;
+    }
+    case EntityType.PARALLAX_SPRITE: {
+      constructParallaxSprite(em, desc.data);
       break;
     }
   }

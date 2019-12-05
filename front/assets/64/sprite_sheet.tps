@@ -207,6 +207,19 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">cave.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>200,147,400,294</rect>
+                <key>scale9Paddings</key>
+                <rect>200,147,400,294</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">earth.png</key>
             <key type="filename">explosion0.png</key>
             <key type="filename">explosion1.png</key>
@@ -358,6 +371,7 @@
             <filename>soil_puff1.png</filename>
             <filename>soil_puff2.png</filename>
             <filename>soil_puff3.png</filename>
+            <filename>cave.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

@@ -28,7 +28,7 @@ export class GameLogic {
                                                  targetedHandlers,
                                                  broadcastHandlers);
 
-    em.addEntity(this._entityId, EntityType.OTHER, [behaviourComp]);
+    em.addEntity(this._entityId, EntityType.OTHER, {}, [behaviourComp]);
   }
 
   update(actions: PlayerAction[]) {

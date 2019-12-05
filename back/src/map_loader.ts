@@ -111,6 +111,20 @@ export function loadMapData(): MapData {
     }
   });
 
+  entities.push({
+    type: EntityType.PARALLAX_SPRITE,
+    data: {
+      width: 1000,
+      height: 800,
+      centre: {
+        x: BLOCK_SZ * (6 + (19 - 6) / 2),
+        y: BLOCK_SZ * (11 + (16 - 11) / 2)
+      },
+      image: "cave.png",
+      depth: 1
+    }
+  });
+
   return {
     width: WORLD_W,
     height: WORLD_H,

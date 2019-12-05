@@ -13,6 +13,7 @@ export function getNextEntityId() {
 export interface Entity {
   id: EntityId;
   type: EntityType;
+  desc: any;
 }
 
 export class EntityManager {
@@ -26,8 +27,11 @@ export class EntityManager {
     this._pendingDeletion = new Set<EntityId>();
   }
 
-  addEntity(id: EntityId, type: EntityType, components: Component[]) {
-    this.entities.set(id, { id, type });
+  addEntity(id: EntityId,
+           type: EntityType,
+           desc: any,
+           components: Component[]) {
+    this.entities.set(id, { id, type, desc });
     components.forEach(c => {
       const sys = this.getSystem(c.type);
       sys.addComponent(c);

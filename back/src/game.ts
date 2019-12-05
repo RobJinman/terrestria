@@ -70,7 +70,7 @@ export class Game {
                                                  targetedHandlers,
                                                  broadcastHandlers);
 
-    this._em.addEntity(this._entityId, EntityType.OTHER, [behaviourComp]);
+    this._em.addEntity(this._entityId, EntityType.OTHER, {}, [behaviourComp]);
 
     console.log(`Starting game ${this._id}`);
 
@@ -125,7 +125,8 @@ export class Game {
       type: GameResponseType.NEW_ENTITIES,
       entities: [{
         id,
-        type: EntityType.PLAYER
+        type: EntityType.PLAYER,
+        desc: {}
       }]
     };
 
@@ -166,7 +167,8 @@ export class Game {
       type: GameResponseType.NEW_ENTITIES,
       entities: [{
         id,
-        type: EntityType.PLAYER
+        type: EntityType.PLAYER,
+        desc: {}
       }]
     };
 
