@@ -8,7 +8,8 @@ export enum GameEventType {
   ENTITY_BURNED = "ENTITY_BURNED",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
   AGENT_ACTION = "AGENT_ACTION",
-  PLAYER_KILLED = "PLAYER_KILLED"
+  PLAYER_KILLED = "PLAYER_KILLED",
+  WINDOW_RESIZED = "WINDOW_RESIZED"
 }
 
 export interface GameEvent {
@@ -53,4 +54,9 @@ export interface EAgentAction extends GameEvent {
 
 export interface EPlayerKilled extends GameEvent {
   playerId: EntityId;
+}
+
+export interface EWindowResized extends GameEvent {
+  w: number;
+  h: number;
 }

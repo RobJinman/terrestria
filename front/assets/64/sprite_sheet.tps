@@ -207,6 +207,35 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">button_down.png</key>
+            <key type="filename">button_left.png</key>
+            <key type="filename">button_right.png</key>
+            <key type="filename">button_up.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>50,50,100,100</rect>
+                <key>scale9Paddings</key>
+                <rect>50,50,100,100</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">button_fullscreen.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>100,30,199,61</rect>
+                <key>scale9Paddings</key>
+                <rect>100,30,199,61</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">cave.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -372,6 +401,11 @@
             <filename>soil_puff2.png</filename>
             <filename>soil_puff3.png</filename>
             <filename>cave.png</filename>
+            <filename>button_down.png</filename>
+            <filename>button_left.png</filename>
+            <filename>button_right.png</filename>
+            <filename>button_up.png</filename>
+            <filename>button_fullscreen.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

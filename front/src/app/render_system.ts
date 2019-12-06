@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
-import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
+import { GameEvent, GameEventType, EEntityMoved, EWindowResized } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
@@ -15,6 +15,15 @@ import { clamp } from './common/utils';
 
 const DEFAULT_Z_INDEX = 1000;
 export const MAX_PARALLAX_DEPTH = 10;
+
+export type OnInteractionFn = () => void;
+
+export interface RenderOptions {
+  zIndex?: number;
+  screenPosition?: Vec2;
+  onPress?: OnInteractionFn;
+  onRelease?: OnInteractionFn;
+}
 
 export class Colour {
   private _r: number = 0;
@@ -89,11 +98,26 @@ interface Animation {
 }
 
 export class RenderComponent extends Component {
-  readonly zIndex: number;
+  readonly zIndex: number = 0;
+  screenPosition: Vec2|null = null;
+  readonly onPress: OnInteractionFn|null = null;
+  readonly onRelease: OnInteractionFn|null = null;
 
-  constructor(entityId: EntityId, zIndex: number) {
+  constructor(entityId: EntityId, options: RenderOptions) {
     super(entityId, ComponentType.RENDER);
-    this.zIndex = zIndex;
+
+    if (options.zIndex) {
+      this.zIndex = options.zIndex;
+    }
+    if (options.screenPosition) {
+      this.screenPosition = options.screenPosition;
+    }
+    if (options.onPress) {
+      this.onPress = options.onPress;
+    }
+    if (options.onRelease) {
+      this.onRelease = options.onRelease;
+    }
   }
 }
 
@@ -102,8 +126,13 @@ export class ShapeRenderComponent extends RenderComponent {
   readonly colour: Colour;
   readonly graphics = new PIXI.Graphics();
 
-  constructor(entityId: EntityId, shape: Shape, colour: Colour, zIndex = 0) {
-    super(entityId, zIndex);
+  constructor(entityId: EntityId,
+              shape: Shape,
+              colour: Colour,
+              options: RenderOptions = {}) {
+    super(entityId, options);
+
+    const zIndex = options.zIndex ? options.zIndex : 0;
 
     this.shape = shape;
     this.colour = colour;
@@ -124,8 +153,8 @@ export class SpriteRenderComponent extends RenderComponent {
               staticImages: StaticImage[],
               animations: AnimationDesc[],
               initialImage: string,
-              zIndex = 0) {
-    super(entityId, zIndex);
+              options: RenderOptions = {}) {
+    super(entityId, options);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -143,8 +172,8 @@ export class ParallaxRenderComponent extends SpriteRenderComponent {
               animations: AnimationDesc[],
               initialImage: string,
               depth: number,
-              zIndex = 0) {
-    super(entityId, staticImages, animations, initialImage, zIndex);
+              options: RenderOptions = {}) {
+    super(entityId, staticImages, animations, initialImage, options);
 
     this.depth = depth;
   }
@@ -161,8 +190,8 @@ export class TiledRegionRenderComponent extends RenderComponent {
               region: Span2d,
               staticImages: StaticImage[],
               initialImage: string,
-              zIndex = 0) {
-    super(entityId, zIndex);
+              options: RenderOptions = {}) {
+    super(entityId, options);
 
     this.staticImages = staticImages;
     this.initialImage = initialImage;
@@ -175,6 +204,7 @@ export class TiledRegionRenderComponent extends RenderComponent {
 export class RenderSystem implements ClientSystem {
   private _components: Map<EntityId, RenderComponent>;
   private _parallaxComponents: Map<EntityId, ParallaxRenderComponent>;
+  private _screenSpaceComponents: Map<EntityId, RenderComponent>;
   private _em: EntityManager;
   private _scheduler: Scheduler;
   private _pixi: PIXI.Application;
@@ -193,6 +223,7 @@ export class RenderSystem implements ClientSystem {
     this._scheduler = scheduler;
     this._components = new Map<EntityId, RenderComponent>();
     this._parallaxComponents = new Map<EntityId, ParallaxRenderComponent>();
+    this._screenSpaceComponents = new Map<EntityId, RenderComponent>();
 
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     PIXI.settings.ROUND_PIXELS = true;
@@ -203,6 +234,14 @@ export class RenderSystem implements ClientSystem {
     });
     this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
     this._pixi.ticker.add(updateFn);
+  }
+
+  get viewW() {
+    return this._viewW;
+  }
+
+  get viewH() {
+    return this._viewH;
   }
 
   async init() {
@@ -230,22 +269,8 @@ export class RenderSystem implements ClientSystem {
     this._pixi.stage.x = -viewX * scale;
     this._pixi.stage.y = -viewY * scale;
 
+    this._updateScreenSpaceComponentPositions();
     this._computeParallaxOffsets();
-  }
-
-  onWindowResize(w: number, h: number) {
-    this._windowW = w;
-    this._windowH = h;
-
-    const aspect = w / this._windowH;
-    this._viewW = this._viewH * aspect;
-
-    this._pixi.renderer.resize(w, h);
-
-    const scale = h / VERTICAL_RESOLUTION;
-
-    this._pixi.stage.scale.x = scale;
-    this._pixi.stage.scale.y = scale;
   }
 
   async addImage(name: string, url: string) {
@@ -307,8 +332,11 @@ export class RenderSystem implements ClientSystem {
     const c = this.getSpriteComponent(entityId);
     if (!c.staticImages.find(i => i.name === image.name)) {
       c.staticImages.push(image);
-      c.staticSprites.set(image.name,
-                          this._makeSpriteFromImageDesc(image, c.zIndex));
+
+      const sprite = this._makeSpriteFromImageDesc(image, c.zIndex);
+      c.staticSprites.set(image.name, sprite);
+
+      this._addInteractionCallbacks(c, sprite);
     }
   }
 
@@ -374,16 +402,51 @@ export class RenderSystem implements ClientSystem {
 
   handleEvent(event: GameEvent) {
     switch (event.type) {
-      case GameEventType.ENTITY_MOVED:
+      case GameEventType.ENTITY_MOVED: {
         const ev = <EEntityMoved>event;
         this._onEntityMoved(ev.entityId);
         break;
+      }
+      case GameEventType.WINDOW_RESIZED: {
+        const ev = <EWindowResized>event;
+        this._onWindowResized(ev.w, ev.h);
+        break;
+      }
     }
   }
 
   update() {}
 
-  private _makeSpriteFromImageDesc(image: StaticImage, zIndex: number) {
+  setScreenPosition(entityId: EntityId, x: number, y: number) {
+    const c = this.getComponent(entityId);
+    this._screenSpaceComponents.set(entityId, c);
+    c.screenPosition = { x, y };
+    this._setScreenPosition(c);
+  }
+
+  private _onWindowResized(w: number, h: number) {
+    this._windowW = w;
+    this._windowH = h;
+
+    const aspect = w / this._windowH;
+    this._viewW = this._viewH * aspect;
+
+    this._pixi.renderer.resize(w, h);
+
+    const scale = h / VERTICAL_RESOLUTION;
+
+    this._pixi.stage.scale.x = scale;
+    this._pixi.stage.scale.y = scale;
+  }
+
+  private _updateScreenSpaceComponentPositions() {
+    this._screenSpaceComponents.forEach(c => {
+      this._setScreenPosition(c);
+    });
+  }
+
+  private _makeSpriteFromImageDesc(image: StaticImage,
+                                   zIndex: number) {
     const texture = this._findTexture(image.name);
     const sprite = new PIXI.Sprite(texture);
     sprite.zIndex = DEFAULT_Z_INDEX + zIndex;
@@ -421,6 +484,8 @@ export class RenderSystem implements ClientSystem {
   }
 
   private _addShapeComponent(c: ShapeRenderComponent) {
+    this._addInteractionCallbacks(c, c.graphics);
+
     c.graphics.beginFill(c.colour.value, Math.floor(c.colour.a * 256));
 
     switch (c.shape.type) {
@@ -441,9 +506,14 @@ export class RenderSystem implements ClientSystem {
     }
 
     c.graphics.endFill();
+
     this._pixi.stage.addChild(c.graphics);
 
-    this._onEntityMoved(c.entityId);
+    this._updateSpritePosition(c);
+
+    if (c.screenPosition) {
+      this._screenSpaceComponents.set(c.entityId, c);
+    }
   }
 
   private _loadResource(name: string,
@@ -460,6 +530,21 @@ export class RenderSystem implements ClientSystem {
   private _removeShapeComponent(c: ShapeRenderComponent) {
     this._pixi.stage.removeChild(c.graphics);
     this._components.delete(c.entityId);
+    this._screenSpaceComponents.delete(c.entityId);
+  }
+
+  private _addInteractionCallbacks(c: RenderComponent,
+                                   sprite: PIXI.DisplayObject) {
+    if (c.onPress) {
+      sprite.interactive = true;
+      sprite.on("mousedown", c.onPress);
+      sprite.on("touchstart", c.onPress);
+    }
+    if (c.onRelease) {
+      sprite.interactive = true;
+      sprite.on("mouseup", c.onRelease);
+      sprite.on("touchend", c.onRelease);
+    }
   }
 
   private _addSpriteComponent(c: SpriteRenderComponent) {
@@ -471,6 +556,7 @@ export class RenderSystem implements ClientSystem {
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
       sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
+      this._addInteractionCallbacks(c, sprite);
 
       const defaultDuration = sprite.textures.length / 60;
       const speedUp = defaultDuration / anim.duration;
@@ -485,11 +571,16 @@ export class RenderSystem implements ClientSystem {
     });
 
     c.staticImages.forEach(imgDesc => {
-      c.staticSprites.set(imgDesc.name,
-                          this._makeSpriteFromImageDesc(imgDesc, c.zIndex));
+      const sprite = this._makeSpriteFromImageDesc(imgDesc, c.zIndex);
+      c.staticSprites.set(imgDesc.name, sprite);
+      this._addInteractionCallbacks(c, sprite);
     });
 
     this._spriteCompSetActiveSprite(c, c.initialImage, false);
+
+    if (c.screenPosition) {
+      this._screenSpaceComponents.set(c.entityId, c);
+    }
   }
 
   private _findTexture(name: string): PIXI.Texture {
@@ -515,6 +606,7 @@ export class RenderSystem implements ClientSystem {
       this._pixi.stage.removeChild(c.stagedSprite);
     }
     this._components.delete(c.entityId);
+    this._screenSpaceComponents.delete(c.entityId);
   }
 
   private _removeTiledRegionComponent(c: TiledRegionRenderComponent) {
@@ -543,6 +635,7 @@ export class RenderSystem implements ClientSystem {
           const n = span.b - span.a + 1;
 
           const sprite = new PIXI.TilingSprite(texture, n * BLOCK_SZ, BLOCK_SZ);
+          this._addInteractionCallbacks(c, sprite);
           sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
           sprite.position.set(x, y);
           sprites.push(sprite);
@@ -557,25 +650,56 @@ export class RenderSystem implements ClientSystem {
 
   private _onEntityMoved(id: EntityId) {
     if (this.hasComponent(id)) {
-      const spatialComp =
-        <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
-                                                      id);
       const c = this.getComponent(id);
-      if (c instanceof SpriteRenderComponent) {
-        if (c.stagedSprite) {
-          // TODO: Shouldn't always assume pivot point
-          c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-          // The pivot needs to be added here to keep the position the same
-          c.stagedSprite.position.set(spatialComp.x + c.stagedSprite.pivot.x,
-                                      spatialComp.y + c.stagedSprite.pivot.y);
-          c.stagedSprite.rotation = spatialComp.angle;
-        }
+      this._setWorldPosition(c);
+    }
+  }
+
+  private _updateSpritePosition(c: RenderComponent) {
+    if (c.screenPosition) {
+      this._setScreenPosition(c);
+    }
+    else {
+      this._setWorldPosition(c);
+    }
+  }
+
+  private _setWorldPosition(c: RenderComponent) {
+    const spatialComp =
+      <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
+                                                    c.entityId);
+    if (c instanceof SpriteRenderComponent) {
+      if (c.stagedSprite) {
+        // TODO: Shouldn't always assume pivot point
+        c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+        // The pivot needs to be added here to keep the position the same
+        c.stagedSprite.position.set(spatialComp.x + c.stagedSprite.pivot.x,
+                                    spatialComp.y + c.stagedSprite.pivot.y);
+        c.stagedSprite.rotation = spatialComp.angle;
       }
-      else if (c instanceof ShapeRenderComponent) {
-        c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-        c.graphics.position.set(spatialComp.x + c.graphics.pivot.x,
-                                spatialComp.y + c.graphics.pivot.y);
-        c.graphics.rotation = spatialComp.angle;
+    }
+    else if (c instanceof ShapeRenderComponent) {
+      c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+      c.graphics.position.set(spatialComp.x + c.graphics.pivot.x,
+                              spatialComp.y + c.graphics.pivot.y);
+      c.graphics.rotation = spatialComp.angle;
+    }
+  }
+
+  private _setScreenPosition(c: RenderComponent) {
+    const viewX = this._camera.x - 0.5 * this._viewW;
+    const viewY = this._camera.y - 0.5 * this._viewH;
+
+    if (c instanceof SpriteRenderComponent) {
+      if (c.stagedSprite && c.screenPosition) {
+        c.stagedSprite.position.set(viewX + c.screenPosition.x,
+                                    viewY + c.screenPosition.y);
+      }
+    }
+    else if (c instanceof ShapeRenderComponent) {
+      if (c.screenPosition) {
+        c.graphics.position.set(viewX + c.screenPosition.x,
+                                viewY + c.screenPosition.y);
       }
     }
   }
@@ -610,7 +734,7 @@ export class RenderSystem implements ClientSystem {
       c.stagedSprite = sprite;
     }
 
-    this._onEntityMoved(c.entityId);
+    this._updateSpritePosition(c);
   }
 
   private _tiledRegionCompSetActiveSprite(c: TiledRegionRenderComponent,

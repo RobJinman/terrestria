@@ -19,6 +19,7 @@ import { BehaviourSystem } from './common/behaviour_system';
 import { ClientAdSystem } from './client_ad_system';
 import { ClientSpatialComponent } from './client_spatial_component';
 import { UserInputManager } from "./user_input_manager";
+import { EWindowResized, GameEventType } from "./common/event";
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -33,7 +34,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData: ClientMapData|null = null;
-  private _userInputManager = new UserInputManager();
+  private _userInputManager: UserInputManager;
 
   constructor() {
     window.onresize = this._onWindowResize.bind(this);
@@ -55,11 +56,12 @@ export class App {
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
 
-    this._userInputManager.onDirectionPressHandler =
-      this._onDirectionKeyDown.bind(this);
-    this._userInputManager.onDirectionReleaseHandler =
-      this._onDirectionKeyUp.bind(this);
-    this._userInputManager.onEnterHandler = this._onEnterKeyPress.bind(this);
+    this._userInputManager
+      = new UserInputManager(this._em,
+                             this._scheduler,
+                             this._onDirectionKeyDown.bind(this),
+                             this._onDirectionKeyUp.bind(this),
+                             this._onEnterKeyPress.bind(this));
 
     this._insertElement();
   }
@@ -67,6 +69,8 @@ export class App {
   async start() {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     await renderSys.init();
+
+    this._userInputManager.initialiseUi();
 
     await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
                            500,
@@ -124,8 +128,14 @@ export class App {
     const w = window.innerWidth;
     const h = window.innerHeight;
 
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    renderSys.onWindowResize(w, h);
+    const event: EWindowResized = {
+      type: GameEventType.WINDOW_RESIZED,
+      entities: [],
+      w,
+      h
+    }
+
+    this._em.postEvent(event);
   }
 
   private _centreStage() {
