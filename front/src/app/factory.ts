@@ -54,6 +54,26 @@ function constructGem(em: ClientEntityManager, entity: Entity) {
                                      behaviourComp ]);
 }
 
+function constructTrophy(em: ClientEntityManager, entity: Entity) {
+  const id = entity.id;
+
+  const staticImages: StaticImage[] = [
+    {
+      name: "trophy.png"
+    }
+  ];
+
+  const renderComp = new SpriteRenderComponent(id,
+                                               staticImages,
+                                               [],
+                                               "trophy.png");
+
+  const spatialComp = new ClientSpatialComponent(id, em);
+
+  em.addEntity(id, EntityType.TROPHY, [ spatialComp,
+                                        renderComp ]);
+}
+
 function constructRock(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
 
@@ -399,6 +419,10 @@ export function constructEntities(entityManager: ClientEntityManager,
       }
       case EntityType.BLIMP: {
         constructBlimp(entityManager, entity);
+        break;
+      }
+      case EntityType.TROPHY: {
+        constructTrophy(entityManager, entity);
         break;
       }
       case EntityType.AD: {

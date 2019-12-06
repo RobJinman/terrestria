@@ -11,7 +11,7 @@ import { InventorySystem, CCollector, CCollectable,
 import { ServerEntityManager } from "./server_entity_manager";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
-import { Circle, Polygon } from "./common/geometry";
+import { Circle, Polygon, Rectangle } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
 import { EntityDesc } from "./common/map_data";
 import { DEFAULT_GRID_MODE_PROPS } from "./grid_mode_properties";
@@ -63,7 +63,7 @@ export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
 
   em.addEntity(id, EntityType.SOIL, desc, [ spatialComp, behaviourComp ]);
 
-  spatialSys.positionEntity(id, desc.col, desc.row);
+  spatialSys.positionEntity(id, desc.x, desc.y);
 
   return id;
 }
@@ -104,7 +104,7 @@ export function constructRock(em: ServerEntityManager, desc: any): EntityId {
 
   em.addEntity(id, EntityType.ROCK, desc, [ spatialComp, behaviourComp ]);
 
-  spatialSys.positionEntity(id, desc.col, desc.row);
+  spatialSys.positionEntity(id, desc.x, desc.y);
 
   return id;
 }
@@ -163,7 +163,7 @@ export function constructGem(em: ServerEntityManager, desc: any): EntityId {
                                            invComp,
                                            behaviourComp ]);
 
-  spatialSys.positionEntity(id, desc.col, desc.row);
+  spatialSys.positionEntity(id, desc.x, desc.y);
 
   return id;
 }
@@ -201,6 +201,7 @@ export function constructPlayer(em: ServerEntityManager,
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
+  invComp.addBucket(new Bucket("trophies", -1));
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_SQUASHED, e => {
@@ -261,6 +262,53 @@ function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
+function constructTrophy(em: ServerEntityManager, desc: any): EntityId {
+  const id = getNextEntityId();
+
+  const gridModeProps = {
+    solid: true,
+    blocking: false,
+    stackable: false,
+    heavy: true,
+    movable: false,
+    isAgent: false
+  };
+
+  const freeModeProps = {
+    heavy: true,
+    fixedAngle: false
+  };
+
+  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
+  const spatialComp = new ServerSpatialComponent(id,
+                                                 spatialSys.grid,
+                                                 gridModeProps,
+                                                 freeModeProps,
+                                                 new Rectangle(64, 64));
+
+  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+  const invComp = new CCollectable(id, "trophies", 1);
+
+  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
+    const event = <EAgentEnterCell>e;
+    inventorySys.collectItem(event.entityId, id);
+
+    em.removeEntity_onClients(id);
+  });
+
+  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+
+  em.addEntity(id, EntityType.TROPHY, desc, [ spatialComp,
+                                              invComp,
+                                              behaviourComp ]);
+
+  spatialSys.positionEntity(id, desc.x, desc.y);
+
+  return id;
+}
+
 function constructAd(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
@@ -315,6 +363,10 @@ export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
     }
     case EntityType.BLIMP: {
       constructBlimp(em, desc.data);
+      break;
+    }
+    case EntityType.TROPHY: {
+      constructTrophy(em, desc.data);
       break;
     }
     case EntityType.AD: {

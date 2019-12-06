@@ -42,10 +42,15 @@ export function loadMapData(): MapData {
   const numRocks = 20;
   const numGems = 10;
 
+  const trophyCoords = { x: 5, y: 10 };
+
   let coords: [number, number][] = [];
   for (let c = 0; c < WORLD_W; ++c) {
     for (let r = 0; r < WORLD_H; ++r) {
       if (c === 0 && r === WORLD_H - 1) {
+        continue;
+      }
+      if (c === trophyCoords.x && r === trophyCoords.y) {
         continue;
       }
       if (gr.contains(c, r)) {
@@ -68,8 +73,8 @@ export function loadMapData(): MapData {
     entities.push({
       type: EntityType.ROCK,
       data: {
-        row: r,
-        col: c
+        y: r,
+        x: c
       }
     });
   });
@@ -78,8 +83,8 @@ export function loadMapData(): MapData {
     entities.push({
       type: EntityType.GEM,
       data: {
-        row: r,
-        col: c
+        y: r,
+        x: c
       }
     });
   });
@@ -88,8 +93,8 @@ export function loadMapData(): MapData {
     entities.push({
       type: EntityType.SOIL,
       data: {
-        row: r,
-        col: c
+        y: r,
+        x: c
       }
     });
   });
@@ -122,6 +127,14 @@ export function loadMapData(): MapData {
       },
       image: "cave.png",
       depth: 2
+    }
+  });
+
+  entities.push({
+    type: EntityType.TROPHY,
+    data: {
+      x: trophyCoords.x * BLOCK_SZ,
+      y: trophyCoords.y * BLOCK_SZ
     }
   });
 

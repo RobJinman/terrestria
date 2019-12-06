@@ -197,6 +197,7 @@ After changes to task.json, run
 ```
     aws ecs register-task-definition --cli-input-json file://task.json
 
+    ./stop_service.sh
     aws ecs update-service \
       --cluster pinata-demo-1 \
       --service pinata-demo-1 \

@@ -7,5 +7,6 @@ export enum EntityType {
   BLIMP = "BLIMP",
   AD = "AD",
   PARALLAX_SPRITE = "PARALLAX_SPRITE",
+  TROPHY = "TROPHY",
   OTHER = "OTHER"
 }
