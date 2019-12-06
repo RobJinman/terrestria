@@ -81,7 +81,7 @@ export class GameLogic {
       if (states[UserInput.LEFT] == InputState.PRESSED) {
         spatialSys.moveAgent(playerId, Direction.LEFT);
       }
-
+/*
       if (player.currentMode == SpatialMode.FREE_MODE &&
         player.currentMode != mode) {
 
@@ -89,7 +89,7 @@ export class GameLogic {
         states[UserInput.RIGHT] = InputState.RELEASED;
         states[UserInput.DOWN] = InputState.RELEASED;
         states[UserInput.LEFT] = InputState.RELEASED;
-      }
+      }*/
     });
   }
 

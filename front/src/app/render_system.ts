@@ -1,18 +1,19 @@
 import * as PIXI from 'pixi.js';
 import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
-import { GameEvent, GameEventType, EEntityMoved, EWindowResized } from "./common/event";
+import { GameEvent, GameEventType, EEntityMoved,
+         EWindowResized } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './scheduler';
 import { ClientSpatialComponent } from './client_spatial_component';
-import { BLOCK_SZ, CLIENT_FRAME_RATE,
-         VERTICAL_RESOLUTION } from './common/constants';
+import { BLOCK_SZ, CLIENT_FRAME_RATE } from './common/constants';
 import { Span2d } from './common/span';
 import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
 import { clamp } from './common/utils';
 
+const VERTICAL_RESOLUTION = 10 * BLOCK_SZ;
 const DEFAULT_Z_INDEX = 1000;
 export const MAX_PARALLAX_DEPTH = 10;
 
@@ -225,7 +226,7 @@ export class RenderSystem implements ClientSystem {
     this._parallaxComponents = new Map<EntityId, ParallaxRenderComponent>();
     this._screenSpaceComponents = new Map<EntityId, RenderComponent>();
 
-    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    //PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     PIXI.settings.ROUND_PIXELS = true;
     PIXI.settings.SORTABLE_CHILDREN = true;
 
@@ -422,6 +423,18 @@ export class RenderSystem implements ClientSystem {
     this._screenSpaceComponents.set(entityId, c);
     c.screenPosition = { x, y };
     this._setScreenPosition(c);
+  }
+
+  setSpriteSize(entityId: EntityId, width: number, height: number) {
+    const c = this.getSpriteComponent(entityId);
+    c.staticSprites.forEach(sprite => {
+      sprite.width = width;
+      sprite.height = height;
+    });
+    c.animatedSprites.forEach(anim => {
+      anim.sprite.width = width;
+      anim.sprite.height = height;
+    });
   }
 
   private _onWindowResized(w: number, h: number) {

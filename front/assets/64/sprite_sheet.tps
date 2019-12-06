@@ -208,9 +208,13 @@
                 <false/>
             </struct>
             <key type="filename">button_down.png</key>
+            <key type="filename">button_down_active.png</key>
             <key type="filename">button_left.png</key>
+            <key type="filename">button_left_active.png</key>
             <key type="filename">button_right.png</key>
+            <key type="filename">button_right_active.png</key>
             <key type="filename">button_up.png</key>
+            <key type="filename">button_up_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -224,6 +228,7 @@
                 <false/>
             </struct>
             <key type="filename">button_fullscreen.png</key>
+            <key type="filename">button_fullscreen_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -406,6 +411,11 @@
             <filename>button_right.png</filename>
             <filename>button_up.png</filename>
             <filename>button_fullscreen.png</filename>
+            <filename>button_down_active.png</filename>
+            <filename>button_fullscreen_active.png</filename>
+            <filename>button_left_active.png</filename>
+            <filename>button_right_active.png</filename>
+            <filename>button_up_active.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
