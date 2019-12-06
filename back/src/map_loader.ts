@@ -9,175 +9,192 @@ import { BehaviourSystem } from "./common/behaviour_system";
 import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
-import { constructEntity } from "./factory";
+import { ServerEntityFactory } from "./server_entity_factory";
 import { ServerAdSystem } from "./server_ad_system";
 
-// TODO: This will come from JSON. For now, generate the data here
-export function loadMapData(): MapData {
-  const WORLD_W = 40;
-  const WORLD_H = 25;
+export class MapLoader {
+  private _em: ServerEntityManager;
+  private _factory: ServerEntityFactory;
+  private _mapData: MapData|null = null;
 
-  const gravRegion: Span2dDesc = [
-    [{ a: 0, b: WORLD_W - 1 }],
-    [{ a: 0, b: WORLD_W - 1 }],
-    [{ a: 0, b: WORLD_W - 1 }],
-    [{ a: 0, b: WORLD_W - 1 }],
-    [{ a: 0, b: WORLD_W - 1 }],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [{ a: 6, b: 18 }],
-    [{ a: 6, b: 18 }],
-    [{ a: 6, b: 18 }],
-    [{ a: 6, b: 18 }],
-    [{ a: 6, b: 18 }],
-  ];
+  constructor(em: ServerEntityManager, factory: ServerEntityFactory) {
+    this._em = em;
+    this._factory = factory;
+  }
 
-  const entities: EntityDesc[] = [];
+  loadMap() {
+    this._mapData = this._loadMapData();
 
-  const gr = constructGravRegion(gravRegion);
-  const numRocks = 20;
-  const numGems = 10;
+    const gravRegion = this._constructGravRegion(this._mapData.gravityRegion);
 
-  const trophyCoords = { x: 5, y: 10 };
+    const serverSpatialSystem = new ServerSpatialSystem(this._em,
+                                                        this._mapData.width,
+                                                        this._mapData.height,
+                                                        gravRegion);
+    const agentSystem = new AgentSystem(this._em);
+    const behaviourSystem = new BehaviourSystem();
+    const inventorySystem = new InventorySystem();
+    const adSystem = new ServerAdSystem();
 
-  let coords: [number, number][] = [];
-  for (let c = 0; c < WORLD_W; ++c) {
-    for (let r = 0; r < WORLD_H; ++r) {
-      if (c === 0 && r === WORLD_H - 1) {
-        continue;
-      }
-      if (c === trophyCoords.x && r === trophyCoords.y) {
-        continue;
-      }
-      if (gr.contains(c, r)) {
-        continue;
-      }
-      coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
+    this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
+    this._em.addSystem(ComponentType.AGENT, agentSystem);
+    this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
+    this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
+    this._em.addSystem(ComponentType.AD, adSystem);
+
+    for (const entity of this._mapData.entities) {
+      this._factory.constructEntity(entity);
     }
   }
 
-  coords = _.shuffle(coords);
-
-  let idx = 0;
-  const rockCoords = coords.slice(0, numRocks);
-  idx += numRocks;
-  const gemCoords = coords.slice(idx, idx + numGems);
-  idx += numGems;
-  const soilCoords = coords.slice(idx);
-
-  rockCoords.forEach(([c, r]) => {
-    entities.push({
-      type: EntityType.ROCK,
-      data: {
-        y: r,
-        x: c
-      }
-    });
-  });
-
-  gemCoords.forEach(([c, r]) => {
-    entities.push({
-      type: EntityType.GEM,
-      data: {
-        y: r,
-        x: c
-      }
-    });
-  });
-
-  soilCoords.forEach(([c, r]) => {
-    entities.push({
-      type: EntityType.SOIL,
-      data: {
-        y: r,
-        x: c
-      }
-    });
-  });
-
-  entities.push({
-    type: EntityType.BLIMP,
-    data: {
-      x: 20,
-      y: 20
-    }
-  });
-
-  entities.push({
-    type: EntityType.AD,
-    data: {
-      x: 80,
-      y: 40,
-      adName: "blimp"
-    }
-  });
-
-  entities.push({
-    type: EntityType.PARALLAX_SPRITE,
-    data: {
-      width: 1000,
-      height: 800,
-      centre: {
-        x: BLOCK_SZ * (6 + (19 - 6) / 2),
-        y: BLOCK_SZ * (11 + (16 - 11) / 2)
-      },
-      image: "cave.png",
-      depth: 2
-    }
-  });
-
-  entities.push({
-    type: EntityType.TROPHY,
-    data: {
-      x: trophyCoords.x * BLOCK_SZ,
-      y: trophyCoords.y * BLOCK_SZ
-    }
-  });
-
-  return {
-    width: WORLD_W,
-    height: WORLD_H,
-    gravityRegion: gravRegion,
-    spawnPoint: { x: 0, y: WORLD_H - 1 },
-    entities
-  };
-}
-
-function constructGravRegion(desc: Span2dDesc) {
-  const gravRegion = new Span2d();
-
-  for (let row = 0; row < desc.length; ++row) {
-    for (const spanDesc of desc[row]) {
-      gravRegion.addHorizontalSpan(row, new Span(spanDesc.a, spanDesc.b));
-    }
+  get mapData() {
+    return this._mapData;
   }
 
-  return gravRegion;
-}
+  // TODO: This will come from JSON. For now, generate the data here
+  private _loadMapData(): MapData {
+    const WORLD_W = 40;
+    const WORLD_H = 25;
 
-export function loadMap(em: ServerEntityManager, mapData: MapData) {
-  const gravRegion = constructGravRegion(mapData.gravityRegion);
+    const gravRegion: Span2dDesc = [
+      [{ a: 0, b: WORLD_W - 1 }],
+      [{ a: 0, b: WORLD_W - 1 }],
+      [{ a: 0, b: WORLD_W - 1 }],
+      [{ a: 0, b: WORLD_W - 1 }],
+      [{ a: 0, b: WORLD_W - 1 }],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [{ a: 6, b: 18 }],
+      [{ a: 6, b: 18 }],
+      [{ a: 6, b: 18 }],
+      [{ a: 6, b: 18 }],
+      [{ a: 6, b: 18 }],
+    ];
 
-  const serverSpatialSystem = new ServerSpatialSystem(em,
-                                                      mapData.width,
-                                                      mapData.height,
-                                                      gravRegion);
-  const agentSystem = new AgentSystem(em);
-  const behaviourSystem = new BehaviourSystem();
-  const inventorySystem = new InventorySystem();
-  const adSystem = new ServerAdSystem();
+    const entities: EntityDesc[] = [];
 
-  em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
-  em.addSystem(ComponentType.AGENT, agentSystem);
-  em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
-  em.addSystem(ComponentType.INVENTORY, inventorySystem);
-  em.addSystem(ComponentType.AD, adSystem);
+    const gr = this._constructGravRegion(gravRegion);
+    const numRocks = 20;
+    const numGems = 10;
 
-  for (const entity of mapData.entities) {
-    constructEntity(em, entity);
+    const trophyCoords = { x: 5, y: 10 };
+
+    let coords: [number, number][] = [];
+    for (let c = 0; c < WORLD_W; ++c) {
+      for (let r = 0; r < WORLD_H; ++r) {
+        if (c === 0 && r === WORLD_H - 1) {
+          continue;
+        }
+        if (c === trophyCoords.x && r === trophyCoords.y) {
+          continue;
+        }
+        if (gr.contains(c, r)) {
+          continue;
+        }
+        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
+      }
+    }
+
+    coords = _.shuffle(coords);
+
+    let idx = 0;
+    const rockCoords = coords.slice(0, numRocks);
+    idx += numRocks;
+    const gemCoords = coords.slice(idx, idx + numGems);
+    idx += numGems;
+    const soilCoords = coords.slice(idx);
+
+    rockCoords.forEach(([c, r]) => {
+      entities.push({
+        type: EntityType.ROCK,
+        data: {
+          y: r,
+          x: c
+        }
+      });
+    });
+
+    gemCoords.forEach(([c, r]) => {
+      entities.push({
+        type: EntityType.GEM,
+        data: {
+          y: r,
+          x: c
+        }
+      });
+    });
+
+    soilCoords.forEach(([c, r]) => {
+      entities.push({
+        type: EntityType.SOIL,
+        data: {
+          y: r,
+          x: c
+        }
+      });
+    });
+
+    entities.push({
+      type: EntityType.BLIMP,
+      data: {
+        x: 20,
+        y: 20
+      }
+    });
+
+    entities.push({
+      type: EntityType.AD,
+      data: {
+        x: 80,
+        y: 40,
+        adName: "blimp"
+      }
+    });
+
+    entities.push({
+      type: EntityType.PARALLAX_SPRITE,
+      data: {
+        width: 1000,
+        height: 800,
+        centre: {
+          x: BLOCK_SZ * (6 + (19 - 6) / 2),
+          y: BLOCK_SZ * (11 + (16 - 11) / 2)
+        },
+        image: "cave.png",
+        depth: 2
+      }
+    });
+
+    entities.push({
+      type: EntityType.TROPHY,
+      data: {
+        x: trophyCoords.x * BLOCK_SZ,
+        y: trophyCoords.y * BLOCK_SZ
+      }
+    });
+
+    return {
+      width: WORLD_W,
+      height: WORLD_H,
+      gravityRegion: gravRegion,
+      spawnPoint: { x: 0, y: WORLD_H - 1 },
+      entities
+    };
+  }
+
+  private _constructGravRegion(desc: Span2dDesc) {
+    const gravRegion = new Span2d();
+
+    for (let row = 0; row < desc.length; ++row) {
+      for (const spanDesc of desc[row]) {
+        gravRegion.addHorizontalSpan(row, new Span(spanDesc.a, spanDesc.b));
+      }
+    }
+
+    return gravRegion;
   }
 }

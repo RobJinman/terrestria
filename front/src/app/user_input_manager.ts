@@ -177,7 +177,6 @@ export class UserInputManager {
     const input = keyEventToUserInput(event);
 
     if (input !== null) {
-      this._scheduler.addFunction(this._setButtonActive.bind(this, input, false), 0);
       this._onDirectionReleaseHandler(input);
     }
   }

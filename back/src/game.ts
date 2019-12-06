@@ -1,11 +1,11 @@
 import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
-import { constructPlayer } from "./factory";
+import { ServerEntityFactory } from "./server_entity_factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
-import { GameResponseType, RGameState, RNewEntities,
-         RPlayerKilled, RMapData } from "./common/response";
+import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
+         RMapData } from "./common/response";
 import { GameLogic } from "./game_logic";
 import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
@@ -19,7 +19,7 @@ import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
 import { ServerSpatialComponent } from "./server_spatial_component";
-import { loadMap, loadMapData } from "./map_loader";
+import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
 import { ServerAdSystem } from "./server_ad_system";
@@ -42,6 +42,7 @@ export class Game {
   private _id: number;
   private _pipe: Pipe;
   private _em: ServerEntityManager;
+  private _factory: ServerEntityFactory;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
@@ -54,9 +55,11 @@ export class Game {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
+    this._factory = new ServerEntityFactory(this._em, this._pinata);
 
-    this._mapData = loadMapData();
-    loadMap(this._em, this._mapData);
+    const mapLoader = new MapLoader(this._em, this._factory);
+    mapLoader.loadMap();
+    this._mapData = <MapData>mapLoader.mapData;
 
     this._gameLogic = new GameLogic(this._em);
 
@@ -94,7 +97,12 @@ export class Game {
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
     const entities = this._em.getEntities();
   
-    const id = constructPlayer(this._em, pinataId, pinataToken);
+    const id = this._factory.constructEntity({
+      type: EntityType.PLAYER,
+      data: {
+        pinataId, pinataToken
+      }
+    });
     const spatial =
       <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
@@ -149,7 +157,12 @@ export class Game {
                           ErrorCode.BAD_REQUEST);
     }
 
-    const id = constructPlayer(this._em, pinataId, pinataToken);
+    const id = this._factory.constructEntity({
+      type: EntityType.PLAYER,
+      data: {
+        pinataId, pinataToken
+      }
+    });
     const spatial =
       <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,

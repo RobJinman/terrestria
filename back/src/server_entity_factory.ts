@@ -18,8 +18,10 @@ import { DEFAULT_GRID_MODE_PROPS } from "./grid_mode_properties";
 import { FreeModeProperties } from "./free_mode_properties";
 import { SpatialMode } from "./common/spatial_component_packet";
 import { ServerAdComponent } from "./server_ad_system";
+import { GameError } from "./common/error";
+import { Pinata } from "./pinata";
 
-export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
+function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   em.addEntity(id, EntityType.EARTH, desc, []);
@@ -27,7 +29,7 @@ export function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
+function constructSoil(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -68,7 +70,7 @@ export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-export function constructRock(em: ServerEntityManager, desc: any): EntityId {
+function constructRock(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -109,7 +111,7 @@ export function constructRock(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-export function constructGem(em: ServerEntityManager, desc: any): EntityId {
+function constructGem(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -168,12 +170,10 @@ export function constructGem(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-export function constructPlayer(em: ServerEntityManager,
-                                pinataId: string,
-                                pinataToken: string): EntityId {
+function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
-  const agentComp = new AgentComponent(id, pinataId, pinataToken);
+  const agentComp = new AgentComponent(id, desc.pinataId, desc.pinataToken);
 
   const gridModeProps = {
     solid: true,
@@ -262,7 +262,9 @@ function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-function constructTrophy(em: ServerEntityManager, desc: any): EntityId {
+function constructTrophy(em: ServerEntityManager,
+                         pinata: Pinata,
+                         desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -294,6 +296,8 @@ function constructTrophy(em: ServerEntityManager, desc: any): EntityId {
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
     const event = <EAgentEnterCell>e;
     inventorySys.collectItem(event.entityId, id);
+
+    // TODO: Pinata award
 
     em.removeEntity_onClients(id);
   });
@@ -343,39 +347,46 @@ function constructParallaxSprite(em: ServerEntityManager, desc: any) {
   return id;
 }
 
-export function constructEntity(em: ServerEntityManager, desc: EntityDesc) {
-  switch (desc.type) {
-    case EntityType.EARTH: {
-      constructEarth(em, desc.data);
-      break;
+export class ServerEntityFactory {
+  private _em: ServerEntityManager;
+  private _pinata: Pinata;
+
+  constructor(em: ServerEntityManager, pinata: Pinata) {
+    this._em = em;
+    this._pinata = pinata;
+  }
+
+  constructEntity(desc: EntityDesc): EntityId {
+    switch (desc.type) {
+      case EntityType.PLAYER: {
+        return constructPlayer(this._em, desc.data);
+      }
+      case EntityType.EARTH: {
+        return constructEarth(this._em, desc.data);
+      }
+      case EntityType.GEM: {
+        return constructGem(this._em, desc.data);
+      }
+      case EntityType.ROCK: {
+        return constructRock(this._em, desc.data);
+      }
+      case EntityType.SOIL: {
+        return constructSoil(this._em, desc.data);
+      }
+      case EntityType.BLIMP: {
+        return constructBlimp(this._em, desc.data);
+      }
+      case EntityType.TROPHY: {
+        return constructTrophy(this._em, this._pinata, desc.data);
+      }
+      case EntityType.AD: {
+        return constructAd(this._em, desc.data);
+      }
+      case EntityType.PARALLAX_SPRITE: {
+        return constructParallaxSprite(this._em, desc.data);
+      }
     }
-    case EntityType.GEM: {
-      constructGem(em, desc.data);
-      break;
-    }
-    case EntityType.ROCK: {
-      constructRock(em, desc.data);
-      break;
-    }
-    case EntityType.SOIL: {
-      constructSoil(em, desc.data);
-      break;
-    }
-    case EntityType.BLIMP: {
-      constructBlimp(em, desc.data);
-      break;
-    }
-    case EntityType.TROPHY: {
-      constructTrophy(em, desc.data);
-      break;
-    }
-    case EntityType.AD: {
-      constructAd(em, desc.data);
-      break;
-    }
-    case EntityType.PARALLAX_SPRITE: {
-      constructParallaxSprite(em, desc.data);
-      break;
-    }
+
+    throw new GameError(`No factory function for type ${desc.type}`);
   }
 }
