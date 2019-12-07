@@ -6,6 +6,12 @@ import { Pipe } from "./pipe";
 import { GameEvent } from "./common/event";
 import { REvent, GameResponseType, REntitiesDeleted } from "./common/response";
 
+let nextEntityId = 0;
+
+export function getNextEntityId() {
+  return ++nextEntityId;
+}
+
 export class ServerEntityManager extends EntityManager {
   private _pipe: Pipe;
   private _eventsPendingTransmission: GameEvent[] = [];

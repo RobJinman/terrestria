@@ -4,6 +4,7 @@ import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { ServerEntityManager } from "./server_entity_manager";
+import { Pinata, CreateAwardResponse } from "./pinata";
 
 export class AgentComponent extends Component {
   dirty: boolean = true;
@@ -29,10 +30,19 @@ export class AgentComponent extends Component {
 export class AgentSystem implements ServerSystem {
   private _components: Map<number, AgentComponent>;
   private _em: ServerEntityManager;
+  private _pinata: Pinata;
 
-  constructor(em: ServerEntityManager) {
+  constructor(em: ServerEntityManager, pinata: Pinata) {
     this._components = new Map<number, AgentComponent>();
     this._em = em;
+    this._pinata = pinata;
+  }
+
+  async grantAward(entityId: EntityId,
+                   name: string): Promise<CreateAwardResponse> {
+    const c = this.getComponent(entityId);
+    const response = await this._pinata.grantAward(name, c.pinataToken);
+    return response;
   }
 
   numComponents() {

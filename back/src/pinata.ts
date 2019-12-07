@@ -23,6 +23,16 @@ export interface AdSpace {
 
 export type AdSpaceResponse = AdSpace[];
 
+export enum CreateAwardResult {
+  SUCCESS = "SUCCESS",
+  VALUE_BELOW_THRESHOLD = "VALUE_BELOW_THRESHOLD"
+}
+
+export interface CreateAwardResponse {
+  result: CreateAwardResult;
+  fetti: number;
+}
+
 function authHeader(token: string): http.OutgoingHttpHeaders {
   return {
     "Authorization": "Bearer " + token
@@ -48,6 +58,21 @@ export class Pinata {
     return this._sendGetRequest(url, headers);
   }
 
+  grantAward(name: string, token: string): Promise<CreateAwardResponse> {
+    const url = `${this._apiBase}/gamer/award`;
+
+    const headers = {
+      "productKey": this._productKey,
+      ...authHeader(token)
+    };
+
+    const body = {
+      name
+    };
+
+    return this._sendPostRequest(url, JSON.stringify(body), headers);
+  }
+
   logIn(email: string, password: string): Promise<AuthResponse> {
     console.log("Authenticating");
 
@@ -62,9 +87,9 @@ export class Pinata {
     return this._sendPostRequest(url, payload);
   }
 
-  private async _sendPostRequest(url: string,
-                                 payloadJson: string,
-                                 headers: http.OutgoingHttpHeaders = {}) {
+  private _sendPostRequest(url: string,
+                           payloadJson: string,
+                           headers: http.OutgoingHttpHeaders = {}) {
     const defaultHeaders = {
       "Content-Type": "application/json",
       "Content-Length": payloadJson.length,
@@ -81,8 +106,8 @@ export class Pinata {
     return this._sendRequest(url, options, payloadJson);
   }
 
-  private async _sendGetRequest(url: string,
-                                headers: http.OutgoingHttpHeaders = {}) {
+  private _sendGetRequest(url: string,
+                          headers: http.OutgoingHttpHeaders = {}) {
     const defaultHeaders = {
       "Content-Type": "application/json"
     };
@@ -98,9 +123,9 @@ export class Pinata {
     return this._sendRequest(url, options);
   }
 
-  private async _sendRequest(url: string,
-                             options: http.RequestOptions,
-                             payloadJson?: string): Promise<any> {
+  private _sendRequest(url: string,
+                       options: http.RequestOptions,
+                       payloadJson?: string): Promise<any> {
     const web = this._apiBase.startsWith("https") ? https: http;
 
     return new Promise((resolve, reject) => {

@@ -9,7 +9,8 @@ export enum GameEventType {
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
-  WINDOW_RESIZED = "WINDOW_RESIZED"
+  WINDOW_RESIZED = "WINDOW_RESIZED",
+  AWARD_GRANTED = "AWARD_GRANTED"
 }
 
 export interface GameEvent {
@@ -59,4 +60,9 @@ export interface EPlayerKilled extends GameEvent {
 export interface EWindowResized extends GameEvent {
   w: number;
   h: number;
+}
+
+export interface EAwardGranted extends GameEvent {
+  name: string;
+  fetti: number;
 }

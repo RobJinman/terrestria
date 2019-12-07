@@ -11,10 +11,9 @@ import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
-import { ServerEntityManager } from "./server_entity_manager";
+import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
 import { EntityId } from "./common/system";
 import { debounce } from "./common/utils";
-import { getNextEntityId } from "./common/entity_manager";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
@@ -55,9 +54,9 @@ export class Game {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
-    this._factory = new ServerEntityFactory(this._em, this._pinata);
+    this._factory = new ServerEntityFactory(this._em);
 
-    const mapLoader = new MapLoader(this._em, this._factory);
+    const mapLoader = new MapLoader(this._em, this._pinata, this._factory);
     mapLoader.loadMap();
     this._mapData = <MapData>mapLoader.mapData;
 

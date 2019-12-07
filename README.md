@@ -1,5 +1,5 @@
-Pinata Demo 1
-=============
+Terrestria
+==========
 
 A browser-based game demonstrating Pinata integration. All state is stored on
 the server, making cheating practically impossible.

@@ -1,4 +1,4 @@
-import { Entity, getNextEntityId } from "./common/entity_manager";
+import { Entity } from "./common/entity_manager";
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
@@ -13,7 +13,7 @@ import { ClientSpatialComponent } from "./client_spatial_component";
 import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
 import { ClientAdComponent } from "./client_ad_system";
-import { ClientEntityManager } from "./client_entity_manager";
+import { ClientEntityManager, getNextEntityId } from "./client_entity_manager";
 
 function constructGem(em: ClientEntityManager, entity: Entity) {
   const id = entity.id;
@@ -396,6 +396,23 @@ function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
   spatialComp.setStaticPos(x, y);
 }
 
+function constructAwardNotification(em: ClientEntityManager) {
+  const id = getNextEntityId();
+
+  const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
+  const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
+
+  broadcastHandlers.set(GameEventType.AWARD_GRANTED, event => {
+    console.log(event);
+  });
+
+  const behaviourComp = new BehaviourComponent(id,
+                                               targetedHandlers,
+                                               broadcastHandlers);
+
+  em.addEntity(id, EntityType.OTHER, [ behaviourComp ]);
+}
+
 export function constructEntities(entityManager: ClientEntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
@@ -442,4 +459,5 @@ export function constructInitialEntitiesFromMapData(em: ClientEntityManager,
                                                     mapData: ClientMapData) {
   constructEarth(em, mapData);
   constructSky(em, mapData);
+  constructAwardNotification(em);
 }

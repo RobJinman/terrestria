@@ -1,14 +1,13 @@
-import { getNextEntityId } from "./common/entity_manager";
-import { AgentComponent } from "./agent_system";
+import { AgentComponent, AgentSystem } from "./agent_system";
 import { EntityType } from "./common/game_objects";
-import { GameEventType, EAgentEnterCell, EEntityBurned, 
-         EPlayerKilled } from "./common/event";
+import { GameEventType, EAgentEnterCell, EEntityBurned, EPlayerKilled, 
+         EAwardGranted } from "./common/event";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { InventorySystem, CCollector, CCollectable,
          Bucket } from "./inventory_system";
-import { ServerEntityManager } from "./server_entity_manager";
+import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { ServerSpatialComponent } from "./server_spatial_component";
 import { Circle, Polygon, Rectangle } from "./common/geometry";
@@ -19,7 +18,7 @@ import { FreeModeProperties } from "./free_mode_properties";
 import { SpatialMode } from "./common/spatial_component_packet";
 import { ServerAdComponent } from "./server_ad_system";
 import { GameError } from "./common/error";
-import { Pinata } from "./pinata";
+import { CreateAwardResult } from "./pinata";
 
 function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -263,7 +262,6 @@ function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
 }
 
 function constructTrophy(em: ServerEntityManager,
-                         pinata: Pinata,
                          desc: any): EntityId {
   const id = getNextEntityId();
 
@@ -292,12 +290,25 @@ function constructTrophy(em: ServerEntityManager,
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "trophies", 1);
 
+  const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
+
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
     const event = <EAgentEnterCell>e;
     inventorySys.collectItem(event.entityId, id);
 
-    // TODO: Pinata award
+    agentSys.grantAward(event.entityId, "special_item_collect")
+    .then(response => {
+      if (response.result == CreateAwardResult.SUCCESS) {
+        const awardEvent: EAwardGranted = {
+          type: GameEventType.AWARD_GRANTED,
+          entities: [event.entityId],
+          name: "special_item_collect",
+          fetti: response.fetti
+        };
+        em.submitEvent(awardEvent);
+      }
+    })
 
     em.removeEntity_onClients(id);
   });
@@ -349,11 +360,9 @@ function constructParallaxSprite(em: ServerEntityManager, desc: any) {
 
 export class ServerEntityFactory {
   private _em: ServerEntityManager;
-  private _pinata: Pinata;
 
-  constructor(em: ServerEntityManager, pinata: Pinata) {
+  constructor(em: ServerEntityManager) {
     this._em = em;
-    this._pinata = pinata;
   }
 
   constructEntity(desc: EntityDesc): EntityId {
@@ -377,7 +386,7 @@ export class ServerEntityFactory {
         return constructBlimp(this._em, desc.data);
       }
       case EntityType.TROPHY: {
-        return constructTrophy(this._em, this._pinata, desc.data);
+        return constructTrophy(this._em, desc.data);
       }
       case EntityType.AD: {
         return constructAd(this._em, desc.data);

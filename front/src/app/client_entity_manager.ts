@@ -3,6 +3,14 @@ import { ClientSystem } from "./common/client_system";
 import { ComponentPacket, EntityId, Component } from "./common/system";
 import { EntityType } from "./common/game_objects";
 
+// Start from a large offset so that IDs created on the client don't clash
+// with existing IDs created on the server
+let nextEntityId = 10000;
+
+export function getNextEntityId() {
+  return ++nextEntityId;
+}
+
 export class ClientEntityManager extends EntityManager {
   constructor() {
     super();

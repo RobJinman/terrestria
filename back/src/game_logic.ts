@@ -1,16 +1,14 @@
 import { PlayerAction, ActionType, UserInputAction, UserInput,
          InputState } from "./common/action";
 import { ComponentType } from "./common/component_types";
-import { ServerEntityManager } from "./server_entity_manager";
+import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
 import { EntityId } from "./common/system";
-import { getNextEntityId } from "./common/entity_manager";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { EntityType } from "./common/game_objects";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
-import { SpatialMode } from "./common/spatial_component_packet";
 
 export class GameLogic {
   private _em: ServerEntityManager;

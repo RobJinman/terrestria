@@ -4,12 +4,6 @@ import { GameEvent } from "./event";
 import { EntityType } from "./game_objects";
 import { EntityId, System, Component } from "./system";
 
-let nextEntityId = 0;
-
-export function getNextEntityId() {
-  return ++nextEntityId;
-}
-
 export interface Entity {
   id: EntityId;
   type: EntityType;

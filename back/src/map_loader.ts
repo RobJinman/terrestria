@@ -11,14 +11,19 @@ import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
 import { ServerEntityFactory } from "./server_entity_factory";
 import { ServerAdSystem } from "./server_ad_system";
+import { Pinata } from "./pinata";
 
 export class MapLoader {
   private _em: ServerEntityManager;
+  private _pinata: Pinata;
   private _factory: ServerEntityFactory;
   private _mapData: MapData|null = null;
 
-  constructor(em: ServerEntityManager, factory: ServerEntityFactory) {
+  constructor(em: ServerEntityManager,
+              pinata: Pinata,
+              factory: ServerEntityFactory) {
     this._em = em;
+    this._pinata = pinata;
     this._factory = factory;
   }
 
@@ -31,7 +36,7 @@ export class MapLoader {
                                                         this._mapData.width,
                                                         this._mapData.height,
                                                         gravRegion);
-    const agentSystem = new AgentSystem(this._em);
+    const agentSystem = new AgentSystem(this._em, this._pinata);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
     const adSystem = new ServerAdSystem();

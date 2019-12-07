@@ -1,9 +1,8 @@
 import { UserInput } from "./common/action";
-import { getNextEntityId } from "./common/entity_manager";
 import { EntityType } from "./common/game_objects";
 import { SpriteRenderComponent, StaticImage, RenderOptions, 
          RenderSystem } from "./render_system";
-import { ClientEntityManager } from "./client_entity_manager";
+import { ClientEntityManager, getNextEntityId } from "./client_entity_manager";
 import { EntityId } from "./common/system";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType } from "./common/event";
