@@ -161,7 +161,7 @@ export class App {
   }
 
   private _logIn() {
-    const email = "gamer1@email.com";
+    const email = "fragzbro123@email.com";
     const password = "password";
 
     const data: LogInAction = {
