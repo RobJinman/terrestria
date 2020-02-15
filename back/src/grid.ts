@@ -4,6 +4,7 @@ import { inRange, addSetToSet } from "./common/utils";
 import { EntityId } from "./common/system";
 import { AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { Span2d } from "./common/span";
+import { Logger } from "./logger";
 
 export class Grid {
   private _blockW: number;
@@ -13,13 +14,16 @@ export class Grid {
   private _grid: Set<GridModeSubcomponent>[][];
   private _gravRegion: Span2d;
   private _attemptModeTransitionFn: AttemptModeTransitionFn;
+  private _logger: Logger;
 
   constructor(blockW: number,
               blockH: number,
               numBlocksX: number,
               numBlocksY: number,
               gravRegion: Span2d,
-              attemptModeTransitionFn: AttemptModeTransitionFn) {
+              attemptModeTransitionFn: AttemptModeTransitionFn,
+              logger: Logger) {
+    this._logger = logger;
     this._blockW = blockW;
     this._blockH = blockH;
     this._w = numBlocksX;
@@ -147,7 +151,7 @@ export class Grid {
       for (let j = 0; j < this._h; ++j) {
         msg += this.inCell(i, j).size + " ";
       }
-      console.log(msg);
+      this._logger.debug(msg);
     }
   }
 

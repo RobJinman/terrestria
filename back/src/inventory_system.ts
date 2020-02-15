@@ -94,7 +94,6 @@ export class CCollector extends CInventory {
                           `${item.bucket} bucket`);
     }
     bucket.addItem(item);
-    console.log(`Entity ${this.entityId} ${bucket.name}: ${bucket.value}`);
   }
 }
 

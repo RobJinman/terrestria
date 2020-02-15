@@ -13,6 +13,7 @@ import { SpatialComponentPacket,
 import { ServerEntityManager } from "./server_entity_manager";
 import { EntityManager } from "./common/entity_manager";
 import { directionToVector } from "./common/geometry";
+import { Logger } from "./logger";
 
 export class ServerSpatialSystem implements ServerSystem {
   private _em: EntityManager;
@@ -25,7 +26,8 @@ export class ServerSpatialSystem implements ServerSystem {
   constructor(em: ServerEntityManager,
               w: number,
               h: number,
-              gravityRegion: Span2d) {
+              gravityRegion: Span2d,
+              logger: Logger) {
 
     const attemptTransitionFn = this._attemptModeTransition.bind(this);
 
@@ -35,7 +37,8 @@ export class ServerSpatialSystem implements ServerSystem {
                                           w,
                                           h,
                                           gravityRegion,
-                                          attemptTransitionFn);
+                                          attemptTransitionFn,
+                                          logger);
     this._freeModeImpl = new FreeModeImpl(gravityRegion,
                                           attemptTransitionFn);
     this._w = w;

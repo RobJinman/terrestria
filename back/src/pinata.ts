@@ -1,5 +1,6 @@
 import https from "https";
 import http from "http";
+import { Logger } from "./logger";
 
 export interface AuthResponse {
   accountId: string;
@@ -42,13 +43,17 @@ function authHeader(token: string): http.OutgoingHttpHeaders {
 export class Pinata {
   private _apiBase: string;
   private _productKey: string;
+  private _logger: Logger;
 
-  constructor(apiBase: string, productKey: string) {
+  constructor(apiBase: string, productKey: string, logger: Logger) {
     this._apiBase = apiBase;
     this._productKey = productKey;
+    this._logger = logger;
   }
 
   getAdSpaces(): Promise<AdSpaceResponse> {
+    this._logger.debug("Fetching ad spaces...");
+
     const url = `${this._apiBase}/gamer/ad-space`;
 
     const headers = {
@@ -74,7 +79,7 @@ export class Pinata {
   }
 
   logIn(email: string, password: string): Promise<AuthResponse> {
-    console.log("Authenticating");
+    this._logger.debug("Authenticating");
 
     const body = {
       email,
@@ -139,19 +144,19 @@ export class Pinata {
         res.on("end", () => {
           try {
             if (res.statusCode != 200) {
-              reject(`Error authenticating user: Status ${res.statusCode}`);
+              reject(`Error sending request: Status ${res.statusCode}`);
             }
             const data = JSON.parse(responseJson);
             resolve(data);
           }
           catch (err) {
-            reject("Error authenticating user: " + err);
+            reject("Error sending request: " + err);
           }
         });
       });
 
       req.on("error", err => {
-        reject("Error authenticating user: " + err);
+        reject("Error sending request: " + err);
       });
 
       if (payloadJson) {

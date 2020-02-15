@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "./build.sh",
+    "run": "cd dist && node ./index.js",
     "test": "jasmine-ts --config=jasmine.json"
   },
   "author": "Rob Jinman",

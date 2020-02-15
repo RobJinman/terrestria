@@ -9,14 +9,17 @@ import { EntityType } from "./common/game_objects";
 import { ServerSpatialSystem } from "./server_spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
+import { Logger } from "./logger";
 
 export class GameLogic {
   private _em: ServerEntityManager;
+  private _logger: Logger;
   private _entityId: EntityId = getNextEntityId();
   private _inputStates = new Map<EntityId, Record<UserInput, InputState>>();
 
-  constructor(em: ServerEntityManager) {
+  constructor(em: ServerEntityManager, logger: Logger) {
     this._em = em;
+    this._logger = logger;
 
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -53,7 +56,7 @@ export class GameLogic {
   private _onPlayerKilled(e: GameEvent) {
     const event = <EPlayerKilled>e;
 
-    console.log(`Player ${event.playerId} killed!`);
+    this._logger.info(`Player ${event.playerId} killed!`);
 
     this.removePlayer(event.playerId);
     this._em.removeEntity(event.playerId);

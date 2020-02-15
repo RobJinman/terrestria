@@ -308,7 +308,9 @@ function constructTrophy(em: ServerEntityManager,
         };
         em.submitEvent(awardEvent);
       }
-    })
+    }, reason => {
+      throw new GameError(`failed to grant award: ${reason}`);
+    });
 
     em.removeEntity_onClients(id);
   });

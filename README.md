@@ -19,14 +19,14 @@ Install dependencies
 Set the relevant environment variables
 
 ```
-    source ./environment/env_dev.sh
+    source ./env.sh
 ```
 
 Compile and run the app
 
 ```
     npm run build
-    node ./dist/index.js
+    npm run run
 ```
 
 It will then be available at http://localhost:3001.

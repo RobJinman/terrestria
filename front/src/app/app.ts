@@ -161,6 +161,7 @@ export class App {
   }
 
   private _logIn() {
+    // TODO
     const email = "fragzbro123@email.com";
     const password = "password";
 

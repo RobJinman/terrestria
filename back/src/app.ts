@@ -9,6 +9,7 @@ import { GameResponse, GameResponseType, RError, RLoginSuccess,
 import { Pinata } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
+import { Logger } from "./logger";
 
 const SERVER_PORT = 3001;
 const MAX_PLAYERS_PER_GAME = 10;
@@ -31,6 +32,7 @@ type HandlerFn = (...args: any) => Promise<void>;
 
 export class App {
   private _config: AppConfig;
+  private _logger = new Logger();
   private _server: http.Server;
   private _wss: WebSocket.Server;
   private _users: Map<EntityId, UserConnection>;
@@ -45,7 +47,8 @@ export class App {
     });
 
     this._pinata = new Pinata(this._config.pinataApiBase,
-                              this._config.productKey);
+                              this._config.productKey,
+                              this._logger);
 
     this._wss = new WebSocket.Server({ server: this._server });;
     this._games = new Set<Game>();
@@ -72,7 +75,7 @@ export class App {
   }
 
   private _handleConnection(ws: WebSocket) {
-    console.log("Got connection");
+    this._logger.info("Got connection");
 
     const sock = <ExtWebSocket>ws;
     sock.isAlive = true;
@@ -90,7 +93,7 @@ export class App {
   }
 
   private _terminateUser(id: EntityId) {
-    console.log(`Terminating user, id = ${id}`);
+    this._logger.info(`Terminating user, id = ${id}`);
 
     const user = this._users.get(id);
 
@@ -101,7 +104,7 @@ export class App {
       user.ws.terminate();
 
       if (user.game.numPlayers === 0) {
-        console.log("Deleting game " + user.game.id);
+        this._logger.info("Deleting game " + user.game.id);
         user.game.terminate();
         this._games.delete(user.game);
       }
@@ -114,7 +117,7 @@ export class App {
     this._wss.clients.forEach(ws => {
       const sock = <ExtWebSocket>ws;
       if (sock.isAlive === false) {
-        console.log("Terminating connection, id = " + sock.userId);
+        this._logger.info("Terminating connection, id = " + sock.userId);
         if (sock.userId) {
           this._terminateUser(sock.userId);
         }
@@ -145,36 +148,38 @@ export class App {
           message: err.toString()
         };
 
-        console.error(response.message);
+        this._logger.error(response.message);
         this._sendResponse(ws, response);
       }
     }
     catch (err) {
-      console.error("Error! " + err);
+      this._logger.error("Error! " + err);
     }
   }
 
-  private _chooseAvailableGame(): Game {
+  private async _chooseAvailableGame(): Promise<Game> {
     const games: Game[] = Array.from(this._games);
 
-    console.log("Number of games: " + games.length);
+    this._logger.info("Number of games: " + games.length);
 
     for (let game of games) {
-      console.log("game.numPlayers = " + game.numPlayers);
+      this._logger.info("game.numPlayers = " + game.numPlayers);
 
       if (game.numPlayers < MAX_PLAYERS_PER_GAME) {
         return game;
       }
     }
 
-    const game = new Game(this._config, this._pinata);
+    const game = new Game(this._config, this._logger, this._pinata);
+    await game.initialise();
+
     this._games.add(game);
 
     return game;
   }
 
   private async _handleLogIn(sock: ExtWebSocket, data: LogInAction) {
-    console.log("Handling log in");
+    this._logger.info("Handling log in");
 
     let pinataId: string = "";
     let pinataToken: string = "";
@@ -184,15 +189,15 @@ export class App {
       pinataId = auth.accountId;
       pinataToken = auth.token;
 
-      console.log(`Logged into pinata account ${pinataId} with token ` +
-                  `${pinataToken}`);
+      this._logger.info(`Logged into pinata account ${pinataId} with token ` +
+                        `${pinataToken}`);
     }
     catch (err) {
       throw new GameError("Couldn't log into pinata: " + err,
                           ErrorCode.AUTHENTICATION_FAILURE);
     }
 
-    const game = this._chooseAvailableGame();
+    const game = await this._chooseAvailableGame();
     const entityId = game.addPlayer(sock, pinataId, pinataToken);
 
     sock.userId = entityId;

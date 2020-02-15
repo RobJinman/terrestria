@@ -11,6 +11,7 @@ import { ServerEntityManager } from "./server_entity_manager";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { Span2d } from "./common/span";
 import { ComponentType } from "./common/component_types";
+import { Logger } from "./logger";
 
 export class GridModeImpl implements SpatialModeImpl {
   private _em: ServerEntityManager;
@@ -21,14 +22,16 @@ export class GridModeImpl implements SpatialModeImpl {
               w: number,
               h: number,
               gravRegion: Span2d,
-              attemptModeTransitionFn: AttemptModeTransitionFn) {
+              attemptModeTransitionFn: AttemptModeTransitionFn,
+              logger: Logger) {
     this._em = entityManager;
     this._grid = new Grid(BLOCK_SZ,
                           BLOCK_SZ,
                           w,
                           h,
                           gravRegion,
-                          attemptModeTransitionFn);
+                          attemptModeTransitionFn,
+                          logger);
   }
 
   get grid() {

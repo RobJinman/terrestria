@@ -22,13 +22,14 @@ import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
 import { ServerAdSystem } from "./server_ad_system";
+import { Logger } from "./logger";
 
-function noThrow(fn: () => any) {
+function noThrow(logger: Logger, fn: () => any) {
   try {
     return fn();
   }
   catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 }
 
@@ -36,6 +37,7 @@ export class Game {
   private static nextGameId: number = 0;
 
   private _appConfig: AppConfig;
+  private _logger: Logger;
   private _pinata: Pinata;
   private _mapData: MapData;
   private _id: number;
@@ -48,19 +50,23 @@ export class Game {
   private _entityId: EntityId;
   private _doSyncFn: () => void;
 
-  constructor(appConfig: AppConfig, pinata: Pinata) {
+  constructor(appConfig: AppConfig, logger: Logger, pinata: Pinata) {
     this._appConfig = appConfig;
+    this._logger = logger;
     this._pinata = pinata;
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new ServerEntityManager(this._pipe);
     this._factory = new ServerEntityFactory(this._em);
 
-    const mapLoader = new MapLoader(this._em, this._pinata, this._factory);
+    const mapLoader = new MapLoader(this._em,
+                                    this._pinata,
+                                    this._factory,
+                                    this._logger);
     mapLoader.loadMap();
     this._mapData = <MapData>mapLoader.mapData;
 
-    this._gameLogic = new GameLogic(this._em);
+    this._gameLogic = new GameLogic(this._em, this._logger);
 
     this._entityId = getNextEntityId();
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -74,22 +80,24 @@ export class Game {
 
     this._em.addEntity(this._entityId, EntityType.OTHER, {}, [behaviourComp]);
 
-    console.log(`Starting game ${this._id}`);
+    this._logger.info(`Starting game ${this._id}`);
 
-    this._loopTimeout = setInterval(() => noThrow(this._tick.bind(this)),
-                                    SERVER_FRAME_DURATION_MS);
+    this._loopTimeout = setInterval(() => {
+      return noThrow(this._logger, this._tick.bind(this));
+    }, SERVER_FRAME_DURATION_MS);
 
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
+  }
 
+  async initialise() {
     const adSystem = <ServerAdSystem>this._em.getSystem(ComponentType.AD);
+    const adSpaces = await this._pinata.getAdSpaces();
 
-    this._pinata.getAdSpaces().then(adSpaces => {
-      adSpaces.forEach(adSpace => {
-        if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
-          adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
-        }
-        console.log(adSpace);
-      });
+    adSpaces.forEach(adSpace => {
+      if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
+        adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
+      }
+      this._logger.debug("Got ad space", adSpace);
     });
   }
 
@@ -109,7 +117,7 @@ export class Game {
 
     this._gameLogic.addPlayer(id);
 
-    console.log(`Adding player ${id}`);
+    this._logger.info(`Adding player ${id}`);
   
     this._pipe.addConnection(id, socket);
 
@@ -173,7 +181,7 @@ export class Game {
 
     this._gameLogic.addPlayer(id);
 
-    console.log(`Respawning player ${oldId} => ${id}`);
+    this._logger.info(`Respawning player ${oldId} => ${id}`);
 
     const newPlayerResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
@@ -190,7 +198,7 @@ export class Game {
   }
 
   removePlayer(playerId: EntityId) {
-    console.log(`Removing player ${playerId} from game`);
+    this._logger.info(`Removing player ${playerId} from game`);
     this._pipe.removeConnection(playerId);
     this._gameLogic.removePlayer(playerId);
     this._em.removeEntity_onClients(playerId);
@@ -213,7 +221,7 @@ export class Game {
   }
 
   terminate() {
-    console.log(`Terminating game ${this._id}`);
+    this._logger.info(`Terminating game ${this._id}`);
     clearInterval(this._loopTimeout);
   }
 
