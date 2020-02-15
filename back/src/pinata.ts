@@ -144,19 +144,19 @@ export class Pinata {
         res.on("end", () => {
           try {
             if (res.statusCode != 200) {
-              reject(`Error sending request: Status ${res.statusCode}`);
+              reject(`Error from Pinata servers: Status ${res.statusCode}`);
             }
             const data = JSON.parse(responseJson);
             resolve(data);
           }
           catch (err) {
-            reject("Error sending request: " + err);
+            reject("Error making request to Pinata servers: " + err);
           }
         });
       });
 
       req.on("error", err => {
-        reject("Error sending request: " + err);
+        reject("Error making request to Pinata servers: " + err);
       });
 
       if (payloadJson) {

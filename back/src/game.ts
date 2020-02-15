@@ -91,14 +91,19 @@ export class Game {
 
   async initialise() {
     const adSystem = <ServerAdSystem>this._em.getSystem(ComponentType.AD);
-    const adSpaces = await this._pinata.getAdSpaces();
+    try {
+      const adSpaces = await this._pinata.getAdSpaces();
 
-    adSpaces.forEach(adSpace => {
-      if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
-        adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
-      }
-      this._logger.debug("Got ad space", adSpace);
-    });
+      adSpaces.forEach(adSpace => {
+        if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
+          adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
+        }
+        this._logger.debug("Got ad space", adSpace);
+      });
+    }
+    catch (err) {
+      this._logger.error("Could not retrieve ad spaces", err);
+    }
   }
 
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
