@@ -171,8 +171,6 @@ export class App {
     }
 
     const game = new Game(this._config, this._logger, this._pinata);
-    await game.initialise();
-
     this._games.add(game);
 
     return game;

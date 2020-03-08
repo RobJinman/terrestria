@@ -4,33 +4,49 @@ import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { AdComponentPacket } from "./common/ad_component_packet";
+import { Pinata, AdSlice } from "./pinata";
 
 export class ServerAdComponent extends Component {
   dirty: boolean = true;
   readonly adName: string;
-  private _adUrl: string|null = null;
+  private _slices: AdSlice[] = [];
+  private _currentSlice = -1;
 
   constructor(entityId: EntityId, adName: string) {
     super(entityId, ComponentType.AD);
     this.adName = adName;
   }
 
-  set adUrl(value: string|null) {
-    this._adUrl = value;
+  set currentSlice(index: number) {
+    this.dirty = true;
+    this._currentSlice = index;
+  }
+
+  get currentSlice() {
+    return this._currentSlice;
+  }
+
+  set slices(slices: AdSlice[]) {
+    this._slices = slices;
     this.dirty = true;
   }
 
   get adUrl() {
-    return this._adUrl;
+    const n = this._slices.length;
+    if (n === 0) {
+      return null;
+    }
+    return this._slices[this._currentSlice % n].url;
   }
 }
 
 export class ServerAdSystem implements ServerSystem {
-  private _components = new Map<EntityId, ServerAdComponent>()
-  private _ads = new Map<string, ServerAdComponent[]>();
-  private _adUrls = new Map<string, string>();
+  private _components = new Map<EntityId, ServerAdComponent>();
+  private _pinata: Pinata;
 
-  constructor() {}
+  constructor(pinata: Pinata) {
+    this._pinata = pinata;
+  }
 
   numComponents() {
     return this._components.size;
@@ -39,24 +55,9 @@ export class ServerAdSystem implements ServerSystem {
   addComponent(component: ServerAdComponent) {
     this._components.set(component.entityId, component);
 
-    component.adUrl = this._adUrls.get(component.adName) || null;
-
-    let entities = this._ads.get(component.adName);
-    if (entities) {
-      entities.push(component);
-    }
-    else {
-      entities = [component];
-      this._ads.set(component.adName, entities);
-    }
-  }
-
-  setAdUrl(name: string, url: string) {
-    this._adUrls.set(name, url);
-
-    const ads = this._ads.get(name) || [];
-    ads.forEach(c => {
-      c.adUrl = url;
+    const region = "GB"; // TODO
+    this._pinata.getAdSlices(component.adName, region).then(slices => {
+      component.slices = slices;
     });
   }
 

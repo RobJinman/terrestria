@@ -31,7 +31,7 @@ export class MapLoader {
     this._logger = logger;
   }
 
-  loadMap() {
+  loadMap(pinata: Pinata) {
     this._mapData = this._loadMapData();
 
     const gravRegion = this._constructGravRegion(this._mapData.gravityRegion);
@@ -44,7 +44,7 @@ export class MapLoader {
     const agentSystem = new AgentSystem(this._em, this._pinata);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
-    const adSystem = new ServerAdSystem();
+    const adSystem = new ServerAdSystem(pinata);
 
     this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);

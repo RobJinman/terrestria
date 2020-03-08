@@ -21,7 +21,6 @@ import { ServerSpatialComponent } from "./server_spatial_component";
 import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
-import { ServerAdSystem } from "./server_ad_system";
 import { Logger } from "./logger";
 
 function noThrow(logger: Logger, fn: () => any) {
@@ -63,7 +62,7 @@ export class Game {
                                     this._pinata,
                                     this._factory,
                                     this._logger);
-    mapLoader.loadMap();
+    mapLoader.loadMap(pinata);
     this._mapData = <MapData>mapLoader.mapData;
 
     this._gameLogic = new GameLogic(this._em, this._logger);
@@ -87,23 +86,6 @@ export class Game {
     }, SERVER_FRAME_DURATION_MS);
 
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
-  }
-
-  async initialise() {
-    const adSystem = <ServerAdSystem>this._em.getSystem(ComponentType.AD);
-    try {
-      const adSpaces = await this._pinata.getAdSpaces();
-
-      adSpaces.forEach(adSpace => {
-        if (adSpace.currentAd && adSpace.currentAd.finalAsset) {
-          adSystem.setAdUrl(adSpace.name, adSpace.currentAd.finalAsset.url);
-        }
-        this._logger.debug("Got ad space", adSpace);
-      });
-    }
-    catch (err) {
-      this._logger.error("Could not retrieve ad spaces", err);
-    }
   }
 
   addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {

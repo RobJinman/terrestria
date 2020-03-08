@@ -4,7 +4,7 @@
   "description": "Pinata demo 1 back-end",
   "main": "index.js",
   "scripts": {
-    "build": "./build.sh",
+    "build": "./build.sh && npm run test",
     "run": "cd dist && node ./index.js",
     "test": "jasmine-ts --config=jasmine.json"
   },

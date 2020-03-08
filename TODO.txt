@@ -2,4 +2,14 @@
 * Walls
 * Display gems collected
 * User log-in
-* Grant awards
+
+
+Design
+* Valuable items spawn periodically - players compete to reach it first.
+* Dig regions refresh periodically - must evacuate in time or die.
+* Must deposit collected gems to bank them.
+* Invisibility power up
+* Bombs, dynamite
+* Killing players releases their gems
+* Ads - billboards, blimps, etc.
+
