@@ -1,9 +1,9 @@
 import "../styles/styles.scss";
 import { ActionType, UserInputAction, UserInput, LogInAction,
-         RespawnAction, InputState } from "./common/action";
+         RespawnAction, InputState, JoinGameAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLoginSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
-         ClientMapData } from "./common/response";
+         ClientMapData, RJoinGameSuccess } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
 import { CLIENT_FRAME_RATE } from "./common/constants";
@@ -20,6 +20,7 @@ import { ClientAdSystem } from './client_ad_system';
 import { ClientSpatialComponent } from './client_spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
+import { GameState } from "./definitions";
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -33,11 +34,16 @@ export class App {
   private _em: ClientEntityManager;
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
-  private _mapData: ClientMapData|null = null;
+  private _mapData?: ClientMapData;
   private _userInputManager: UserInputManager;
+  private _onStateChange: (state: GameState) => void;
+  private _pinataId?: string;
+  private _pinataToken?: string;
 
-  constructor() {
+  constructor(onStateChange: (state: GameState) => void) {
     window.onresize = this._onWindowResize.bind(this);
+
+    this._onStateChange = onStateChange;
 
     this._ws = new WebSocket(__WEBSOCKET_URL__);
     this._ws.onmessage = ev => this._onServerMessage(ev);
@@ -64,20 +70,38 @@ export class App {
                              this._onEnterKeyPress.bind(this));
   }
 
-  async start() {
+  async initialise() {
     this._insertElement();
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     await renderSys.init();
+
+    this._onWindowResize();
 
     this._userInputManager.initialiseUi();
 
     await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
                            500,
                            10);
+  }
 
+  logIn() {
     // TODO
     this._logIn();
+  }
+
+  start() {
+    console.log("Starting game");
+
+    const data: JoinGameAction = {
+      playerId: PLAYER_ID_UNSET,
+      type: ActionType.JOIN_GAME,
+      pinataId: this._pinataId,
+      pinataToken: this._pinataToken
+    };
+
+    const dataString = JSON.stringify(data);
+    this._ws.send(dataString);
   }
 
   private _onEnterKeyPress() {
@@ -249,11 +273,23 @@ export class App {
       }
       case GameResponseType.LOGIN_SUCCESS: {
         const m = <RLoginSuccess>msg;
+        this._pinataId = m.pinataId;
+        this._pinataToken = m.pinataToken;
+
+        this._onStateChange(GameState.LOGGED_IN);
+        break;
+      }
+      case GameResponseType.JOIN_GAME_SUCCESS: {
+        const m = <RJoinGameSuccess>msg;
         this._startGame(m.playerId);
+
+        this._onStateChange(GameState.GAME_ACTIVE);
         break;
       }
       case GameResponseType.PLAYER_KILLED: {
         this._onPlayerKilled();
+
+        this._onStateChange(GameState.PLAYER_DEAD);
         break;
       }
       case GameResponseType.NEW_PLAYER_ID: {

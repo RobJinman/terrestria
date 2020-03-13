@@ -15,6 +15,7 @@ export enum InputState {
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
+  JOIN_GAME = "JOIN_GAME",
   RESPAWN = "RESPAWN",
   USER_INPUT = "USER_INPUT"
   // ...
@@ -22,6 +23,7 @@ export enum ActionType {
 
 const VALIDATORS: ValidatorFnMap = {
   LOG_IN: isLogInAction,
+  JOIN_GAME: isJoinGameAction,
   RESPAWN: isRespawnAction,
   USER_INPUT: isUserInputAction
   // ...
@@ -39,6 +41,20 @@ export function isLogInAction(obj: any): obj is LogInAction {
   return obj.type == ActionType.LOG_IN &&
          obj.email &&
          obj.password;
+}
+
+// =======================================================
+// JoinGameAction
+//
+export interface JoinGameAction extends PlayerAction {
+  pinataId?: string;
+  pinataToken?: string;
+}
+
+export function isJoinGameAction(obj: any): obj is JoinGameAction {
+  return obj.type === ActionType.JOIN_GAME &&
+         obj.pinataId &&
+         obj.pinataToken;
 }
 
 // =======================================================

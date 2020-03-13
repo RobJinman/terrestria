@@ -3,9 +3,11 @@ import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
 import { ActionType, LogInAction, deserialiseMessage,
-         RespawnAction } from "./common/action";
+         RespawnAction, 
+         JoinGameAction} from "./common/action";
 import { GameResponse, GameResponseType, RError, RLoginSuccess, 
-         RNewPlayerId } from "./common/response";
+         RNewPlayerId, 
+         RJoinGameSuccess} from "./common/response";
 import { Pinata } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
@@ -195,6 +197,24 @@ export class App {
                           ErrorCode.AUTHENTICATION_FAILURE);
     }
 
+    const response: RLoginSuccess = {
+      type: GameResponseType.LOGIN_SUCCESS,
+      pinataId,
+      pinataToken
+    };
+
+    this._sendResponse(sock, response);
+  }
+
+  private async _handleJoinGame(sock: ExtWebSocket, data: JoinGameAction) {
+    this._logger.info("Handling join game");
+
+    let { pinataId, pinataToken } = data;
+
+    // TODO: Accept unset pinata credentials
+    pinataId = pinataId || "";
+    pinataToken = pinataToken || "";
+
     const game = await this._chooseAvailableGame();
     const entityId = game.addPlayer(sock, pinataId, pinataToken);
 
@@ -214,8 +234,8 @@ export class App {
       }
     });
 
-    const response: RLoginSuccess = {
-      type: GameResponseType.LOGIN_SUCCESS,
+    const response: RJoinGameSuccess = {
+      type: GameResponseType.JOIN_GAME_SUCCESS,
       playerId: entityId
     };
 
@@ -250,6 +270,10 @@ export class App {
     if (action.type === ActionType.LOG_IN) {
       const data = <LogInAction>action;
       await this._handleLogIn(sock, data);
+    }
+    else if (action.type == ActionType.JOIN_GAME) {
+      const data = <JoinGameAction>action;
+      await this._handleJoinGame(sock, data);
     }
     else {
       if (!sock.userId) {

@@ -4,6 +4,7 @@
 * User log-in
 
 
+
 Design
 * Valuable items spawn periodically - players compete to reach it first.
 * Dig regions refresh periodically - must evacuate in time or die.
@@ -12,4 +13,7 @@ Design
 * Bombs, dynamite
 * Killing players releases their gems
 * Ads - billboards, blimps, etc.
+
+
+
 

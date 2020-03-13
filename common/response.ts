@@ -4,8 +4,10 @@ import { EntityId, ComponentPacket } from "./system";
 import { GameEvent } from "./event";
 import { MapData } from "./map_data";
 
+// TODO: Use numbers, not strings
 export enum GameResponseType {
   ERROR = "ERROR",
+  JOIN_GAME_SUCCESS = "JOIN_GAME_SUCCESS",
   LOGIN_SUCCESS = "LOGIN_SUCCESS",
   MAP_DATA = "MAP_DATA",
   GAME_STATE = "GAME_STATE",
@@ -27,8 +29,13 @@ export interface RError extends GameResponse {
   message: string;
 }
 
-export interface RLoginSuccess extends GameResponse {
+export interface RJoinGameSuccess extends GameResponse {
   playerId: EntityId;
+}
+
+export interface RLoginSuccess extends GameResponse {
+  pinataId: string;
+  pinataToken: string;
 }
 
 export interface RMapData extends GameResponse {
