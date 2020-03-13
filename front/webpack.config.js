@@ -16,19 +16,24 @@ let websocketUrl = isProduction ? "wss://api.terrestria.io:3001"
 const baseConfig = {
   context: rootDir,
   entry: {
-    app: "./app/main.ts"
+    terrestria: "./index.tsx"
   },
   mode: isProduction ? "production" : "development",
   target: "web",
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.ts(x?)$/,
         use: "ts-loader",
         exclude: [
           /\.spec.ts$/,
           /node_modules/
         ]
+      },
+      {
+        test: /\.js$/,
+        enforce: "pre",
+        loader: "source-map-loader"
       },
       {
         test: /\.scss$/,
@@ -41,7 +46,7 @@ const baseConfig = {
     ]
   },
   resolve: {
-    extensions: [ ".ts", ".js" ]
+    extensions: [ ".ts", ".tsx", ".js" ]
   },
   output: {
     filename: "[name].bundle.js",

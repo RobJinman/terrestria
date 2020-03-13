@@ -62,11 +62,11 @@ export class App {
                              this._onDirectionKeyDown.bind(this),
                              this._onDirectionKeyUp.bind(this),
                              this._onEnterKeyPress.bind(this));
-
-    this._insertElement();
   }
 
   async start() {
+    this._insertElement();
+
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     await renderSys.init();
 
@@ -282,9 +282,9 @@ export class App {
   }
 
   private _insertElement() {
-    const parentElement = document.getElementById("pinata-demo-app");
+    const parentElement = document.getElementById("terrestria");
     if (!parentElement) {
-      throw new Error("Could not find #pinata-demo-app");
+      throw new Error("Could not find #terrestria");
     }
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     parentElement.appendChild(renderSys.getCanvas());

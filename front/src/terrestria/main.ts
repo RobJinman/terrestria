@@ -5,4 +5,4 @@ async function init() {
   await app.start();
 }
 
-document.body.onload = init;
+//document.body.onload = init;
