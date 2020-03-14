@@ -88,13 +88,14 @@ export class Game {
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
   }
 
-  addPlayer(socket: WebSocket, pinataId: string, pinataToken: string) {
+  addPlayer(socket: WebSocket, pinataId?: string, pinataToken?: string) {
     const entities = this._em.getEntities();
   
     const id = this._factory.constructEntity({
       type: EntityType.PLAYER,
       data: {
-        pinataId, pinataToken
+        pinataId,
+        pinataToken
       }
     });
     const spatial =
@@ -140,7 +141,7 @@ export class Game {
     return id;
   }
 
-  respawnPlayer(oldId: EntityId, pinataId: string, pinataToken: string) {
+  respawnPlayer(oldId: EntityId, pinataId?: string, pinataToken?: string) {
     if (this._em.hasEntity(oldId)) {
       throw new GameError(`Cannot respawn; player ${oldId} is still alive`,
                           ErrorCode.BAD_REQUEST);

@@ -1,8 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { EntityManager } from "./common/entity_manager";
 import { GameError } from "./common/error";
-import { GameEvent, GameEventType, EEntityMoved,
-         EWindowResized } from "./common/event";
+import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
@@ -408,11 +407,6 @@ export class RenderSystem implements ClientSystem {
         this._onEntityMoved(ev.entityId);
         break;
       }
-      case GameEventType.WINDOW_RESIZED: {
-        const ev = <EWindowResized>event;
-        this._onWindowResized(ev.w, ev.h);
-        break;
-      }
     }
   }
 
@@ -437,7 +431,7 @@ export class RenderSystem implements ClientSystem {
     });
   }
 
-  private _onWindowResized(w: number, h: number) {
+  onWindowResized(w: number, h: number) {
     this._windowW = w;
     this._windowH = h;
 

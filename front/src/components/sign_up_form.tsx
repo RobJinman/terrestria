@@ -80,8 +80,8 @@ export class CSignUpForm
     return (
       <div className="sign-up">
         <h1>Create your Piñata Account</h1>
-        <p>Once signed up, you can view your awards at
-          <a href="https://pinatagames.com"> pinatagames.com</a> and convert your
+        <p>Once signed up, you can view your awards at{" "}
+          <a href="https://pinatagames.com">pinatagames.com</a> and convert your
           Fetti to real money via PayPal.</p>
         <form onSubmit={onSubmit}>
           <InputControl name="email" label="Email"

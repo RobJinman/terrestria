@@ -25,8 +25,8 @@ interface ExtWebSocket extends WebSocket {
 interface UserConnection {
   ws: ExtWebSocket;
   playerId: EntityId;
-  pinataId: string;
-  pinataToken: string;
+  pinataId?: string;
+  pinataToken?: string;
   game: Game;
 }
 
@@ -210,10 +210,6 @@ export class App {
     this._logger.info("Handling join game");
 
     let { pinataId, pinataToken } = data;
-
-    // TODO: Accept unset pinata credentials
-    pinataId = pinataId || "";
-    pinataToken = pinataToken || "";
 
     const game = await this._chooseAvailableGame();
     const entityId = game.addPlayer(sock, pinataId, pinataToken);

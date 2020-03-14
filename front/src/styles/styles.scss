@@ -16,7 +16,9 @@ html, body {
 
     .main-menu {
       width: 340px;
-      height: 340px;
+      min-height: 340px;
+      max-height: 90%;
+      overflow-y: auto;
       box-sizing: border-box;
       position: absolute;
       left: 50%;
@@ -25,6 +27,21 @@ html, body {
       background-color: white;
       border-radius: 12px;
       padding: 20px;
+    }
+
+    .log-in {
+      .continue {
+        margin-top: 30px;
+      }
+
+      .go-back {
+        position: absolute;
+        bottom: 0;
+      }
+    }
+
+    p {
+      margin: 10px 0;
     }
 
     form {

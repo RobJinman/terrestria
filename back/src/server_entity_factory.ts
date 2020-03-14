@@ -299,14 +299,19 @@ function constructTrophy(em: ServerEntityManager,
 
     agentSys.grantAward(event.entityId, "special_item_collect")
     .then(response => {
-      if (response.result == CreateAwardResult.SUCCESS) {
-        const awardEvent: EAwardGranted = {
-          type: GameEventType.AWARD_GRANTED,
-          entities: [event.entityId],
-          name: "special_item_collect",
-          fetti: response.fetti
-        };
-        em.submitEvent(awardEvent);
+      if (response !== null) {
+        if (response.result == CreateAwardResult.SUCCESS) {
+          const awardEvent: EAwardGranted = {
+            type: GameEventType.AWARD_GRANTED,
+            entities: [event.entityId],
+            name: "special_item_collect",
+            fetti: response.fetti
+          };
+          em.submitEvent(awardEvent);
+        }
+      }
+      else {
+        // TODO: Handle not logged-in user
       }
     }, reason => {
       throw new GameError(`failed to grant award: ${reason}`);

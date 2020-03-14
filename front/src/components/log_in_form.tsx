@@ -1,22 +1,17 @@
 import * as React from "react";
 import { InputControl, InputControlType, InputControlState,
          initialInputState } from "./input_control";
+import { noDefault } from "./utils";
 
 interface CLogInFormProps {
   onLogIn: (email: string, password: string) => void;
   onStart: () => void;
+  onBack: () => void;
 }
 
 interface CLogInFormState {
   email: InputControlState;
   password: InputControlState;
-}
-
-function noDefault(fn: (event: React.SyntheticEvent) => void) {
-  return (event: React.SyntheticEvent) => {
-    event.preventDefault();
-    fn(event);
-  };
 }
 
 export class CLogInForm
@@ -66,8 +61,11 @@ export class CLogInForm
             errorMsg="Please enter a password"/>
           <input disabled={!isValid()} type="submit" value="Sign in"/>
         </form>
-        <p><a href="#" onClick={noDefault(this.props.onStart)}>
-          Skip Piñata sign in</a></p>
+        <p className="continue">
+          <a href="#" onClick={noDefault(this.props.onStart)}>
+          Skip Piñata sign in and continue to game</a></p>
+        <p className="go-back">
+          <a href="#" onClick={noDefault(this.props.onBack)}>Go back</a></p>
       </div>
     );
   }

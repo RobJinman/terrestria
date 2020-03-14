@@ -39,6 +39,7 @@ export class App {
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
+  private _gameState: GameState = GameState.GAME_INACTIVE;
 
   constructor(onStateChange: (state: GameState) => void) {
     window.onresize = this._onWindowResize.bind(this);
@@ -160,14 +161,19 @@ export class App {
     const w = window.innerWidth;
     const h = window.innerHeight;
 
-    const event: EWindowResized = {
-      type: GameEventType.WINDOW_RESIZED,
-      entities: [],
-      w,
-      h
-    }
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    renderSys.onWindowResized(w, h);
 
-    this._em.postEvent(event);
+    if (this._gameState != GameState.GAME_INACTIVE) {
+      const event: EWindowResized = {
+        type: GameEventType.WINDOW_RESIZED,
+        entities: [],
+        w,
+        h
+      }
+
+      this._em.postEvent(event);
+    }
   }
 
   private _centreStage() {
@@ -235,6 +241,11 @@ export class App {
     constructInitialEntitiesFromMapData(this._em, mapData);
   }
 
+  private _setGameState(state: GameState) {
+    this._gameState = state;
+    this._onStateChange(this._gameState);
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.MAP_DATA:{
@@ -266,21 +277,20 @@ export class App {
         const m = <RLoginSuccess>msg;
         this._pinataId = m.pinataId;
         this._pinataToken = m.pinataToken;
-
-        this._onStateChange(GameState.LOGGED_IN);
         break;
       }
       case GameResponseType.JOIN_GAME_SUCCESS: {
         const m = <RJoinGameSuccess>msg;
         this._startGame(m.playerId);
 
-        this._onStateChange(GameState.GAME_ACTIVE);
+        this._setGameState(GameState.GAME_ACTIVE);
+        this._onWindowResize();
         break;
       }
       case GameResponseType.PLAYER_KILLED: {
         this._onPlayerKilled();
 
-        this._onStateChange(GameState.PLAYER_DEAD);
+        this._setGameState(GameState.PLAYER_DEAD);
         break;
       }
       case GameResponseType.NEW_PLAYER_ID: {

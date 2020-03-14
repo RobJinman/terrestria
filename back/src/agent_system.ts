@@ -8,10 +8,10 @@ import { Pinata, CreateAwardResponse } from "./pinata";
 
 export class AgentComponent extends Component {
   dirty: boolean = true;
-  private _pinataId: string;
-  private _pinataToken: string;
+  private _pinataId?: string;
+  private _pinataToken?: string;
 
-  constructor(entityId: EntityId, pinataId: string, pinataToken: string) {
+  constructor(entityId: EntityId, pinataId?: string, pinataToken?: string) {
     super(entityId, ComponentType.AGENT);
     
     this._pinataId = pinataId;
@@ -39,10 +39,13 @@ export class AgentSystem implements ServerSystem {
   }
 
   async grantAward(entityId: EntityId,
-                   name: string): Promise<CreateAwardResponse> {
+                   name: string): Promise<CreateAwardResponse|null> {
     const c = this.getComponent(entityId);
-    const response = await this._pinata.grantAward(name, c.pinataToken);
-    return response;
+    if (c.pinataToken) {
+      const response = await this._pinata.grantAward(name, c.pinataToken);
+      return response;
+    }
+    return Promise.resolve(null);
   }
 
   numComponents() {

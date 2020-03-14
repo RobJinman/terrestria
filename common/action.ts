@@ -52,9 +52,7 @@ export interface JoinGameAction extends PlayerAction {
 }
 
 export function isJoinGameAction(obj: any): obj is JoinGameAction {
-  return obj.type === ActionType.JOIN_GAME &&
-         obj.pinataId &&
-         obj.pinataToken;
+  return obj.type === ActionType.JOIN_GAME;
 }
 
 // =======================================================
