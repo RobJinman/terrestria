@@ -13,7 +13,7 @@ import { waitForCondition } from './common/utils';
 import { ClientEntityManager } from './client_entity_manager';
 import { EntityId } from './common/system';
 import { ClientSpatialSystem } from './client_spatial_system';
-import { GameError } from './common/error';
+import { GameError, ErrorCode } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 import { ClientAdSystem } from './client_ad_system';
@@ -26,6 +26,18 @@ declare var __WEBSOCKET_URL__: string;
 
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
+
+type PromiseResolver = () => void;
+
+type ServerResponseHandlerFn = (msg: GameResponse,
+                                resolve: PromiseResolver,
+                                reject: PromiseResolver) => boolean;
+
+interface ServerResponseHandler {
+  handlerFn: ServerResponseHandlerFn;
+  resolve: PromiseResolver;
+  reject: PromiseResolver;
+}
 
 export class App {
   private _ws?: WebSocket;
@@ -41,6 +53,7 @@ export class App {
   private _pinataToken?: string;
   private _userName?: string;
   private _gameState: GameState = GameState.GAME_INACTIVE;
+  private _serverResponseHandlers: ServerResponseHandler[] = [];
 
   constructor(onStateChange: (state: GameState) => void) {
     window.onresize = this._onWindowResize.bind(this);
@@ -105,7 +118,7 @@ export class App {
     this._userInputManager.initialiseUi();
   }
 
-  logIn(email: string, password: string) {
+  logIn(email: string, password: string): Promise<void> {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -120,6 +133,21 @@ export class App {
     const dataString = JSON.stringify(data);
 
     this._ws.send(dataString);
+
+    return this._getPromiseForServerResponse((msg, resolve, reject) => {
+      if (msg.type === GameResponseType.LOGIN_SUCCESS) {
+        resolve();
+        return true;
+      }
+      else if (msg.type === GameResponseType.ERROR) {
+        const error = <RError>(msg);
+        if (error.code === ErrorCode.AUTHENTICATION_FAILURE) {
+          reject();
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   logOut() {
@@ -131,8 +159,6 @@ export class App {
   }
 
   start() {
-    console.log("Starting game");
-
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -146,6 +172,18 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
+  }
+
+  private _getPromiseForServerResponse(handlerFn: ServerResponseHandlerFn):
+    Promise<void> {
+
+    return new Promise<void>((resolve, reject) => {
+      this._serverResponseHandlers.push({
+        handlerFn,
+        resolve,
+        reject
+      });
+    });
   }
 
   private _onEnterKeyPress() {
@@ -250,8 +288,6 @@ export class App {
   }
 
   private _startGame(playerId: EntityId) {
-    // TODO
-    console.log("Starting game");
     this._playerId = playerId;
   }
 
@@ -262,8 +298,7 @@ export class App {
   }
 
   private _handleServerError(response: RError) {
-    // TODO
-    console.log("Received error from server: " + response.message);
+    console.error("Received error from server: " + response.message);
   }
 
   private _deleteEntities(response: REntitiesDeleted) {
@@ -365,6 +400,15 @@ export class App {
   private _onServerMessage(event: MessageEvent) {
     const msg = <GameResponse>JSON.parse(event.data);
     this._responseQueue.push(msg);
+
+    for (let i = 0; i < this._serverResponseHandlers.length; ++i) {
+      const handler = this._serverResponseHandlers[i];
+      const done = handler.handlerFn(msg, handler.resolve, handler.reject);
+      if (done) {
+        this._serverResponseHandlers.splice(i, 1);
+        --i;
+      }
+    }
   }
 
   private _insertElement() {

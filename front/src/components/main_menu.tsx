@@ -3,11 +3,6 @@ import { App } from "../terrestria/app";
 import { CLogInForm } from "./log_in_form";
 import { CSignUpForm } from "./sign_up_form";
 import { noDefault } from "./utils";
-import { GameState } from "../terrestria/definitions";
-
-interface CMainMenuState {
-  page: MenuPage
-}
 
 enum MenuPage {
   SIGN_UP,
@@ -15,33 +10,29 @@ enum MenuPage {
   LOGGED_IN
 }
 
+interface CMainMenuState {
+  page: MenuPage,
+  loading: boolean
+  errorMsg: string;
+}
+
 interface CMainMenuProps {
   terrestria: App;
-  gameState: GameState;
 }
 
 export class CMainMenu extends React.Component<CMainMenuProps> {
-  state: CMainMenuState;
+  state: CMainMenuState = {
+    page: MenuPage.SIGN_UP,
+    loading: false,
+    errorMsg: ""
+  };
+
   private _terrestria: App;
 
   constructor(props: CMainMenuProps) {
     super(props);
 
-    this.state = {
-      page: MenuPage.SIGN_UP
-    };
-
     this._terrestria = props.terrestria;
-  }
-
-  componentDidUpdate() {
-    // Detect successful log in
-    if (this.state.page != MenuPage.LOGGED_IN) {
-      if (this.props.gameState === GameState.GAME_INACTIVE &&
-          this._terrestria.userName) {
-        this.setState({ page: MenuPage.LOGGED_IN });
-      }
-    }
   }
 
   render() {
@@ -50,37 +41,48 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     const logIn = this._logIn.bind(this);
     const logOut = this._logOut.bind(this);
 
-    const goToLogIn = () => {
-      this.setState({ page: MenuPage.LOG_IN });
-    };
-
-    const goToSignUp = () => {
-      this.setState({ page: MenuPage.SIGN_UP });
+    const goToPage = (page: MenuPage) => () => {
+      this.setState({
+        page,
+        errorMsg: ""
+      });
     };
 
     const userName = this._terrestria.userName;
 
+    const hasError = this.state.errorMsg.length > 0;
+    const errorMsg = this.state.errorMsg;
+
     return (
       <div className="main-menu">
-        {this.state.page == MenuPage.SIGN_UP &&
-        <div>
-          <CSignUpForm onSignUp={signUp} />
-          <p>Already have an account?{" "}
-            <a href="#" onClick={noDefault(goToLogIn)}>Log in</a></p>
-          <p>Don't care about free money?{" "}
-            <a href="#" onClick={noDefault(startGame)}>Continue to game</a>
-          </p>
-        </div>}
-        {this.state.page == MenuPage.LOG_IN &&
-        <div>
-          <CLogInForm onLogIn={logIn} onStart={startGame} onBack={goToSignUp} />
-        </div>}
-        {this.state.page == MenuPage.LOGGED_IN &&
-        <div className="log-in">
-          <h1>Ready to Play</h1>
-          <p>You're logged in as <b>{userName}</b>.</p>
-          <p>Not you? <a href="#" onClick={noDefault(logOut)}>Log out</a></p>
-          <button onClick={startGame}>Start Game</button>
+        {this.state.loading &&
+        <div className="loading">Loading...</div>}
+        {!this.state.loading &&
+        <div className="content">
+          {this.state.page == MenuPage.SIGN_UP &&
+          <div>
+            <CSignUpForm onSignUp={signUp} />
+            <p>Already have an account?{" "}
+              <a href="#" onClick={noDefault(goToPage(MenuPage.LOG_IN))}>
+                Sign in</a></p>
+            <p>Don't care about free money?{" "}
+              <a href="#" onClick={noDefault(startGame)}>Continue to game</a>
+            </p>
+          </div>}
+          {this.state.page == MenuPage.LOG_IN &&
+          <div>
+            <CLogInForm onLogIn={logIn} onStart={startGame}
+              onBack={goToPage(MenuPage.SIGN_UP)} />
+          </div>}
+          {this.state.page == MenuPage.LOGGED_IN &&
+          <div className="log-in">
+            <h1>Ready to Play</h1>
+            <p>You're signed in as <b>{userName}</b>.</p>
+            <p>Not you? <a href="#" onClick={noDefault(logOut)}>Sign out</a></p>
+            <button onClick={startGame}>Start Game</button>
+          </div>}
+          <div className={hasError ? "error-msg" : "error-msg hidden"}>
+            {errorMsg}</div>
         </div>}
       </div>
     );
@@ -88,11 +90,12 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _startGame() {
     this._terrestria.connect().then(() => {
-      console.log("Hello");
       this._terrestria.start();
     }, () => {
-      // TODO
-      console.error("Failed to connect");
+      this.setState({
+        loading: false,
+        errorMsg: "Failed to connect to server"
+      });
     });
   }
 
@@ -107,12 +110,30 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     console.log(email, userName, password1); // TODO
   }
 
-  private async _logIn(email: string, password: string) {
+  private _logIn(email: string, password: string) {
+    this.setState({
+      loading: true,
+      errorMsg: ""
+    });
+
     this._terrestria.connect().then(() => {
-      this._terrestria.logIn(email, password);
+      this._terrestria.logIn(email, password).then(() => {
+        this.setState({
+          page: MenuPage.LOGGED_IN,
+          loading: false
+        });
+      }, () => {
+        this.setState({
+          loading: false,
+          errorMsg: "Authentication failed"
+        });
+        this._terrestria.disconnect();
+      });
     }, () => {
-      // TODO
-      console.error("Failed to connect");
+      this.setState({
+        loading: false,
+        errorMsg: "Failed to connect to server"
+      });
     });
   }
 }
