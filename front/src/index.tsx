@@ -1,9 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { MainComponent } from "./components/main_component";
+import { CMain } from "./components/main";
 
 ReactDOM.render(
-  <MainComponent />,
+  <CMain />,
   document.getElementById("app")
 );

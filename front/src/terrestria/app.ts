@@ -85,9 +85,17 @@ export class App {
                            10);
   }
 
-  logIn() {
-    // TODO
-    this._logIn();
+  logIn(email: string, password: string) {
+    const data: LogInAction = {
+      playerId: PLAYER_ID_UNSET,
+      type: ActionType.LOG_IN,
+      email,
+      password
+    };
+
+    const dataString = JSON.stringify(data);
+
+    this._ws.send(dataString);
   }
 
   start() {
@@ -182,23 +190,6 @@ export class App {
     });
 
     this._actionQueue = [];
-  }
-
-  private _logIn() {
-    // TODO
-    const email = "fragzbro123@email.com";
-    const password = "password";
-
-    const data: LogInAction = {
-      playerId: PLAYER_ID_UNSET,
-      type: ActionType.LOG_IN,
-      email,
-      password
-    };
-
-    const dataString = JSON.stringify(data);
-
-    this._ws.send(dataString);
   }
 
   private _requestRespawn() {

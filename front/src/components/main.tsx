@@ -1,14 +1,14 @@
 import * as React from "react";
 import { App } from "../terrestria/app";
-import { MainMenuComponent } from "./main_menu_component";
+import { CMainMenu } from "./main_menu";
 import { GameState } from "../terrestria/definitions";
 
-interface MainComponentState {
+interface CMainState {
   gameState: GameState;
 }
 
-export class MainComponent extends React.Component<{}> {
-  state: MainComponentState;
+export class CMain extends React.Component<{}> {
+  state: CMainState;
   private _terrestria: App;
 
   constructor(props: {}) {
@@ -37,8 +37,7 @@ export class MainComponent extends React.Component<{}> {
         <div id="terrestria"></div>
         { gameState != GameState.GAME_ACTIVE &&
         <div id="ui-overlay">
-          <MainMenuComponent terrestria={this._terrestria}
-                             gameState={gameState}/>
+          <CMainMenu terrestria={this._terrestria} gameState={gameState}/>
         </div>
         }
       </div>
