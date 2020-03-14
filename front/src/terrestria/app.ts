@@ -358,9 +358,6 @@ export class App {
       case GameResponseType.LOGIN_SUCCESS: {
         const m = <RLoginSuccess>msg;
         this._onLogInSuccess(m);
-
-        // Notify log in success even though state enum hasn't changed
-        this._setGameState(GameState.GAME_INACTIVE);
         break;
       }
       case GameResponseType.JOIN_GAME_SUCCESS: {
@@ -394,21 +391,21 @@ export class App {
     while (this._responseQueue.length > 0) {
       const msg = <GameResponse>this._responseQueue.shift();
       this._handleServerMessage(msg);
+
+      for (let i = 0; i < this._serverResponseHandlers.length; ++i) {
+        const handler = this._serverResponseHandlers[i];
+        const done = handler.handlerFn(msg, handler.resolve, handler.reject);
+        if (done) {
+          this._serverResponseHandlers.splice(i, 1);
+          --i;
+        }
+      }
     }
   }
 
   private _onServerMessage(event: MessageEvent) {
     const msg = <GameResponse>JSON.parse(event.data);
     this._responseQueue.push(msg);
-
-    for (let i = 0; i < this._serverResponseHandlers.length; ++i) {
-      const handler = this._serverResponseHandlers[i];
-      const done = handler.handlerFn(msg, handler.resolve, handler.reject);
-      if (done) {
-        this._serverResponseHandlers.splice(i, 1);
-        --i;
-      }
-    }
   }
 
   private _insertElement() {
