@@ -28,7 +28,7 @@ const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
 export class App {
-  private _ws: WebSocket;
+  private _ws?: WebSocket;
   private _responseQueue: GameResponse[] = [];
   private _actionQueue: UserInputAction[] = [];
   private _em: ClientEntityManager;
@@ -39,15 +39,13 @@ export class App {
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
+  private _userName?: string;
   private _gameState: GameState = GameState.GAME_INACTIVE;
 
   constructor(onStateChange: (state: GameState) => void) {
     window.onresize = this._onWindowResize.bind(this);
 
     this._onStateChange = onStateChange;
-
-    this._ws = new WebSocket(__WEBSOCKET_URL__);
-    this._ws.onmessage = ev => this._onServerMessage(ev);
 
     this._scheduler = new Scheduler();
 
@@ -71,6 +69,31 @@ export class App {
                              this._onEnterKeyPress.bind(this));
   }
 
+  async connect() {
+    this._ws = new WebSocket(__WEBSOCKET_URL__);
+    this._ws.onmessage = ev => this._onServerMessage(ev);
+
+    await waitForCondition(() => this._ws !== undefined &&
+                                 this._ws.readyState === WebSocket.OPEN,
+                           500,
+                           10);
+  }
+
+  get connected() {
+    return this._ws !== undefined;
+  }
+
+  get userName() {
+    return this._userName;
+  }
+
+  disconnect() {
+    if (this._ws) {
+      this._ws.close();
+      this._ws = undefined;
+    }
+  }
+
   async initialise() {
     this._insertElement();
 
@@ -80,13 +103,13 @@ export class App {
     this._onWindowResize();
 
     this._userInputManager.initialiseUi();
-
-    await waitForCondition(() => this._ws.readyState === WebSocket.OPEN,
-                           500,
-                           10);
   }
 
   logIn(email: string, password: string) {
+    if (!this._ws) {
+      throw new GameError("Not connected");
+    }
+
     const data: LogInAction = {
       playerId: PLAYER_ID_UNSET,
       type: ActionType.LOG_IN,
@@ -99,8 +122,20 @@ export class App {
     this._ws.send(dataString);
   }
 
+  logOut() {
+    this._pinataId = undefined;
+    this._pinataToken = undefined;
+    this._userName = undefined;
+
+    this.disconnect();
+  }
+
   start() {
     console.log("Starting game");
+
+    if (!this._ws) {
+      throw new GameError("Not connected");
+    }
 
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
@@ -188,17 +223,23 @@ export class App {
   }
 
   private _processUserActions() {
-    this._actionQueue.forEach(action => {
-      if (this._playerId != PLAYER_ID_DEAD) {
-        const dataString = JSON.stringify(action);
-        this._ws.send(dataString);
+    if (this._ws) {
+      for (const action of this._actionQueue) {
+        if (this._playerId != PLAYER_ID_DEAD) {
+          const dataString = JSON.stringify(action);
+          this._ws.send(dataString);
+        }
       }
-    });
 
-    this._actionQueue = [];
+      this._actionQueue = [];
+    }
   }
 
   private _requestRespawn() {
+    if (!this._ws) {
+      throw new GameError("Not connected");
+    }
+
     const action: RespawnAction = {
       type: ActionType.RESPAWN,
       playerId: PLAYER_ID_UNSET
@@ -246,6 +287,12 @@ export class App {
     this._onStateChange(this._gameState);
   }
 
+  private _onLogInSuccess(msg: RLoginSuccess) {
+    this._pinataId = msg.pinataId;
+    this._pinataToken = msg.pinataToken;
+    this._userName = msg.userName;
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.MAP_DATA:{
@@ -275,8 +322,10 @@ export class App {
       }
       case GameResponseType.LOGIN_SUCCESS: {
         const m = <RLoginSuccess>msg;
-        this._pinataId = m.pinataId;
-        this._pinataToken = m.pinataToken;
+        this._onLogInSuccess(m);
+
+        // Notify log in success even though state enum hasn't changed
+        this._setGameState(GameState.GAME_INACTIVE);
         break;
       }
       case GameResponseType.JOIN_GAME_SUCCESS: {
@@ -321,7 +370,7 @@ export class App {
   private _insertElement() {
     const parentElement = document.getElementById("terrestria");
     if (!parentElement) {
-      throw new Error("Could not find #terrestria");
+      throw new GameError("Could not find #terrestria");
     }
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     parentElement.appendChild(renderSys.getCanvas());

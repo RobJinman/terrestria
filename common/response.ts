@@ -34,6 +34,7 @@ export interface RJoinGameSuccess extends GameResponse {
 }
 
 export interface RLoginSuccess extends GameResponse {
+  userName: string;
   pinataId: string;
   pinataToken: string;
 }

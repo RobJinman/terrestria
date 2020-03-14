@@ -8,6 +8,7 @@ const REFRESH_INTERVAL_MS = 1 * 60 * 1000;
 
 export interface AuthResponse {
   accountId: string;
+  userName: string;
   token: string;
 }
 

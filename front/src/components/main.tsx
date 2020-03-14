@@ -37,7 +37,7 @@ export class CMain extends React.Component<{}> {
         <div id="terrestria"></div>
         { gameState != GameState.GAME_ACTIVE &&
         <div id="ui-overlay">
-          <CMainMenu terrestria={this._terrestria}/>
+          <CMainMenu terrestria={this._terrestria} gameState={gameState}/>
         </div>
         }
       </div>

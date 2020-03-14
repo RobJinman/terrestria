@@ -3,11 +3,9 @@ import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
 import { ActionType, LogInAction, deserialiseMessage,
-         RespawnAction, 
-         JoinGameAction} from "./common/action";
+         RespawnAction, JoinGameAction } from "./common/action";
 import { GameResponse, GameResponseType, RError, RLoginSuccess, 
-         RNewPlayerId, 
-         RJoinGameSuccess} from "./common/response";
+         RNewPlayerId, RJoinGameSuccess} from "./common/response";
 import { Pinata } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
@@ -181,13 +179,15 @@ export class App {
   private async _handleLogIn(sock: ExtWebSocket, data: LogInAction) {
     this._logger.info("Handling log in");
 
-    let pinataId: string = "";
-    let pinataToken: string = "";
+    let pinataId = "";
+    let pinataToken = "";
+    let userName = "";
 
     try {
       const auth = await this._pinata.logIn(data.email, data.password);
       pinataId = auth.accountId;
       pinataToken = auth.token;
+      userName = auth.userName;
 
       this._logger.info(`Logged into pinata account ${pinataId} with token ` +
                         `${pinataToken}`);
@@ -199,6 +199,7 @@ export class App {
 
     const response: RLoginSuccess = {
       type: GameResponseType.LOGIN_SUCCESS,
+      userName,
       pinataId,
       pinataToken
     };

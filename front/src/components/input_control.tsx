@@ -96,8 +96,8 @@ export class InputControl
     return (
       <div className="input-control form-field">
         <label htmlFor="email">{this.props.label}</label>
-        <input type={this._inputType} name={this.props.name} value={this.state.value}
-          onChange={onChange}/>
+        <input type={this._inputType} name={this.props.name}
+          value={this.state.value} onChange={onChange}/>
         <div className={isInvalid() ? "error-msg" : "error-msg hidden"}>
           {this.props.errorMsg}
         </div>
