@@ -2,7 +2,6 @@ import * as React from "react";
 
 const EMAIL_REGEX = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
-
 function isValidEmail(email: string) {
   return EMAIL_REGEX.test(email);
 }
@@ -42,8 +41,9 @@ export interface InputControlProps {
 
 export class InputControl
   extends React.Component<InputControlProps, InputControlState> {
-  
+
   private _validator = (value: string) => true;
+  private _inputType = "text";
 
   state: InputControlState = {
     dirty: false,
@@ -61,10 +61,12 @@ export class InputControl
       switch (props.type) {
         case InputControlType.EMAIL: {
           this._validator = isValidEmail;
+          this._inputType = "email";
           break;
         }
         case InputControlType.PASSWORD: {
           this._validator = isValidPassword;
+          this._inputType = "password";
           break;
         }
       }
@@ -94,7 +96,7 @@ export class InputControl
     return (
       <div className="input-control form-field">
         <label htmlFor="email">{this.props.label}</label>
-        <input type="text" name={this.props.name} value={this.state.value}
+        <input type={this._inputType} name={this.props.name} value={this.state.value}
           onChange={onChange}/>
         <div className={isInvalid() ? "error-msg" : "error-msg hidden"}>
           {this.props.errorMsg}

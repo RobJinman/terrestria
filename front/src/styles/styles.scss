@@ -10,6 +10,10 @@ html, body {
   #ui-overlay {
     z-index: 1;
 
+    h1 {
+      font-size: 18px;
+    }
+
     .main-menu {
       width: 340px;
       height: 340px;
@@ -32,22 +36,22 @@ html, body {
 
         label {
           display: table-cell;
-          padding: 10px 10px 10px 0;
+          padding-right: 10px;
         }
 
         input {
           display: table-cell;
           width: 100%;
         }
+      }
+    }
 
-        .error-msg {
-          color: red;
-          font-size: 0.8em;
+    .error-msg {
+      color: red;
+      font-size: 0.8em;
 
-          &.hidden {
-            visibility: hidden;
-          }
-        }
+      &.hidden {
+        visibility: hidden;
       }
     }
   }

@@ -1,5 +1,6 @@
 import * as React from "react";
-import { InputControl, InputControlType, InputControlState, initialInputState } from "./input_control";
+import { InputControl, InputControlType, InputControlState,
+         initialInputState } from "./input_control";
 
 interface CLogInFormProps {
   onLogIn: (email: string, password: string) => void;
@@ -54,7 +55,7 @@ export class CLogInForm
 
     return (
       <div className="log-in">
-        <h1>Piñata</h1>
+        <h1>Piñata Sign In</h1>
         <p>Sign in with Piñata to win money as you play!</p>
         <form onSubmit={onSubmit}>
           <InputControl name="email" label="Email"
