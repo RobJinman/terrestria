@@ -2,8 +2,8 @@ const path = require("path");
 const webpack = require("webpack");
 const merge = require("webpack-merge");
 const TerserPlugin = require("terser-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -42,7 +42,13 @@ const baseConfig = {
           "css-loader",
           "sass-loader"
         ]
-      }
+      },
+      {
+        test: /\.(woff)$/,
+        use: [
+          'file-loader'
+        ]
+      },
     ]
   },
   resolve: {

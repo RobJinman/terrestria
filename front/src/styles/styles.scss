@@ -1,7 +1,14 @@
+@font-face {
+  font-family: "Gotham Rounded Book";
+  src: url(../fonts/gotham_rounded_book.woff);
+}
+
 html, body {
   padding: 0;
   margin: 0;
   overflow: hidden;
+  font-family: "Gotham Rounded Book";
+  font-size: 12px;
 
   #terrestria {
     z-index: 0;
