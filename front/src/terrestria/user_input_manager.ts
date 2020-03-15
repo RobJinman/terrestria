@@ -104,6 +104,7 @@ export class UserInputManager {
                             () => this._onSoundButtonRelease());
 */
     this._constructFullscreenButton();
+    this._positionButtons();
   }
 
   private _onFullscreenChange() {
@@ -169,8 +170,8 @@ export class UserInputManager {
       renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
     }
     if (this._quitButton) {
-      const w = 0.1 * renderSys.viewH;
-      const h = 0.1 * renderSys.viewH;
+      const w = 0.13 * renderSys.viewH;
+      const h = 0.13 * renderSys.viewH;
       const margin = 0.02 * renderSys.viewH;
       const x = renderSys.viewW - margin - w;
       const y = renderSys.viewH - margin - h;

@@ -384,7 +384,7 @@ export class RenderSystem implements ClientSystem {
   }
 
   removeComponent(id: EntityId) {
-    const c = this.getComponent(id);
+    const c = this._components.get(id);
     if (c instanceof SpriteRenderComponent) {
       this._removeSpriteComponent(c);
 

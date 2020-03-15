@@ -61,6 +61,10 @@ export class EntityManager {
     this._pendingDeletion.add(entityId);
   }
 
+  removeAll() {
+    this.entities.forEach(entity => this.removeEntity(entity.id));
+  }
+
   postEvent(event: GameEvent) {
     this.systems.forEach(sys => sys.handleEvent(event));
   }

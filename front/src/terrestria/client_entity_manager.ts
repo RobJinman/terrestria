@@ -5,10 +5,10 @@ import { EntityType } from "./common/game_objects";
 
 // Start from a large offset so that IDs created on the client don't clash
 // with existing IDs created on the server
-let nextEntityId = 10000;
+let nextEntityId = 1000000;
 
 export function getNextEntityId() {
-  return ++nextEntityId;
+  return nextEntityId++;
 }
 
 export class ClientEntityManager extends EntityManager {

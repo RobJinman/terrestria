@@ -48,7 +48,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
-  private _userInputManager: UserInputManager;
+  private _userInputManager?: UserInputManager;
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
@@ -74,14 +74,6 @@ export class App {
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
-
-    this._userInputManager
-      = new UserInputManager(this._em,
-                             this._scheduler,
-                             this._onDirectionKeyDown.bind(this),
-                             this._onDirectionKeyUp.bind(this),
-                             this._onEnterKeyPress.bind(this),
-                             this._onQuit.bind(this));
   }
 
   async connect() {
@@ -116,8 +108,6 @@ export class App {
     await renderSys.init();
 
     this._onWindowResize();
-
-    this._userInputManager.initialiseUi();
   }
 
   logIn(email: string, password: string): Promise<void> {
@@ -189,14 +179,30 @@ export class App {
     this._pinataId = undefined;
     this._pinataToken = undefined;
     this._userName = undefined;
+    this._playerId = PLAYER_ID_UNSET;
 
     this.disconnect();
+
+    this._em.removeAll();
+    this._gameState = GameState.GAME_INACTIVE;
+
+    this._onStateChange(this._gameState);
   }
 
   start() {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
+
+    this._userInputManager
+      = new UserInputManager(this._em,
+                             this._scheduler,
+                             this._onDirectionKeyDown.bind(this),
+                             this._onDirectionKeyUp.bind(this),
+                             this._onEnterKeyPress.bind(this),
+                             this.logOut.bind(this));
+
+    this._userInputManager.initialiseUi();
 
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
@@ -255,10 +261,6 @@ export class App {
 
       this._actionQueue.push(action);
     }
-  }
-
-  private _onQuit() {
-    console.log("Quit pressed!");
   }
 
   private _tick(delta: number) {
