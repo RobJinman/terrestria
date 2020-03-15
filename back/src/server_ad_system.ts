@@ -58,6 +58,8 @@ export class ServerAdSystem implements ServerSystem {
     const region = "GB"; // TODO
     this._pinata.getAdSlices(component.adName, region).then(slices => {
       component.slices = slices;
+    }, () => {
+      console.error("Error fetching ads from Pinata server");
     });
   }
 
