@@ -80,7 +80,8 @@ export class App {
                              this._scheduler,
                              this._onDirectionKeyDown.bind(this),
                              this._onDirectionKeyUp.bind(this),
-                             this._onEnterKeyPress.bind(this));
+                             this._onEnterKeyPress.bind(this),
+                             this._onQuit.bind(this));
   }
 
   async connect() {
@@ -254,6 +255,10 @@ export class App {
 
       this._actionQueue.push(action);
     }
+  }
+
+  private _onQuit() {
+    console.log("Quit pressed!");
   }
 
   private _tick(delta: number) {

@@ -29,23 +29,25 @@ export class UserInputManager {
   private _onDirectionPressHandler: DirectionInputHandlerFn;
   private _onDirectionReleaseHandler: DirectionInputHandlerFn;
   private _onEnterHandler: VoidInputHandlerFn;
-  private _upArrow: EntityId|null = null;
-  private _rightArrow: EntityId|null = null;
-  private _downArrow: EntityId|null = null;
-  private _leftArrow: EntityId|null = null;
-  private _fullscreenButton: EntityId|null = null;
+  private _onQuitHandler: VoidInputHandlerFn;
+  private _arrowButtons = new Map<UserInput, EntityId>();
+  private _fullscreenButton?: EntityId;
+  //private _soundButton?: EntityId;
+  private _quitButton?: EntityId;
 
   constructor(em: ClientEntityManager,
               scheduler: Scheduler,
               onDirectionPressHandler: DirectionInputHandlerFn,
               onDirectionReleaseHandler: DirectionInputHandlerFn,
-              onEnterHandler: VoidInputHandlerFn) {
+              onEnterHandler: VoidInputHandlerFn,
+              onQuitHandler: VoidInputHandlerFn) {
     this._em = em;
     this._scheduler = scheduler;
 
     this._onDirectionPressHandler = onDirectionPressHandler;
     this._onDirectionReleaseHandler = onDirectionReleaseHandler;
     this._onEnterHandler = onEnterHandler;
+    this._onQuitHandler = onQuitHandler;
 
     window.addEventListener("keydown", event => this._onKeyDown(event), false);
     window.addEventListener("keyup", event => this._onKeyUp(event), false);
@@ -66,11 +68,41 @@ export class UserInputManager {
   }
 
   initialiseUi() {
-    this._upArrow = this._constructArrow(UserInput.UP, "up");
-    this._rightArrow = this._constructArrow(UserInput.RIGHT, "right");
-    this._downArrow = this._constructArrow(UserInput.DOWN, "down");
-    this._leftArrow = this._constructArrow(UserInput.LEFT, "left");
+    const btnUp =
+      this._constructButton("button_up",
+                            () => this._onArrowPressed(UserInput.UP),
+                            () => this._onArrowReleased(UserInput.UP));
 
+    const btnRight =
+      this._constructButton("button_right",
+                            () => this._onArrowPressed(UserInput.RIGHT),
+                            () => this._onArrowReleased(UserInput.RIGHT));
+
+    const btnDown =
+      this._constructButton("button_down",
+                            () => this._onArrowPressed(UserInput.DOWN),
+                            () => this._onArrowReleased(UserInput.DOWN));
+
+    const btnLeft =
+      this._constructButton("button_left",
+                            () => this._onArrowPressed(UserInput.LEFT),
+                            () => this._onArrowReleased(UserInput.LEFT));
+
+    this._arrowButtons.set(UserInput.UP, btnUp);
+    this._arrowButtons.set(UserInput.RIGHT, btnRight);
+    this._arrowButtons.set(UserInput.DOWN, btnDown);
+    this._arrowButtons.set(UserInput.LEFT, btnLeft);
+
+    this._quitButton =
+      this._constructButton("button_quit",
+                            () => this._onQuitButtonPress(),
+                            () => this._onQuitButtonRelease());
+/*
+    this._soundButton =
+      this._constructButton("sound_button",
+                            () => this._onSoundButtonPress,
+                            () => this._onSoundButtonRelease());
+*/
     this._constructFullscreenButton();
   }
 
@@ -85,6 +117,15 @@ export class UserInputManager {
     this._positionButtons();
   }
 
+  private _constructFullscreenButton() {
+    if (!this._fullscreenButton) {
+      this._fullscreenButton =
+        this._constructButton("button_fullscreen",
+                              () => this._onFullscreenButtonPress(),
+                              () => this._onFullscreenButtonRelease());
+    }
+  }
+
   private _onWindowResized() {
     this._positionButtons();
   }
@@ -92,9 +133,12 @@ export class UserInputManager {
   private _positionButtons() {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
-    if (this._upArrow && this._rightArrow &&
-      this._downArrow && this._leftArrow) {
+    const upArrow = this._arrowButtons.get(UserInput.UP);
+    const rightArrow = this._arrowButtons.get(UserInput.RIGHT);
+    const downArrow = this._arrowButtons.get(UserInput.DOWN);
+    const leftArrow = this._arrowButtons.get(UserInput.LEFT);
 
+    if (upArrow && rightArrow && downArrow && leftArrow) {
       const sz = 0.15; // As percentage of view height
 
       const margin = renderSys.viewH * 0.02;
@@ -107,15 +151,15 @@ export class UserInputManager {
       const y2 = renderSys.viewH - 2 * h - margin;
       const y3 = renderSys.viewH - 1 * h - margin;
 
-      renderSys.setSpriteSize(this._upArrow, w, h);
-      renderSys.setSpriteSize(this._rightArrow, w, h);
-      renderSys.setSpriteSize(this._downArrow, w, h);
-      renderSys.setSpriteSize(this._leftArrow, w, h);
+      renderSys.setSpriteSize(upArrow, w, h);
+      renderSys.setSpriteSize(rightArrow, w, h);
+      renderSys.setSpriteSize(downArrow, w, h);
+      renderSys.setSpriteSize(leftArrow, w, h);
 
-      renderSys.setScreenPosition(this._upArrow, x2, y1);
-      renderSys.setScreenPosition(this._rightArrow, x3, y2);
-      renderSys.setScreenPosition(this._downArrow, x2, y3);
-      renderSys.setScreenPosition(this._leftArrow, x1, y2);
+      renderSys.setScreenPosition(upArrow, x2, y1);
+      renderSys.setScreenPosition(rightArrow, x3, y2);
+      renderSys.setScreenPosition(downArrow, x2, y3);
+      renderSys.setScreenPosition(leftArrow, x1, y2);
     }
     if (this._fullscreenButton) {
       const w = 0.25 * renderSys.viewH;
@@ -124,40 +168,14 @@ export class UserInputManager {
       renderSys.setSpriteSize(this._fullscreenButton, w, h);
       renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
     }
-  }
-
-  private _setButtonActive(input: UserInput, active: boolean) {
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    const suffix = active ? "_active" : "";
-
-    switch (input) {
-      case UserInput.UP: {
-        if (this._upArrow) {
-          renderSys.setCurrentImage(this._upArrow, `button_up${suffix}.png`);
-        }
-        break;
-      }
-      case UserInput.RIGHT: {
-        if (this._rightArrow) {
-          renderSys.setCurrentImage(this._rightArrow,
-                                    `button_right${suffix}.png`);
-        }
-        break;
-      }
-      case UserInput.DOWN: {
-        if (this._downArrow) {
-          renderSys.setCurrentImage(this._downArrow,
-                                    `button_down${suffix}.png`);
-        }
-        break;
-      }
-      case UserInput.LEFT: {
-        if (this._leftArrow) {
-          renderSys.setCurrentImage(this._leftArrow,
-                                    `button_left${suffix}.png`);
-        }
-        break;
-      }
+    if (this._quitButton) {
+      const w = 0.1 * renderSys.viewH;
+      const h = 0.1 * renderSys.viewH;
+      const margin = 0.02 * renderSys.viewH;
+      const x = renderSys.viewW - margin - w;
+      const y = renderSys.viewH - margin - h;
+      renderSys.setSpriteSize(this._quitButton, w, h);
+      renderSys.setScreenPosition(this._quitButton, x, y);
     }
   }
 
@@ -184,96 +202,98 @@ export class UserInputManager {
     document.documentElement.requestFullscreen();
     if (this._fullscreenButton) {
       this._em.removeEntity(this._fullscreenButton);
-      this._fullscreenButton = null;
+      this._fullscreenButton = undefined;
     }
   }
 
   private _onArrowPressed(input: UserInput) {
     this._onDirectionPressHandler(input);
-    this._scheduler.addFunction(() => this._setButtonActive(input, true), 0);
+    const id = this._arrowButtons.get(input);
+    const inputName = this._inputName(input);
+    id && this._setButtonActive(id, inputName);
   }
 
   private _onArrowReleased(input: UserInput) {
     this._onDirectionReleaseHandler(input);
-    this._scheduler.addFunction(() => this._setButtonActive(input, false), 0);
+    const id = this._arrowButtons.get(input);
+    const inputName = this._inputName(input);
+    id && this._setButtonInactive(id, inputName);
   }
 
   private _onFullscreenButtonPress() {
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    this._scheduler.addFunction(() => {
-      if (this._fullscreenButton) {
-        renderSys.setCurrentImage(this._fullscreenButton,
-                                  "button_fullscreen_active.png");
-      }
-    }, 0);
-  }
-
-  private _onFullscreenButtonRelease() {
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    this._scheduler.addFunction(() => {
-      if (this._fullscreenButton) {
-        renderSys.setCurrentImage(this._fullscreenButton,
-                                  "button_fullscreen.png");
-      }
-    }, 0);
-    this._enterFullscreen();
-  }
-
-  private _constructFullscreenButton() {
-    if (!this._fullscreenButton) {
-      const id = getNextEntityId();
-
-      const staticImages: StaticImage[] = [
-        {
-          name: "button_fullscreen.png"
-        },
-        {
-          name: "button_fullscreen_active.png"
-        }
-      ];
-
-      const renderOpts: RenderOptions = {
-        zIndex: 1,
-        screenPosition: { x: 0, y: 0 },
-        onPress: () => this._onFullscreenButtonPress(),
-        onRelease: () => this._onFullscreenButtonRelease()
-      };
-
-      const renderComp = new SpriteRenderComponent(id,
-                                                  staticImages,
-                                                  [],
-                                                  "button_fullscreen.png",
-                                                  renderOpts);
-
-      this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
-
-      this._fullscreenButton = id;
+    if (this._fullscreenButton) {
+      this._setButtonActive(this._fullscreenButton, "button_fullscreen");
     }
   }
 
-  private _constructArrow(userInput: UserInput, name: string) {
+  private _onFullscreenButtonRelease() {
+    if (this._fullscreenButton) {
+      this._setButtonInactive(this._fullscreenButton, "button_fullscreen");
+    }
+    this._enterFullscreen();
+  }
+
+  private _onQuitButtonPress() {
+    if (this._quitButton) {
+      this._setButtonActive(this._quitButton, "button_quit");
+    }
+  }
+
+  private _onQuitButtonRelease() {
+    if (this._quitButton) {
+      this._setButtonInactive(this._quitButton, "button_quit");
+    }
+    this._onQuitHandler();
+  }
+
+  private _inputName(input: UserInput): string {
+    switch (input) {
+      case UserInput.UP: return "button_up";
+      case UserInput.RIGHT: return "button_right";
+      case UserInput.DOWN: return "button_down";
+      case UserInput.LEFT: return "button_left";
+    }
+  }
+
+  private _setButtonActive(id: EntityId, buttonName: string) {
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    this._scheduler.addFunction(() => {
+      renderSys.setCurrentImage(id, `${buttonName}_active.png`);
+    }, 0);
+  }
+
+  private _setButtonInactive(id: EntityId, buttonName: string) {
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    this._scheduler.addFunction(() => {
+      renderSys.setCurrentImage(id, `${buttonName}.png`);
+    }, 0);
+  }
+
+  private _constructButton(buttonName: string,
+                           onPress: () => void,
+                           onRelease: () => void) {
     const id = getNextEntityId();
 
     const staticImages: StaticImage[] = [
       {
-        name: `button_${name}.png`
+        name: `${buttonName}.png`
       },
       {
-        name: `button_${name}_active.png`
+        name: `${buttonName}_active.png`
       }
     ];
 
     const renderOpts: RenderOptions = {
       zIndex: 1,
       screenPosition: { x: 0, y: 0 },
-      onPress: () => this._onArrowPressed(userInput),
-      onRelease: () => this._onArrowReleased(userInput)
+      onPress,
+      onRelease
     };
 
     const renderComp = new SpriteRenderComponent(id,
                                                  staticImages,
                                                  [],
-                                                 `button_${name}.png`,
+                                                 `${buttonName}.png`,
                                                  renderOpts);
 
     this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);

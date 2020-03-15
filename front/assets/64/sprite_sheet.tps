@@ -217,7 +217,7 @@
             <key type="filename">button_up_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
-                <point_f>0,0</point_f>
+                <point_f>0.5,0.5</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -231,7 +231,7 @@
             <key type="filename">button_fullscreen_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
-                <point_f>0,0</point_f>
+                <point_f>0.5,0.5</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -241,10 +241,52 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">button_quit.png</key>
+            <key type="filename">button_quit_active.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>45,51,90,102</rect>
+                <key>scale9Paddings</key>
+                <rect>45,51,90,102</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">button_sound_off.png</key>
+            <key type="filename">button_sound_off_active.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>27,35,54,71</rect>
+                <key>scale9Paddings</key>
+                <rect>27,35,54,71</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">button_sound_on.png</key>
+            <key type="filename">button_sound_on_active.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>51,39,103,77</rect>
+                <key>scale9Paddings</key>
+                <rect>51,39,103,77</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">cave.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
-                <point_f>0,0</point_f>
+                <point_f>0.5,0.5</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -314,6 +356,7 @@
             <key type="filename">soil_puff1.png</key>
             <key type="filename">soil_puff2.png</key>
             <key type="filename">soil_puff3.png</key>
+            <key type="filename">trophy.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -336,19 +379,6 @@
                 <rect>100,43,200,87</rect>
                 <key>scale9Paddings</key>
                 <rect>100,43,200,87</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">trophy.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0,0</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>16,16,32,32</rect>
-                <key>scale9Paddings</key>
-                <rect>16,16,32,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -430,6 +460,12 @@
             <filename>button_right_active.png</filename>
             <filename>button_up_active.png</filename>
             <filename>trophy.png</filename>
+            <filename>button_quit.png</filename>
+            <filename>button_quit_active.png</filename>
+            <filename>button_sound_off.png</filename>
+            <filename>button_sound_off_active.png</filename>
+            <filename>button_sound_on.png</filename>
+            <filename>button_sound_on_active.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
