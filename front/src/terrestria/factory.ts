@@ -417,8 +417,6 @@ export function constructEntities(entityManager: ClientEntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
-    console.log(`constructing entity ${entity.id} of type ${entity.type}`);
-
     switch (entity.type) {
       case EntityType.PLAYER: {
         constructPlayer(entityManager, entity);

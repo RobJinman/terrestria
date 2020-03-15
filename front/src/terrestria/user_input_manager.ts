@@ -25,7 +25,7 @@ function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
 export class UserInputManager {
   private _em: ClientEntityManager;
   private _scheduler: Scheduler;
-  private _entityId: EntityId;
+  private _entityId?: EntityId;
   private _onDirectionPressHandler: DirectionInputHandlerFn;
   private _onDirectionReleaseHandler: DirectionInputHandlerFn;
   private _onEnterHandler: VoidInputHandlerFn;
@@ -34,6 +34,10 @@ export class UserInputManager {
   private _fullscreenButton?: EntityId;
   //private _soundButton?: EntityId;
   private _quitButton?: EntityId;
+
+  private _onKeyDownFn = this._onKeyDown.bind(this);
+  private _onKeyUpFn = this._onKeyUp.bind(this);
+  private _onFullscreenChangeFn = this._onFullscreenChange.bind(this);
 
   constructor(em: ClientEntityManager,
               scheduler: Scheduler,
@@ -48,14 +52,39 @@ export class UserInputManager {
     this._onDirectionReleaseHandler = onDirectionReleaseHandler;
     this._onEnterHandler = onEnterHandler;
     this._onQuitHandler = onQuitHandler;
+  }
 
-    window.addEventListener("keydown", event => this._onKeyDown(event), false);
-    window.addEventListener("keyup", event => this._onKeyUp(event), false);
-    document.addEventListener("fullscreenchange",
-                              () => this._onFullscreenChange(),
-                              false);
+  destroy() {
+    if (this._entityId) {
+      this._em.removeEntity(this._entityId);
+      this._entityId = undefined;
+    }
+    if (this._fullscreenButton) {
+      this._em.removeEntity(this._fullscreenButton);
+      this._fullscreenButton = undefined;
+    }
+    if (this._quitButton) {
+      this._em.removeEntity(this._quitButton);
+      this._quitButton = undefined;
+    }
 
+    this._arrowButtons.forEach(id => this._em.removeEntity(id));
+    this._arrowButtons.clear();
+
+    window.removeEventListener("keydown", this._onKeyDownFn);
+    window.removeEventListener("keyup", this._onKeyUpFn);
+    document.removeEventListener("fullscreenchange",
+                                 this._onFullscreenChangeFn);
+  }
+
+  initialise() {
     this._entityId = getNextEntityId();
+
+    window.addEventListener("keydown", this._onKeyDownFn, false);
+    window.addEventListener("keyup", this._onKeyUpFn, false);
+    document.addEventListener("fullscreenchange",
+                              this._onFullscreenChangeFn,
+                              false);
 
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -65,9 +94,7 @@ export class UserInputManager {
                                                  targetedHandlers,
                                                  broadcastHandlers);
     this._em.addEntity(this._entityId, EntityType.OTHER, [ behaviourComp ]);
-  }
 
-  initialiseUi() {
     const btnUp =
       this._constructButton("button_up",
                             () => this._onArrowPressed(UserInput.UP),
@@ -103,7 +130,9 @@ export class UserInputManager {
                             () => this._onSoundButtonPress,
                             () => this._onSoundButtonRelease());
 */
-    this._constructFullscreenButton();
+    if (!document.fullscreenElement) {
+      this._constructFullscreenButton();
+    }
     this._positionButtons();
   }
 
@@ -119,12 +148,10 @@ export class UserInputManager {
   }
 
   private _constructFullscreenButton() {
-    if (!this._fullscreenButton) {
-      this._fullscreenButton =
-        this._constructButton("button_fullscreen",
-                              () => this._onFullscreenButtonPress(),
-                              () => this._onFullscreenButtonRelease());
-    }
+    this._fullscreenButton =
+      this._constructButton("button_fullscreen",
+                            () => this._onFullscreenButtonPress(),
+                            () => this._onFullscreenButtonRelease());
   }
 
   private _onWindowResized() {

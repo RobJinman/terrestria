@@ -48,7 +48,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
-  private _userInputManager?: UserInputManager;
+  private _userInputManager: UserInputManager;
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
@@ -74,6 +74,14 @@ export class App {
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
+
+    this._userInputManager
+      = new UserInputManager(this._em,
+                             this._scheduler,
+                             this._onDirectionKeyDown.bind(this),
+                             this._onDirectionKeyUp.bind(this),
+                             this._onEnterKeyPress.bind(this),
+                             this.logOut.bind(this));
   }
 
   async connect() {
@@ -183,6 +191,8 @@ export class App {
 
     this.disconnect();
 
+    this._userInputManager.destroy();
+
     this._em.removeAll();
     this._gameState = GameState.GAME_INACTIVE;
 
@@ -194,15 +204,7 @@ export class App {
       throw new GameError("Not connected");
     }
 
-    this._userInputManager
-      = new UserInputManager(this._em,
-                             this._scheduler,
-                             this._onDirectionKeyDown.bind(this),
-                             this._onDirectionKeyUp.bind(this),
-                             this._onEnterKeyPress.bind(this),
-                             this.logOut.bind(this));
-
-    this._userInputManager.initialiseUi();
+    this._userInputManager.initialise();
 
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
