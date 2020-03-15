@@ -3,9 +3,10 @@ import WebSocket from "ws";
 import { GameError, ErrorCode } from "./common/error";
 import { Game } from "./game";
 import { ActionType, LogInAction, deserialiseMessage,
-         RespawnAction, JoinGameAction } from "./common/action";
-import { GameResponse, GameResponseType, RError, RLoginSuccess, 
-         RNewPlayerId, RJoinGameSuccess} from "./common/response";
+         RespawnAction, JoinGameAction, SignUpAction } from "./common/action";
+import { GameResponse, GameResponseType, RError, RLogInSuccess, 
+         RNewPlayerId, RJoinGameSuccess,
+         RSignUpSuccess } from "./common/response";
 import { Pinata } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
@@ -179,32 +180,49 @@ export class App {
   private async _handleLogIn(sock: ExtWebSocket, data: LogInAction) {
     this._logger.info("Handling log in");
 
-    let pinataId = "";
-    let pinataToken = "";
-    let userName = "";
-
     try {
       const auth = await this._pinata.logIn(data.email, data.password);
-      pinataId = auth.accountId;
-      pinataToken = auth.token;
-      userName = auth.userName;
+      const pinataId = auth.accountId;
+      const pinataToken = auth.token;
+      const userName = auth.userName;
 
       this._logger.info(`Logged into pinata account ${pinataId} with token ` +
                         `${pinataToken}`);
+
+      const response: RLogInSuccess = {
+        type: GameResponseType.LOG_IN_SUCCESS,
+        userName,
+        pinataId,
+        pinataToken
+      };
+
+      this._sendResponse(sock, response);
     }
     catch (err) {
       throw new GameError("Couldn't log into pinata: " + err,
-                          ErrorCode.AUTHENTICATION_FAILURE);
+                          ErrorCode.LOG_IN_FAILURE);
     }
+  }
 
-    const response: RLoginSuccess = {
-      type: GameResponseType.LOGIN_SUCCESS,
-      userName,
-      pinataId,
-      pinataToken
-    };
+  private async _handleSignUp(sock: ExtWebSocket, data: SignUpAction) {
+    this._logger.info("Handling sign up");
 
-    this._sendResponse(sock, response);
+    try {
+      await this._pinata.signUp(data.userName, data.email, data.password);
+      this._logger.info(`Created account with name ${data.userName}`);
+
+      const response: RSignUpSuccess = {
+        type: GameResponseType.SIGN_UP_SUCCESS,
+        userName: data.userName
+      };
+  
+      this._sendResponse(sock, response);
+    }
+    catch (err) {
+      // TODO: Reason
+      throw new GameError("Couldn't sign up new pinata account: " + err,
+                          ErrorCode.SIGN_UP_FAILURE);
+    }
   }
 
   private async _handleJoinGame(sock: ExtWebSocket, data: JoinGameAction) {
@@ -268,13 +286,17 @@ export class App {
       const data = <LogInAction>action;
       await this._handleLogIn(sock, data);
     }
+    else if (action.type === ActionType.SIGN_UP) {
+      const data = <SignUpAction>action;
+      await this._handleSignUp(sock, data);
+    }
     else if (action.type == ActionType.JOIN_GAME) {
       const data = <JoinGameAction>action;
       await this._handleJoinGame(sock, data);
     }
     else {
       if (!sock.userId) {
-        throw new GameError("User not logged in", ErrorCode.NOT_AUTHORISED);
+        throw new GameError("Player not spawned yet", ErrorCode.BAD_MESSAGE);
       }
 
       const client = this._users.get(sock.userId);

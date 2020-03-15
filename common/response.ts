@@ -8,7 +8,8 @@ import { MapData } from "./map_data";
 export enum GameResponseType {
   ERROR = "ERROR",
   JOIN_GAME_SUCCESS = "JOIN_GAME_SUCCESS",
-  LOGIN_SUCCESS = "LOGIN_SUCCESS",
+  LOG_IN_SUCCESS = "LOG_IN_SUCCESS",
+  SIGN_UP_SUCCESS = "SIGN_UP_SUCCESS",
   MAP_DATA = "MAP_DATA",
   GAME_STATE = "GAME_STATE",
   NEW_ENTITIES = "NEW_ENTITIES",
@@ -33,10 +34,14 @@ export interface RJoinGameSuccess extends GameResponse {
   playerId: EntityId;
 }
 
-export interface RLoginSuccess extends GameResponse {
+export interface RLogInSuccess extends GameResponse {
   userName: string;
   pinataId: string;
   pinataToken: string;
+}
+
+export interface RSignUpSuccess extends GameResponse {
+  userName: string;
 }
 
 export interface RMapData extends GameResponse {

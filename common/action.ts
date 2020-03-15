@@ -15,6 +15,7 @@ export enum InputState {
 
 export enum ActionType {
   LOG_IN = "LOG_IN",
+  SIGN_UP = "SIGN_UP",
   JOIN_GAME = "JOIN_GAME",
   RESPAWN = "RESPAWN",
   USER_INPUT = "USER_INPUT"
@@ -23,6 +24,7 @@ export enum ActionType {
 
 const VALIDATORS: ValidatorFnMap = {
   LOG_IN: isLogInAction,
+  SIGN_UP: isSignUpAction,
   JOIN_GAME: isJoinGameAction,
   RESPAWN: isRespawnAction,
   USER_INPUT: isUserInputAction
@@ -40,6 +42,22 @@ export interface LogInAction extends PlayerAction {
 export function isLogInAction(obj: any): obj is LogInAction {
   return obj.type == ActionType.LOG_IN &&
          obj.email &&
+         obj.password;
+}
+
+// =======================================================
+// SignUpAction
+//
+export interface SignUpAction extends PlayerAction {
+  email: string;
+  userName: string;
+  password: string;
+}
+
+export function isSignUpAction(obj: any): obj is SignUpAction {
+  return obj.type == ActionType.SIGN_UP &&
+         obj.email &&
+         obj.userName &&
          obj.password;
 }
 
@@ -93,8 +111,8 @@ type ValidatorFnMap = { [ actionType in ActionType ]: ValidatorFn; };
 
 function assertHasProperty(obj: any, prop: string) {
   if (!obj.hasOwnProperty(prop)) {
-    throw new GameError(`Malformed request: Missing ${prop} property`,
-                        ErrorCode.BAD_REQUEST);
+    throw new GameError(`Malformed message: Missing ${prop} property`,
+                        ErrorCode.BAD_MESSAGE);
   }
 }
 
@@ -104,8 +122,8 @@ export function deserialiseMessage(msg: string): PlayerAction {
     action = <PlayerAction>JSON.parse(msg);
   }
   catch (err) {
-    throw new GameError("Malformed request: " + err,
-                        ErrorCode.BAD_REQUEST);
+    throw new GameError("Malformed message: " + err,
+                        ErrorCode.BAD_MESSAGE);
   }
 
   assertHasProperty(action, "type");
@@ -113,12 +131,12 @@ export function deserialiseMessage(msg: string): PlayerAction {
   const validator = VALIDATORS[action.type];
   if (!validator) {
     throw new GameError(`Unrecognised type '${action.type}'`,
-                        ErrorCode.BAD_REQUEST);
+                        ErrorCode.BAD_MESSAGE);
   }
 
   if (!validator(action)) {
     throw new GameError(`Object is not valid ${action.type}`,
-                        ErrorCode.BAD_REQUEST);
+                        ErrorCode.BAD_MESSAGE);
   }
 
   return action;

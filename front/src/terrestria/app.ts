@@ -1,8 +1,9 @@
 import "../styles/styles.scss";
 import { ActionType, UserInputAction, UserInput, LogInAction,
-         RespawnAction, InputState, JoinGameAction } from "./common/action";
+         RespawnAction, InputState, JoinGameAction,
+         SignUpAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
-         RLoginSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
+         RLogInSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
          ClientMapData, RJoinGameSuccess } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
@@ -135,14 +136,47 @@ export class App {
     this._ws.send(dataString);
 
     return this._getPromiseForServerResponse((msg, resolve, reject) => {
-      if (msg.type === GameResponseType.LOGIN_SUCCESS) {
+      if (msg.type === GameResponseType.LOG_IN_SUCCESS) {
         resolve();
         return true;
       }
       else if (msg.type === GameResponseType.ERROR) {
         const error = <RError>(msg);
-        if (error.code === ErrorCode.AUTHENTICATION_FAILURE) {
+        if (error.code === ErrorCode.LOG_IN_FAILURE) {
           reject();
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  signUp(email: string, userName: string, password: string): Promise<void> {
+    if (!this._ws) {
+      throw new GameError("Not connected");
+    }
+
+    const data: SignUpAction = {
+      playerId: PLAYER_ID_UNSET,
+      type: ActionType.SIGN_UP,
+      email,
+      userName,
+      password
+    };
+
+    const dataString = JSON.stringify(data);
+
+    this._ws.send(dataString);
+
+    return this._getPromiseForServerResponse((msg, resolve, reject) => {
+      if (msg.type === GameResponseType.SIGN_UP_SUCCESS) {
+        resolve();
+        return true;
+      }
+      else if (msg.type === GameResponseType.ERROR) {
+        const error = <RError>(msg);
+        if (error.code === ErrorCode.SIGN_UP_FAILURE) {
+          reject(); // TODO: return reason
           return true;
         }
       }
@@ -322,7 +356,7 @@ export class App {
     this._onStateChange(this._gameState);
   }
 
-  private _onLogInSuccess(msg: RLoginSuccess) {
+  private _onLogInSuccess(msg: RLogInSuccess) {
     this._pinataId = msg.pinataId;
     this._pinataToken = msg.pinataToken;
     this._userName = msg.userName;
@@ -355,9 +389,13 @@ export class App {
         this._em.postEvent((<REvent>msg).event);
         break;
       }
-      case GameResponseType.LOGIN_SUCCESS: {
-        const m = <RLoginSuccess>msg;
+      case GameResponseType.LOG_IN_SUCCESS: {
+        const m = <RLogInSuccess>msg;
         this._onLogInSuccess(m);
+        break;
+      }
+      case GameResponseType.SIGN_UP_SUCCESS: {
+        // Do nothing
         break;
       }
       case GameResponseType.JOIN_GAME_SUCCESS: {

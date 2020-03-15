@@ -6,6 +6,7 @@ import { noDefault } from "./utils";
 
 enum MenuPage {
   SIGN_UP,
+  SIGN_UP_SUCCESS,
   LOG_IN,
   LOGGED_IN
 }
@@ -81,6 +82,13 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
             <p>Not you? <a href="#" onClick={noDefault(logOut)}>Sign out</a></p>
             <button onClick={startGame}>Start Game</button>
           </div>}
+          {this.state.page == MenuPage.SIGN_UP_SUCCESS &&
+          <div className="sign-up-success">
+            <h1>Your New Piñata Account</h1>
+            <p>Your account has successfully been created.</p>
+            <p><a href="#" onClick={noDefault(goToPage(MenuPage.LOG_IN))}>
+              Sign in</a></p>
+          </div>}
           <div className={hasError ? "error-msg" : "error-msg hidden"}>
             {errorMsg}</div>
         </div>}
@@ -106,8 +114,31 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _signUp(email: string,
                   userName: string,
-                  password1: string) {
-    console.log(email, userName, password1); // TODO
+                  password: string) {
+    this.setState({
+      loading: true,
+      errorMsg: ""
+    });
+
+    this._terrestria.connect().then(() => {
+      this._terrestria.signUp(email, userName, password).then(() => {
+        this.setState({
+          page: MenuPage.SIGN_UP_SUCCESS,
+          loading: false
+        });
+      }, () => {
+        this.setState({
+          loading: false,
+          errorMsg: "Sign up failed"
+        });
+        this._terrestria.disconnect();
+      });
+    }, () => {
+      this.setState({
+        loading: false,
+        errorMsg: "Failed to connect to server"
+      });
+    });
   }
 
   private _logIn(email: string, password: string) {

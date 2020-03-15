@@ -103,6 +103,23 @@ export class Pinata {
     return this._sendPostRequest(url, payload);
   }
 
+  signUp(userName: string,
+         email: string,
+         password: string): Promise<AuthResponse> {
+    this._logger.debug("Creating new account");
+
+    const body = {
+      userName,
+      email,
+      password
+    };
+
+    const payload = JSON.stringify(body);
+    const url = `${this._apiBase}/gamer/sign-up`;
+
+    return this._sendPostRequest(url, payload);
+  }
+
   async getAdSlices(adSpaceName: string, region: string): Promise<AdSlice[]> {
     await this._updateAdSlicesIfNeeded(adSpaceName, region);
 

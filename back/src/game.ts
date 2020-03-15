@@ -144,12 +144,12 @@ export class Game {
   respawnPlayer(oldId: EntityId, pinataId?: string, pinataToken?: string) {
     if (this._em.hasEntity(oldId)) {
       throw new GameError(`Cannot respawn; player ${oldId} is still alive`,
-                          ErrorCode.BAD_REQUEST);
+                          ErrorCode.BAD_MESSAGE);
     }
 
     if (!this._pipe.hasConnection(oldId)) {
       throw new GameError(`Unrecognised player id ${oldId}`,
-                          ErrorCode.BAD_REQUEST);
+                          ErrorCode.BAD_MESSAGE);
     }
 
     const id = this._factory.constructEntity({
