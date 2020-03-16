@@ -44,7 +44,7 @@ const baseConfig = {
         ]
       },
       {
-        test: /\.(woff)$/,
+        test: /\.(woff|jpg)$/,
         use: [
           'file-loader'
         ]
