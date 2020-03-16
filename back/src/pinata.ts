@@ -95,11 +95,11 @@ export class Pinata {
     return this._sendPostRequest(url, JSON.stringify(body), headers);
   }
 
-  logIn(email: string, password: string): Promise<AuthResponse> {
+  logIn(identity: string, password: string): Promise<AuthResponse> {
     this._logger.debug("Authenticating");
 
     const body = {
-      email,
+      identity,
       password
     };
 

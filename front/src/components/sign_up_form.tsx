@@ -1,6 +1,7 @@
 import * as React from "react";
 import { InputControl, InputControlType, InputControlState,
          initialInputState } from "./input_control";
+import { USER_NAME_REGEX } from "./utils";
 
 interface CSignUpFormProps {
   onSignUp: (email: string,
@@ -58,19 +59,23 @@ export class CSignUpForm
 
     const onEmailChange = (state: InputControlState) => {
       this.setState({ email: state, errorMsg: "" });
-    }
+    };
 
     const onUserNameChange = (state: InputControlState) => {
       this.setState({ userName: state, errorMsg: "" });
-    }
+    };
 
     const onPassword1Change = (state: InputControlState) => {
       this.setState({ password1: state, errorMsg: "" });
-    }
+    };
 
     const onPassword2Change = (state: InputControlState) => {
       this.setState({ password2: state, errorMsg: "" });
-    }
+    };
+
+    const isValidUserName = (userName: string) => {
+      return USER_NAME_REGEX.test(userName);
+    };
 
     const isValid = this._isValid.bind(this);
 
@@ -89,6 +94,7 @@ export class CSignUpForm
             errorMsg="Please enter a valid email address"/>
           <InputControl name="userName" label="User name"
             type={InputControlType.TEXT} onChange={onUserNameChange}
+            validator={isValidUserName}
             errorMsg="Please enter a valid user name"/>
           <InputControl name="password1" label="Password"
             type={InputControlType.PASSWORD} onChange={onPassword1Change}

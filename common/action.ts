@@ -35,13 +35,13 @@ const VALIDATORS: ValidatorFnMap = {
 // LogInAction
 //
 export interface LogInAction extends PlayerAction {
-  email: string;
+  identity: string;
   password: string;
 }
 
 export function isLogInAction(obj: any): obj is LogInAction {
   return obj.type == ActionType.LOG_IN &&
-         obj.email &&
+         obj.identity &&
          obj.password;
 }
 

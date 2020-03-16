@@ -125,7 +125,7 @@ export class App {
     this._onWindowResize();
   }
 
-  logIn(email: string, password: string): Promise<RLogInSuccess> {
+  logIn(identity: string, password: string): Promise<RLogInSuccess> {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -133,7 +133,7 @@ export class App {
     const data: LogInAction = {
       playerId: PLAYER_ID_UNSET,
       type: ActionType.LOG_IN,
-      email,
+      identity,
       password
     };
 

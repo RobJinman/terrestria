@@ -1,7 +1,7 @@
 import * as React from "react";
 import { InputControl, InputControlType, InputControlState,
          initialInputState } from "./input_control";
-import { noDefault } from "./utils";
+import { noDefault, EMAIL_REGEX, USER_NAME_REGEX } from "./utils";
 
 interface CLogInFormProps {
   onLogIn: (email: string, password: string) => void;
@@ -31,11 +31,15 @@ export class CLogInForm
 
     const onEmailChange = (state: InputControlState) => {
       this.setState({ email: state });
-    }
+    };
 
     const onPasswordChange = (state: InputControlState) => {
       this.setState({ password: state });
-    }
+    };
+
+    const isValidIdentity = (identity: string) => {
+      return EMAIL_REGEX.test(identity) || USER_NAME_REGEX.test(identity);
+    };
 
     const isValid = this._isValid.bind(this);
 
@@ -44,8 +48,9 @@ export class CLogInForm
         <h1>Piñata Sign In</h1>
         <p>Sign in with Piñata to win money as you play!</p>
         <form onSubmit={onSubmit}>
-          <InputControl name="email" label="Email"
-            type={InputControlType.EMAIL} onChange={onEmailChange}
+          <InputControl name="identity" label="User name or email"
+            type={InputControlType.TEXT} onChange={onEmailChange}
+            validator={isValidIdentity}
             errorMsg="Please enter a valid email address"/>
           <InputControl name="password" label="Password"
             type={InputControlType.PASSWORD} onChange={onPasswordChange}

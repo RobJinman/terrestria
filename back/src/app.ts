@@ -191,7 +191,7 @@ export class App {
     this._logger.info("Handling log in");
 
     try {
-      const auth = await this._pinata.logIn(data.email, data.password);
+      const auth = await this._pinata.logIn(data.identity, data.password);
       const pinataId = auth.accountId;
       const pinataToken = auth.token;
       const userName = auth.userName;
