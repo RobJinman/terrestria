@@ -51,7 +51,7 @@ export class CLogInForm
           <InputControl name="identity" label="User name or email"
             type={InputControlType.TEXT} onChange={onEmailChange}
             validator={isValidIdentity}
-            errorMsg="Please enter a valid email address"/>
+            errorMsg="Please enter a valid name or email"/>
           <InputControl name="password" label="Password"
             type={InputControlType.PASSWORD} onChange={onPasswordChange}
             errorMsg="Please enter a password"/>
