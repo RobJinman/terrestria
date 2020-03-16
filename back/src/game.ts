@@ -105,7 +105,7 @@ export class Game {
 
     this._gameLogic.addPlayer(id);
 
-    this._logger.info(`Adding player ${id}`);
+    this._logger.info(`Adding player ${id} with pinata id ${pinataId}`);
   
     this._pipe.addConnection(id, socket);
 

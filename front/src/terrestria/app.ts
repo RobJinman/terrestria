@@ -28,16 +28,17 @@ declare var __WEBSOCKET_URL__: string;
 const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
-type PromiseResolver = () => void;
+type PromiseResolver<T> = (value: T) => void;
+type PromiseRejector = () => void;
 
-type ServerResponseHandlerFn = (msg: GameResponse,
-                                resolve: PromiseResolver,
-                                reject: PromiseResolver) => boolean;
+type ServerResponseHandlerFn<T> = (msg: GameResponse,
+                                   resolve: PromiseResolver<T>,
+                                   reject: PromiseRejector) => boolean;
 
-interface ServerResponseHandler {
-  handlerFn: ServerResponseHandlerFn;
-  resolve: PromiseResolver;
-  reject: PromiseResolver;
+type ServerResponseHandler<T> = {
+  handlerFn: ServerResponseHandlerFn<T>;
+  resolve: PromiseResolver<T>;
+  reject: PromiseRejector;
 }
 
 export class App {
@@ -54,7 +55,7 @@ export class App {
   private _pinataToken?: string;
   private _userName?: string;
   private _gameState: GameState = GameState.GAME_INACTIVE;
-  private _serverResponseHandlers: ServerResponseHandler[] = [];
+  private _serverResponseHandlers: ServerResponseHandler<any>[] = [];
 
   constructor(onStateChange: (state: GameState) => void) {
     window.onresize = this._onWindowResize.bind(this);
@@ -118,7 +119,7 @@ export class App {
     this._onWindowResize();
   }
 
-  logIn(email: string, password: string): Promise<void> {
+  logIn(email: string, password: string): Promise<RLogInSuccess> {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -136,7 +137,7 @@ export class App {
 
     return this._getPromiseForServerResponse((msg, resolve, reject) => {
       if (msg.type === GameResponseType.LOG_IN_SUCCESS) {
-        resolve();
+        resolve(<RLogInSuccess>msg);
         return true;
       }
       else if (msg.type === GameResponseType.ERROR) {
@@ -199,7 +200,7 @@ export class App {
     this._onStateChange(this._gameState);
   }
 
-  start() {
+  start(pinataId?: string, pinataToken?: string) {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -209,20 +210,20 @@ export class App {
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
       type: ActionType.JOIN_GAME,
-      pinataId: this._pinataId,
-      pinataToken: this._pinataToken
+      pinataId: pinataId || this._pinataId,
+      pinataToken: pinataToken || this._pinataToken
     };
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
   }
 
-  private _getPromiseForServerResponse(handlerFn: ServerResponseHandlerFn):
-    Promise<void> {
+  private _getPromiseForServerResponse<T>(handler: ServerResponseHandlerFn<T>):
+    Promise<T> {
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       this._serverResponseHandlers.push({
-        handlerFn,
+        handlerFn: handler,
         resolve,
         reject
       });

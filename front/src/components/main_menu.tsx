@@ -3,6 +3,7 @@ import { App } from "../terrestria/app";
 import { CLogInForm } from "./log_in_form";
 import { CSignUpForm } from "./sign_up_form";
 import { noDefault } from "./utils";
+import { RLogInSuccess } from "../terrestria/common/response";
 
 enum MenuPage {
   SIGN_UP,
@@ -98,7 +99,10 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _startGame() {
     this._terrestria.connect().then(() => {
-      this._terrestria.start();
+      const pinataId = localStorage.getItem("pinataId") || undefined;
+      const pinataToken = localStorage.getItem("pinataToken") || undefined;
+
+      this._terrestria.start(pinataId, pinataToken);
     }, () => {
       this.setState({
         loading: false,
@@ -141,14 +145,22 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     });
   }
 
-  private _logIn(email: string, password: string) {
+  private _logIn(email: string, password: string, stayLoggedIn: boolean) {
     this.setState({
       loading: true,
       errorMsg: ""
     });
 
     this._terrestria.connect().then(() => {
-      this._terrestria.logIn(email, password).then(() => {
+      this._terrestria.logIn(email, password).then((result: RLogInSuccess) => {
+        if (stayLoggedIn) {
+          localStorage.setItem("pinataId", result.pinataId);
+          localStorage.setItem("pinataToken", result.pinataToken);  
+        }
+        else {
+          localStorage.removeItem("pinataId");
+          localStorage.removeItem("pinataToken");
+        }
         this.setState({
           page: MenuPage.LOGGED_IN,
           loading: false
