@@ -1,5 +1,5 @@
 import * as React from "react";
-import { App } from "../terrestria/app";
+import { App, PinataCredentials } from "../terrestria/app";
 import { CLogInForm } from "./log_in_form";
 import { CSignUpForm } from "./sign_up_form";
 import { noDefault } from "./utils";
@@ -20,14 +20,14 @@ interface CMainMenuState {
 
 interface CMainMenuProps {
   terrestria: App;
+  onUpdatePinataCreds: (creds?: PinataCredentials) => void;
+  pinataId?: string;
+  pinataToken?: string;
+  userName?: string;
 }
 
 export class CMainMenu extends React.Component<CMainMenuProps> {
-  state: CMainMenuState = {
-    page: MenuPage.SIGN_UP,
-    loading: false,
-    errorMsg: ""
-  };
+  state: CMainMenuState;
 
   private _terrestria: App;
 
@@ -35,6 +35,23 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     super(props);
 
     this._terrestria = props.terrestria;
+
+    const loggedIn = this.props.pinataId && this.props.pinataToken;
+
+    this.state = {
+      page: loggedIn ? MenuPage.LOGGED_IN : MenuPage.SIGN_UP,
+      loading: false,
+      errorMsg: ""
+    };
+  }
+
+  componentDidUpdate() {
+    if (this.state.page !== MenuPage.LOGGED_IN &&
+        this.props.pinataId && this.props.pinataToken) {
+      this.setState({
+        page: MenuPage.LOGGED_IN
+      });
+    }
   }
 
   render() {
@@ -49,8 +66,6 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
         errorMsg: ""
       });
     };
-
-    const userName = this._terrestria.userName;
 
     const hasError = this.state.errorMsg.length > 0;
     const errorMsg = this.state.errorMsg;
@@ -79,7 +94,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
           {this.state.page == MenuPage.LOGGED_IN &&
           <div className="log-in">
             <h1>Ready to Play</h1>
-            <p>You're signed in as <b>{userName}</b>.</p>
+            <p>You're signed in as <b>{this.props.userName}</b>.</p>
             <p>Not you? <a href="#" onClick={noDefault(logOut)}>Sign out</a></p>
             <button onClick={startGame}>Start Game</button>
           </div>}
@@ -99,10 +114,16 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _startGame() {
     this._terrestria.connect().then(() => {
-      const pinataId = localStorage.getItem("pinataId") || undefined;
-      const pinataToken = localStorage.getItem("pinataToken") || undefined;
+      const { userName, pinataId, pinataToken } = this.props;
+      let creds: PinataCredentials|undefined;
 
-      this._terrestria.start(pinataId, pinataToken);
+      if (userName && pinataId && pinataToken) {
+        creds = {
+          userName, pinataId, pinataToken
+        };
+      }
+
+      this._terrestria.start(creds);
     }, () => {
       this.setState({
         loading: false,
@@ -113,7 +134,10 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _logOut() {
     this._terrestria.logOut();
-    this.setState({ page: MenuPage.SIGN_UP });
+    this.setState({
+      page: MenuPage.SIGN_UP
+    });
+    this.props.onUpdatePinataCreds(undefined);
   }
 
   private _signUp(email: string,
@@ -145,7 +169,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     });
   }
 
-  private _logIn(email: string, password: string, stayLoggedIn: boolean) {
+  private _logIn(email: string, password: string) {
     this.setState({
       loading: true,
       errorMsg: ""
@@ -153,18 +177,11 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
     this._terrestria.connect().then(() => {
       this._terrestria.logIn(email, password).then((result: RLogInSuccess) => {
-        if (stayLoggedIn) {
-          localStorage.setItem("pinataId", result.pinataId);
-          localStorage.setItem("pinataToken", result.pinataToken);  
-        }
-        else {
-          localStorage.removeItem("pinataId");
-          localStorage.removeItem("pinataToken");
-        }
         this.setState({
           page: MenuPage.LOGGED_IN,
           loading: false
         });
+        this.props.onUpdatePinataCreds(result);
       }, () => {
         this.setState({
           loading: false,

@@ -1,10 +1,13 @@
 import * as React from "react";
-import { App } from "../terrestria/app";
+import { App, PinataCredentials } from "../terrestria/app";
 import { CMainMenu } from "./main_menu";
 import { GameState } from "../terrestria/definitions";
 
 interface CMainState {
   gameState: GameState;
+  userName?: string;
+  pinataId?: string;
+  pinataToken?: string;
 }
 
 export class CMain extends React.Component<{}> {
@@ -31,16 +34,34 @@ export class CMain extends React.Component<{}> {
 
   render() {
     const gameState = this.state.gameState;
+    const onUpdatePinataCreds = this._onUpdatePinataCreds.bind(this);
 
     return (
       <div>
         <div id="terrestria"></div>
         { gameState != GameState.GAME_ACTIVE &&
         <div id="ui-overlay">
-          <CMainMenu terrestria={this._terrestria}/>
+          <CMainMenu terrestria={this._terrestria}
+            onUpdatePinataCreds={onUpdatePinataCreds}
+            userName={this.state.userName}
+            pinataId={this.state.pinataId}
+            pinataToken={this.state.pinataToken}/>
         </div>
         }
       </div>
     );
+  }
+
+  private _onUpdatePinataCreds(creds?: PinataCredentials) {
+    if (creds) {
+      this.setState(creds);
+    }
+    else {
+      this.setState({
+        userName: undefined,
+        pinataId: undefined,
+        pinataToken: undefined
+      });
+    }
   }
 }

@@ -4,7 +4,7 @@ import { InputControl, InputControlType, InputControlState,
 import { noDefault } from "./utils";
 
 interface CLogInFormProps {
-  onLogIn: (email: string, password: string, stayLoggedIn: boolean) => void;
+  onLogIn: (email: string, password: string) => void;
   onStart: () => void;
   onBack: () => void;
 }
@@ -12,7 +12,6 @@ interface CLogInFormProps {
 interface CLogInFormState {
   email: InputControlState;
   password: InputControlState;
-  stayLoggedIn: boolean;
 }
 
 export class CLogInForm
@@ -20,8 +19,7 @@ export class CLogInForm
 
   state: CLogInFormState = {
     email: initialInputState(),
-    password: initialInputState(),
-    stayLoggedIn: true
+    password: initialInputState()
   };
 
   constructor(props: CLogInFormProps) {
@@ -41,11 +39,6 @@ export class CLogInForm
 
     const isValid = this._isValid.bind(this);
 
-    const onStayLoggedInToggle = (event: React.SyntheticEvent) => {
-      const target: any = event.target;
-      this.setState({ stayLoggedIn: target.checked });
-    };
-
     return (
       <div className="log-in">
         <h1>Piñata Sign In</h1>
@@ -57,12 +50,6 @@ export class CLogInForm
           <InputControl name="password" label="Password"
             type={InputControlType.PASSWORD} onChange={onPasswordChange}
             errorMsg="Please enter a password"/>
-          <div className="form-field">
-            <label htmlFor="stayLoggedIn">Stay signed in</label>
-            <input type="checkbox" name="stayLoggedIn"
-              checked={this.state.stayLoggedIn}
-              onChange={onStayLoggedInToggle} />
-          </div>
           <input disabled={!isValid()} type="submit" value="Sign in"
             className="btn-log-in" />
         </form>
@@ -81,7 +68,7 @@ export class CLogInForm
 
   private _onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const { email, password, stayLoggedIn } = this.state;
-    this.props.onLogIn(email.value, password.value, stayLoggedIn);
+    const { email, password } = this.state;
+    this.props.onLogIn(email.value, password.value);
   }
 }

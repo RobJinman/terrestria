@@ -41,6 +41,12 @@ type ServerResponseHandler<T> = {
   reject: PromiseRejector;
 }
 
+export interface PinataCredentials {
+  userName: string;
+  pinataId: string;
+  pinataToken: string;
+}
+
 export class App {
   private _ws?: WebSocket;
   private _responseQueue: GameResponse[] = [];
@@ -200,18 +206,27 @@ export class App {
     this._onStateChange(this._gameState);
   }
 
-  start(pinataId?: string, pinataToken?: string) {
+  start(pinataCredentials?: PinataCredentials) {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
 
     this._userInputManager.initialise();
 
+    const pinataId = pinataCredentials ?
+                     pinataCredentials.pinataId : this._pinataId;
+
+    const pinataToken = pinataCredentials ?
+                        pinataCredentials.pinataToken : this._pinataToken;
+
+    this._userName = pinataCredentials ?
+                     pinataCredentials.userName : this._userName;
+
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
       type: ActionType.JOIN_GAME,
-      pinataId: pinataId || this._pinataId,
-      pinataToken: pinataToken || this._pinataToken
+      pinataId,
+      pinataToken
     };
 
     const dataString = JSON.stringify(data);
