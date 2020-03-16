@@ -1,3 +1,4 @@
+import { PinataApiErrorCode } from "./pinata_api";
 import { Entity } from "./entity_manager";
 import { ErrorCode } from "./error";
 import { EntityId, ComponentPacket } from "./system";
@@ -10,6 +11,7 @@ export enum GameResponseType {
   JOIN_GAME_SUCCESS = "JOIN_GAME_SUCCESS",
   LOG_IN_SUCCESS = "LOG_IN_SUCCESS",
   SIGN_UP_SUCCESS = "SIGN_UP_SUCCESS",
+  SIGN_UP_FAILURE = "SIGN_UP_FAILURE",
   MAP_DATA = "MAP_DATA",
   GAME_STATE = "GAME_STATE",
   NEW_ENTITIES = "NEW_ENTITIES",
@@ -42,6 +44,10 @@ export interface RLogInSuccess extends GameResponse {
 
 export interface RSignUpSuccess extends GameResponse {
   userName: string;
+}
+
+export interface RSignUpFailure extends GameResponse {
+  reason: PinataApiErrorCode;
 }
 
 export interface RMapData extends GameResponse {

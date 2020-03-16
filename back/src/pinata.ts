@@ -6,6 +6,12 @@ import { GameError, ErrorCode } from "./common/error";
 // How frequently to check for new adverts
 const REFRESH_INTERVAL_MS = 1 * 60 * 1000;
 
+export class PinataHttpError {
+  constructor(public reason: string,
+              public messageFromServer?: string,
+              public httpStatusCode?: number) {}
+}
+
 export interface AuthResponse {
   accountId: string;
   userName: string;
@@ -256,19 +262,22 @@ export class Pinata {
         res.on("end", () => {
           try {
             if (res.statusCode != 200) {
-              reject(`Error from Pinata servers: Status ${res.statusCode}`);
+              reject(new PinataHttpError("Error from Pinata server",
+                                         responseJson,
+                                         res.statusCode));
             }
             const data = JSON.parse(responseJson);
             resolve(data);
           }
           catch (err) {
-            reject("Error making request to Pinata servers: " + err);
+            reject(new PinataHttpError("Error parsing response from Pinata " +
+                                       "server", responseJson));
           }
         });
       });
 
       req.on("error", err => {
-        reject("Error making request to Pinata servers: " + err);
+        reject(new PinataHttpError("Error making request to Pinata server"));
       });
 
       if (payloadJson) {

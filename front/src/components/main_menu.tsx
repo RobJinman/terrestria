@@ -4,6 +4,7 @@ import { CLogInForm } from "./log_in_form";
 import { CSignUpForm } from "./sign_up_form";
 import { noDefault } from "./utils";
 import { RLogInSuccess } from "../terrestria/common/response";
+import { PinataApiErrorCode } from "../terrestria/common/pinata_api";
 
 enum MenuPage {
   SIGN_UP,
@@ -24,6 +25,20 @@ interface CMainMenuProps {
   pinataId?: string;
   pinataToken?: string;
   userName?: string;
+}
+
+function signUpFailedMessage(reason: PinataApiErrorCode) {
+  switch (reason) {
+    case PinataApiErrorCode.EMAIL_ADDRESS_ALREADY_EXISTS:
+      return "User with that email address already exists";
+    case PinataApiErrorCode.USER_NAME_ALREADY_EXISTS:
+      return "User with that name already exists";
+    case PinataApiErrorCode.INVALID_EMAIL_ADDRESS:
+      return "Invalid email address";
+    case PinataApiErrorCode.INVALID_USER_NAME:
+      return "Invalid user name";
+  }
+  return "Unknown error";
 }
 
 export class CMainMenu extends React.Component<CMainMenuProps> {
@@ -154,10 +169,10 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
           page: MenuPage.SIGN_UP_SUCCESS,
           loading: false
         });
-      }, () => {
+      }, (reason: PinataApiErrorCode) => {
         this.setState({
           loading: false,
-          errorMsg: "Sign up failed"
+          errorMsg: signUpFailedMessage(reason)
         });
         this._terrestria.disconnect();
       });

@@ -4,7 +4,7 @@ import { ActionType, UserInputAction, UserInput, LogInAction,
          SignUpAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLogInSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
-         ClientMapData, RJoinGameSuccess } from "./common/response";
+         ClientMapData, RJoinGameSuccess, RSignUpFailure } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
 import { CLIENT_FRAME_RATE } from "./common/constants";
@@ -29,7 +29,7 @@ const PLAYER_ID_UNSET = -1;
 const PLAYER_ID_DEAD = -2;
 
 type PromiseResolver<T> = (value: T) => void;
-type PromiseRejector = () => void;
+type PromiseRejector = (reason?: any) => void;
 
 type ServerResponseHandlerFn<T> = (msg: GameResponse,
                                    resolve: PromiseResolver<T>,
@@ -179,12 +179,10 @@ export class App {
         resolve();
         return true;
       }
-      else if (msg.type === GameResponseType.ERROR) {
-        const error = <RError>(msg);
-        if (error.code === ErrorCode.SIGN_UP_FAILURE) {
-          reject(); // TODO: return reason
-          return true;
-        }
+      else if (msg.type === GameResponseType.SIGN_UP_FAILURE) {
+        const failure = <RSignUpFailure>(msg);
+        reject(failure.reason);
+        return true;
       }
       return false;
     });

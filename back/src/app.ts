@@ -5,9 +5,10 @@ import { Game } from "./game";
 import { ActionType, LogInAction, deserialiseMessage,
          RespawnAction, JoinGameAction, SignUpAction } from "./common/action";
 import { GameResponse, GameResponseType, RError, RLogInSuccess, 
-         RNewPlayerId, RJoinGameSuccess,
-         RSignUpSuccess } from "./common/response";
-import { Pinata } from "./pinata";
+         RNewPlayerId, RJoinGameSuccess, RSignUpSuccess, 
+         RSignUpFailure } from "./common/response";
+import { PinataApiErrorCode } from "./common/pinata_api";
+import { Pinata, PinataHttpError } from "./pinata";
 import { EntityId } from "./common/system";
 import { AppConfig, makeAppConfig } from "./config";
 import { Logger } from "./logger";
@@ -30,6 +31,15 @@ interface UserConnection {
 }
 
 type HandlerFn = (...args: any) => Promise<void>;
+
+function attemptJsonParse(json: string) {
+  let result: any = null;
+  try {
+    result = JSON.parse(json);
+  }
+  catch (err) {}
+  return result;
+}
 
 export class App {
   private _config: AppConfig;
@@ -219,9 +229,19 @@ export class App {
       this._sendResponse(sock, response);
     }
     catch (err) {
-      // TODO: Reason
-      throw new GameError("Couldn't sign up new pinata account: " + err,
-                          ErrorCode.SIGN_UP_FAILURE);
+      let code: PinataApiErrorCode = PinataApiErrorCode.UNKNOWN_ERROR;
+
+      if (err instanceof PinataHttpError) {
+        const msg = attemptJsonParse(err.messageFromServer || "");
+        code = msg.error.code;
+      }
+
+      const response: RSignUpFailure = {
+        type: GameResponseType.SIGN_UP_FAILURE,
+        reason: code
+      };
+  
+      this._sendResponse(sock, response);
     }
   }
 
