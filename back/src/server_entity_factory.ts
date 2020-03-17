@@ -35,6 +35,7 @@ function constructSoil(em: ServerEntityManager, desc: any): EntityId {
     solid: true,
     blocking: false,
     stackable: true,
+    squashable: false,
     heavy: false,
     movable: false,
     isAgent: false
@@ -76,6 +77,7 @@ function constructRock(em: ServerEntityManager, desc: any): EntityId {
     solid: true,
     blocking: true,
     stackable: false,
+    squashable: false,
     heavy: true,
     movable: true,
     isAgent: false
@@ -117,6 +119,7 @@ function constructGem(em: ServerEntityManager, desc: any): EntityId {
     solid: true,
     blocking: false,
     stackable: false,
+    squashable: false,
     heavy: true,
     movable: false,
     isAgent: false
@@ -178,6 +181,7 @@ function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
     solid: true,
     blocking: false,
     stackable: true,
+    squashable: true,
     heavy: false,
     movable: false,
     isAgent: true
@@ -271,6 +275,7 @@ function constructTrophy(em: ServerEntityManager,
     solid: true,
     blocking: false,
     stackable: false,
+    squashable: false,
     heavy: true,
     movable: false,
     isAgent: false

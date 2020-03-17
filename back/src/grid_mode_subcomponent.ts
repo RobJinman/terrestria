@@ -166,6 +166,10 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
     return this._properties.stackable;
   }
 
+  get squashable() {
+    return this._properties.squashable;
+  }
+
   get heavy() {
     return this._properties.heavy;
   }

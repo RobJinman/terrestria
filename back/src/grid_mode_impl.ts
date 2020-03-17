@@ -5,7 +5,7 @@ import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
-         AgentActionType } from "./common/event";
+         AgentActionType, EEntityHit } from "./common/event";
 import { Direction } from "./common/definitions";
 import { ServerEntityManager } from "./server_entity_manager";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
@@ -122,49 +122,88 @@ export class GridModeImpl implements SpatialModeImpl {
     this._em.postEvent(event);
   }
 
+  private _canFallIntoPos(x: number, y: number, falling: boolean) {
+    if (this._grid.outOfRange(x, y)) {
+      return false;
+    }
+
+    const solid = this._grid.solidItemsAtPos(x, y);
+
+    if (!falling) {
+      return solid.size === 0;
+    }
+
+    const squashable = this._grid.squashableItemsAtPos(x, y);
+
+    for (const item of solid) {
+      if (!squashable.has(item)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   private _gravity() {
     this._components.forEach(c => {
-      if (c.heavy) {
-        const x = c.x();
-        const y = c.y();
-        const yDown = y + BLOCK_SZ;
-        const xRight = x + BLOCK_SZ;
-        const xLeft = x - BLOCK_SZ;
+      if (!c.heavy) {
+        return;
+      }
 
-        const t = 1.0 / FALL_SPEED;
+      const x = c.x();
+      const y = c.y();
+      const yDown = y + BLOCK_SZ;
+      const xRight = x + BLOCK_SZ;
+      const xLeft = x - BLOCK_SZ;
 
-        if (!this.grid.outOfRange(x, yDown)) {
-          if (this.grid.spaceFreeAtPos(x, yDown)) {
-            c.moveToPos(c.x(), c.y() + BLOCK_SZ, t);
-            c.falling = true;
+      const squashable = this._grid.squashableItemsAtPos(x, y);
+      if (c.falling && squashable.size > 0) {
+        const event: EEntitySquashed = {
+          type: GameEventType.ENTITY_SQUASHED,
+          entities: Array.from(squashable).map(i => i.entityId),
+          squasherId: c.entityId,
+          gridX: this.grid.toGridX(x),
+          gridY: this.grid.toGridY(y)
+        };
+
+        this._em.postEvent(event);
+      }
+
+      if (this.grid.outOfRange(x, yDown)) {
+        return;
+      }
+
+      const t = 1.0 / FALL_SPEED;
+
+      if (this._canFallIntoPos(x, yDown, c.falling)) {
+        c.moveToPos(c.x(), c.y() + BLOCK_SZ, t);
+        c.falling = true;
+      }
+      else {
+        if (c.falling) {
+          const event: EEntityHit = {
+            type: GameEventType.ENTITY_HIT,
+            entities: this.grid.idsAtPos(x, yDown),
+            hitterId: c.entityId,
+            gridX: this.grid.toGridX(x),
+            gridY: this.grid.toGridY(yDown)
+          };
+
+          this._em.postEvent(event);
+        }
+
+        c.falling = false;
+
+        if (!this.grid.stackableSpaceAtPos(x, yDown)) {
+          if (this.grid.spaceFreeAtPos(xRight, y) &&
+            this.grid.spaceFreeAtPos(xRight, yDown)) {
+
+            c.moveToPos(c.x() + BLOCK_SZ, c.y(), t);
           }
-          else {
-            if (c.falling) {
-              const event: EEntitySquashed = {
-                type: GameEventType.ENTITY_SQUASHED,
-                entities: this.grid.idsAtPos(x, yDown),
-                squasherId: c.entityId,
-                gridX: this.grid.toGridX(x),
-                gridY: this.grid.toGridY(yDown)
-              };
+          else if (this.grid.spaceFreeAtPos(xLeft, y) &&
+            this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
-              this._em.postEvent(event);
-            }
-
-            c.falling = false;
-
-            if (!this.grid.stackableSpaceAtPos(x, yDown)) {
-              if (this.grid.spaceFreeAtPos(xRight, y) &&
-                this.grid.spaceFreeAtPos(xRight, yDown)) {
-
-                c.moveToPos(c.x() + BLOCK_SZ, c.y(), t);
-              }
-              else if (this.grid.spaceFreeAtPos(xLeft, y) &&
-                this.grid.spaceFreeAtPos(xLeft, yDown)) {
-
-                c.moveToPos(c.x() - BLOCK_SZ, c.y(), t);
-              }
-            }
+            c.moveToPos(c.x() - BLOCK_SZ, c.y(), t);
           }
         }
       }

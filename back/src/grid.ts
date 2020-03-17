@@ -181,6 +181,10 @@ export class Grid {
     return this.itemsWithPropAtPos(x, y, "stackable");
   }
 
+  squashableItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "squashable");
+  }
+
   movableItemsAtPos(x: number, y: number) {
     return this.itemsWithPropAtPos(x, y, "movable");
   }
