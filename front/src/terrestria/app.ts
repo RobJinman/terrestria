@@ -8,7 +8,7 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RSignUpFailure } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
-import { CLIENT_FRAME_RATE } from "./common/constants";
+import { CLIENT_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { waitForCondition } from './common/utils';
@@ -320,8 +320,23 @@ export class App {
       const t = 0.25;
       const v = { x: player.x - camX, y: player.y - camY };
 
-      renderSys.setCameraPosition(camX + v.x / (t * CLIENT_FRAME_RATE),
-                                  camY + v.y / (t * CLIENT_FRAME_RATE));
+      if (this._mapData) {
+        const worldW = this._mapData.width * BLOCK_SZ;
+        const worldH = this._mapData.height * BLOCK_SZ;
+
+        const minX = renderSys.viewW  * 0.5;
+        const minY = renderSys.viewH * 0.5;
+        const maxX = worldW - renderSys.viewW * 0.5;
+        const maxY = worldH - renderSys.viewH * 0.5;
+
+        let destX = camX + v.x / (t * CLIENT_FRAME_RATE);
+        let destY = camY + v.y / (t * CLIENT_FRAME_RATE);
+
+        destX = Math.min(Math.max(destX, minX), maxX);
+        destY = Math.min(Math.max(destY, minY), maxY);
+
+        renderSys.setCameraPosition(destX, destY);
+      }
     }
   }
 
@@ -378,6 +393,7 @@ export class App {
   }
 
   private _initialiseGame(mapData: ClientMapData) {
+    this._mapData = mapData;
     this._onWindowResize();
     constructInitialEntitiesFromMapData(this._em, mapData);
   }
@@ -397,8 +413,7 @@ export class App {
     switch (msg.type) {
       case GameResponseType.MAP_DATA:{
         const m = <RMapData>msg;
-        this._mapData = m.mapData;
-        this._initialiseGame(this._mapData);
+        this._initialiseGame(m.mapData);
         break;
       }
       case GameResponseType.NEW_ENTITIES: {
@@ -439,8 +454,6 @@ export class App {
       }
       case GameResponseType.PLAYER_KILLED: {
         this._onPlayerKilled();
-
-        this._setGameState(GameState.PLAYER_DEAD);
         break;
       }
       case GameResponseType.NEW_PLAYER_ID: {
