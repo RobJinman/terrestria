@@ -244,6 +244,14 @@ export class RenderSystem implements ClientSystem {
     return this._viewH;
   }
 
+  get cameraX() {
+    return this._camera.x;
+  }
+
+  get cameraY() {
+    return this._camera.y;
+  }
+
   async init() {
     const resource = await this._loadResource("sprite_sheet",
                                               "assets/sprite_sheet.json");

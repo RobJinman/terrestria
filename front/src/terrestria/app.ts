@@ -22,6 +22,7 @@ import { ClientSpatialComponent } from './client_spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
 import { GameState } from "./definitions";
+import { normalise } from "./common/geometry";
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -313,7 +314,14 @@ export class App {
                                                       this._playerId);
 
       const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-      renderSys.setCameraPosition(player.x, player.y);
+
+      const camX = renderSys.cameraX;
+      const camY = renderSys.cameraY;
+      const t = 0.25;
+      const v = { x: player.x - camX, y: player.y - camY };
+
+      renderSys.setCameraPosition(camX + v.x / (t * CLIENT_FRAME_RATE),
+                                  camY + v.y / (t * CLIENT_FRAME_RATE));
     }
   }
 
