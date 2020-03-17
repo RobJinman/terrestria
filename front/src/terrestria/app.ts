@@ -4,7 +4,8 @@ import { ActionType, UserInputAction, UserInput, LogInAction,
          SignUpAction } from "./common/action";
 import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RLogInSuccess, REntitiesDeleted, REvent, RNewPlayerId, RMapData,
-         ClientMapData, RJoinGameSuccess, RSignUpFailure } from "./common/response";
+         ClientMapData, RJoinGameSuccess,
+         RSignUpFailure } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
 import { CLIENT_FRAME_RATE } from "./common/constants";
@@ -22,7 +23,6 @@ import { ClientSpatialComponent } from './client_spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
 import { GameState } from "./definitions";
-import { normalise } from "./common/geometry";
 
 declare var __WEBSOCKET_URL__: string;
 

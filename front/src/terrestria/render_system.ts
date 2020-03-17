@@ -325,11 +325,13 @@ export class RenderSystem implements ClientSystem {
         this._scheduler.addFunction(onFinish, -1);
       }
       if (anim.endFrame) {
-        anim.setEndFrameFnHandle = this._scheduler.addFunction(() => {
-          if (this.hasComponent(entityId)) {
-            this.setCurrentImage(entityId, anim.endFrame || "");
-          }
-        }, anim.endFrameDelayMs || 100);
+        if (c.activeAnimation === anim) {
+          anim.setEndFrameFnHandle = this._scheduler.addFunction(() => {
+            if (this.hasComponent(entityId)) {
+              this.setCurrentImage(entityId, anim.endFrame || "");
+            }
+          }, anim.endFrameDelayMs || 100);
+        }
       }
     }
 

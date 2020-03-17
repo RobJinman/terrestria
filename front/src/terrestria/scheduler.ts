@@ -30,6 +30,9 @@ export class Scheduler {
     });
     this._pendingAdd = [];
 
+    this._pendingDelete.forEach(id => this._functions.delete(id));
+    this._pendingDelete = [];
+
     const toRemove: ScheduledFnHandle[] = [];
     const now = (new Date()).getTime();
 
@@ -49,8 +52,6 @@ export class Scheduler {
     });
 
     toRemove.forEach(id => this._functions.delete(id));
-    this._pendingDelete.forEach(id => this._functions.delete(id));
-    this._pendingDelete = [];
   }
 
   addFunction(fn: ScheduledFn,
