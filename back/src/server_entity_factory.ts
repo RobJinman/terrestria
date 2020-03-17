@@ -204,13 +204,15 @@ function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_SQUASHED, e => {
-    const gridX = spatialSys.grid.toGridX(spatialComp.x);
-    const gridY = spatialSys.grid.toGridY(spatialComp.y);
+    const gridX = spatialComp.gridMode.gridX;
+    const gridY = spatialComp.gridMode.gridY;
 
     const entities = spatialSys.grid.idsInCells(gridX - 1,
                                                 gridX + 1,
                                                 gridY - 1,
                                                 gridY + 1);
+
+    entities.splice(entities.indexOf(id), 1);
 
     const burned: EEntityBurned = {
       type: GameEventType.ENTITY_BURNED,
@@ -219,7 +221,7 @@ function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
 
     const killed: EPlayerKilled = {
       type: GameEventType.PLAYER_KILLED,
-      entities: [],
+      entities: [id],
       playerId: id
     };
 

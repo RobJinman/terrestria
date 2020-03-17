@@ -268,6 +268,12 @@ function constructPlayer(em: ClientEntityManager, entity: Entity) {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+    console.log("Player burned");
+    renderSys.playAnimation(id, "explosion", () => {
+      em.removeEntity(id);
+    });
+  });
+  targetedEvents.set(GameEventType.PLAYER_KILLED, e => {
     renderSys.playAnimation(id, "explosion", () => {
       em.removeEntity(id);
     });
