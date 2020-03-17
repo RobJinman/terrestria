@@ -33,12 +33,14 @@ export class Pipe {
     return socket;
   }
 
-  sendToAll(data: any) {
+  async sendToAll(data: any) {
     const json = JSON.stringify(data);
-    this._sockets.forEach(socket => socket.send(json));
+    for (const [id, socket] of this._sockets) {
+      await this._sendThroughSocket(socket, json);
+    }
   }
 
-  send(playerId: EntityId, data: any) {
+  async send(playerId: EntityId, data: any) {
     const json = JSON.stringify(data);
     const socket = this._sockets.get(playerId);
 
@@ -46,6 +48,19 @@ export class Pipe {
       throw new GameError(`No socket for player with id ${playerId}`);
     }
 
-    socket.send(json);
+    await this._sendThroughSocket(socket, json);
+  }
+
+  private _sendThroughSocket(socket: WebSocket, data: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      socket.send(data, (err) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve();
+        }
+      });
+    });
   }
 }
