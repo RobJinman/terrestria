@@ -251,7 +251,7 @@ export class App {
     let { pinataId, pinataToken } = data;
 
     const game = await this._chooseAvailableGame();
-    const entityId = game.addPlayer(sock, pinataId, pinataToken);
+    const entityId = await game.addPlayer(sock, pinataId, pinataToken);
 
     sock.userId = entityId;
 

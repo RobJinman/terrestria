@@ -88,7 +88,7 @@ export class Game {
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
   }
 
-  addPlayer(socket: WebSocket, pinataId?: string, pinataToken?: string) {
+  async addPlayer(socket: WebSocket, pinataId?: string, pinataToken?: string) {
     const entities = this._em.getEntities();
   
     const id = this._factory.constructEntity({
@@ -133,10 +133,10 @@ export class Game {
       }]
     };
 
-    this._pipe.send(id, mapDataResp);
-    this._pipe.send(id, newEntitiesResp);
-    this._pipe.sendToAll(newPlayerResp);
-    this._pipe.send(id, stateUpdateResp);
+    await this._pipe.send(id, mapDataResp);
+    await this._pipe.send(id, newEntitiesResp);
+    await this._pipe.sendToAll(newPlayerResp);
+    await this._pipe.send(id, stateUpdateResp);
 
     return id;
   }
