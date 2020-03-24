@@ -50,14 +50,14 @@ export function isLogInAction(obj: any): obj is LogInAction {
 //
 export interface SignUpAction extends PlayerAction {
   email: string;
-  userName: string;
+  username: string;
   password: string;
 }
 
 export function isSignUpAction(obj: any): obj is SignUpAction {
   return obj.type == ActionType.SIGN_UP &&
          obj.email &&
-         obj.userName &&
+         obj.username &&
          obj.password;
 }
 

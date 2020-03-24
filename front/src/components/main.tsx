@@ -5,7 +5,7 @@ import { GameState } from "../terrestria/definitions";
 
 interface CMainState {
   gameState: GameState;
-  userName?: string;
+  username?: string;
   pinataId?: string;
   pinataToken?: string;
 }
@@ -43,7 +43,7 @@ export class CMain extends React.Component<{}> {
         <div id="ui-overlay">
           <CMainMenu terrestria={this._terrestria}
             onUpdatePinataCreds={onUpdatePinataCreds}
-            userName={this.state.userName}
+            username={this.state.username}
             pinataId={this.state.pinataId}
             pinataToken={this.state.pinataToken}/>
         </div>
@@ -58,7 +58,7 @@ export class CMain extends React.Component<{}> {
     }
     else {
       this.setState({
-        userName: undefined,
+        username: undefined,
         pinataId: undefined,
         pinataToken: undefined
       });

@@ -14,7 +14,7 @@ export class PinataHttpError {
 
 export interface AuthResponse {
   accountId: string;
-  userName: string;
+  username: string;
   token: string;
 }
 
@@ -109,13 +109,13 @@ export class Pinata {
     return this._sendPostRequest(url, payload);
   }
 
-  signUp(userName: string,
+  signUp(username: string,
          email: string,
          password: string): Promise<AuthResponse> {
     this._logger.debug("Creating new account");
 
     const body = {
-      userName,
+      username,
       email,
       password
     };

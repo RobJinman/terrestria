@@ -53,6 +53,8 @@ export class App {
   constructor() {
     this._config = makeAppConfig();
 
+    this._logger.info(`Starting app with config`, this._config);
+
     this._server = http.createServer((req, res) => {
       this._handleHttpRequest(req, res);
     });
@@ -194,14 +196,14 @@ export class App {
       const auth = await this._pinata.logIn(data.identity, data.password);
       const pinataId = auth.accountId;
       const pinataToken = auth.token;
-      const userName = auth.userName;
+      const username = auth.username;
 
       this._logger.info(`Logged into pinata account ${pinataId} with token ` +
                         `${pinataToken}`);
 
       const response: RLogInSuccess = {
         type: GameResponseType.LOG_IN_SUCCESS,
-        userName,
+        username,
         pinataId,
         pinataToken
       };
@@ -218,12 +220,12 @@ export class App {
     this._logger.info("Handling sign up");
 
     try {
-      await this._pinata.signUp(data.userName, data.email, data.password);
-      this._logger.info(`Created account with name ${data.userName}`);
+      await this._pinata.signUp(data.username, data.email, data.password);
+      this._logger.info(`Created account with name ${data.username}`);
 
       const response: RSignUpSuccess = {
         type: GameResponseType.SIGN_UP_SUCCESS,
-        userName: data.userName
+        username: data.username
       };
   
       this._sendResponse(sock, response);

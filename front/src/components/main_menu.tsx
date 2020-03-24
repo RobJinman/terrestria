@@ -24,7 +24,7 @@ interface CMainMenuProps {
   onUpdatePinataCreds: (creds?: PinataCredentials) => void;
   pinataId?: string;
   pinataToken?: string;
-  userName?: string;
+  username?: string;
 }
 
 function signUpFailedMessage(reason: PinataApiErrorCode) {
@@ -109,7 +109,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
           {this.state.page == MenuPage.LOGGED_IN &&
           <div className="log-in">
             <h1>Ready to Play</h1>
-            <p>You're signed in as <b>{this.props.userName}</b>.</p>
+            <p>You're signed in as <b>{this.props.username}</b>.</p>
             <p>Not you? <a href="#" onClick={noDefault(logOut)}>Sign out</a></p>
             <button onClick={startGame}>Start Game</button>
           </div>}
@@ -129,12 +129,12 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
   private _startGame() {
     this._terrestria.connect().then(() => {
-      const { userName, pinataId, pinataToken } = this.props;
+      const { username, pinataId, pinataToken } = this.props;
       let creds: PinataCredentials|undefined;
 
-      if (userName && pinataId && pinataToken) {
+      if (username && pinataId && pinataToken) {
         creds = {
-          userName, pinataId, pinataToken
+          username, pinataId, pinataToken
         };
       }
 
@@ -156,7 +156,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
   }
 
   private _signUp(email: string,
-                  userName: string,
+                  username: string,
                   password: string) {
     this.setState({
       loading: true,
@@ -164,7 +164,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     });
 
     this._terrestria.connect().then(() => {
-      this._terrestria.signUp(email, userName, password).then(() => {
+      this._terrestria.signUp(email, username, password).then(() => {
         this.setState({
           page: MenuPage.SIGN_UP_SUCCESS,
           loading: false

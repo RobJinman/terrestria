@@ -43,7 +43,7 @@ type ServerResponseHandler<T> = {
 }
 
 export interface PinataCredentials {
-  userName: string;
+  username: string;
   pinataId: string;
   pinataToken: string;
 }
@@ -60,7 +60,7 @@ export class App {
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
-  private _userName?: string;
+  private _username?: string;
   private _gameState: GameState = GameState.GAME_INACTIVE;
   private _serverResponseHandlers: ServerResponseHandler<any>[] = [];
 
@@ -106,8 +106,8 @@ export class App {
     return this._ws !== undefined;
   }
 
-  get userName() {
-    return this._userName;
+  get username() {
+    return this._username;
   }
 
   disconnect() {
@@ -158,7 +158,7 @@ export class App {
     });
   }
 
-  signUp(email: string, userName: string, password: string): Promise<void> {
+  signUp(email: string, username: string, password: string): Promise<void> {
     if (!this._ws) {
       throw new GameError("Not connected");
     }
@@ -167,7 +167,7 @@ export class App {
       playerId: PLAYER_ID_UNSET,
       type: ActionType.SIGN_UP,
       email,
-      userName,
+      username,
       password
     };
 
@@ -192,7 +192,7 @@ export class App {
   logOut() {
     this._pinataId = undefined;
     this._pinataToken = undefined;
-    this._userName = undefined;
+    this._username = undefined;
     this._playerId = PLAYER_ID_UNSET;
 
     this.disconnect();
@@ -218,8 +218,8 @@ export class App {
     const pinataToken = pinataCredentials ?
                         pinataCredentials.pinataToken : this._pinataToken;
 
-    this._userName = pinataCredentials ?
-                     pinataCredentials.userName : this._userName;
+    this._username = pinataCredentials ?
+                     pinataCredentials.username : this._username;
 
     const data: JoinGameAction = {
       playerId: PLAYER_ID_UNSET,
@@ -406,7 +406,7 @@ export class App {
   private _onLogInSuccess(msg: RLogInSuccess) {
     this._pinataId = msg.pinataId;
     this._pinataToken = msg.pinataToken;
-    this._userName = msg.userName;
+    this._username = msg.username;
   }
 
   private _handleServerMessage(msg: GameResponse) {

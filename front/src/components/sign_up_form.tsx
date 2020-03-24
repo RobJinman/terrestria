@@ -5,13 +5,13 @@ import { USER_NAME_REGEX } from "./utils";
 
 interface CSignUpFormProps {
   onSignUp: (email: string,
-             userName: string,
+             username: string,
              password1: string) => void;
 }
 
 interface CSignUpFormState {
   email: InputControlState;
-  userName: InputControlState;
+  username: InputControlState;
   password1: InputControlState;
   password2: InputControlState;
   errorMsg: string;
@@ -22,7 +22,7 @@ export class CSignUpForm
 
   state: CSignUpFormState = {
     email: initialInputState(),
-    userName: initialInputState(),
+    username: initialInputState(),
     password1: initialInputState(),
     password2: initialInputState(),
     errorMsg: ""
@@ -34,7 +34,7 @@ export class CSignUpForm
 
   private _isValid() {
     return this.state.email.valid &&
-           this.state.userName.valid &&
+           this.state.username.valid &&
            this.state.password1.valid &&
            this.state.password2.valid;
   }
@@ -42,14 +42,14 @@ export class CSignUpForm
   private _onSubmit(event: React.FormEvent) {
     event.preventDefault();
 
-    const { email, userName, password1, password2 } = this.state;
+    const { email, username, password1, password2 } = this.state;
 
     if (password1.value !== password2.value) {
       this.setState({ errorMsg: "Please make sure your passwords match" });
     }
     else {
       this.props.onSignUp(email.value,
-                          userName.value,
+                          username.value,
                           password1.value);
     }
   }
@@ -62,7 +62,7 @@ export class CSignUpForm
     };
 
     const onUserNameChange = (state: InputControlState) => {
-      this.setState({ userName: state, errorMsg: "" });
+      this.setState({ username: state, errorMsg: "" });
     };
 
     const onPassword1Change = (state: InputControlState) => {
@@ -73,8 +73,8 @@ export class CSignUpForm
       this.setState({ password2: state, errorMsg: "" });
     };
 
-    const isValidUserName = (userName: string) => {
-      return USER_NAME_REGEX.test(userName);
+    const isValidUserName = (username: string) => {
+      return USER_NAME_REGEX.test(username);
     };
 
     const isValid = this._isValid.bind(this);
@@ -92,7 +92,7 @@ export class CSignUpForm
           <InputControl name="email" label="Email"
             type={InputControlType.EMAIL} onChange={onEmailChange}
             errorMsg="Please enter a valid email address"/>
-          <InputControl name="userName" label="User name"
+          <InputControl name="username" label="User name"
             type={InputControlType.TEXT} onChange={onUserNameChange}
             validator={isValidUserName}
             errorMsg="Please enter a valid user name"/>
