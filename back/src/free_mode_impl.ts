@@ -8,6 +8,8 @@ import { Span2d, getPerimeter, EdgeOrientation,
 import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
+import { ServerEntityManager } from "./server_entity_manager";
+import { EEntityCollision, GameEventType } from "./common/event";
 
 const PLAYER_VELOCITY_H = 6;
 const PLAYER_VELOCITY_V = 10;
@@ -41,6 +43,7 @@ function isGroundContact(body: Body, contact: any): boolean {
 }
 
 export class FreeModeImpl implements SpatialModeImpl {
+  private _em: ServerEntityManager;
   private _engine = Engine.create();
   private _gravRegion: Span2d;
   private _componentsByEntityId = new Map<number, FreeModeSubcomponent>();
@@ -48,9 +51,12 @@ export class FreeModeImpl implements SpatialModeImpl {
   private _attemptModeTransitionFn: AttemptModeTransitionFn;
   // EntityId -> contact id
   private _grounded = new Map<EntityId, string>();
+  private _collisions = new Map<number, Matter.IPair>();
 
-  constructor(gravRegion: Span2d,
+  constructor(em: ServerEntityManager,
+              gravRegion: Span2d,
               attemptModeTransitionFn: AttemptModeTransitionFn) {
+    this._em = em;
     this._gravRegion = gravRegion;
     this._attemptModeTransitionFn = attemptModeTransitionFn;
 
@@ -60,6 +66,20 @@ export class FreeModeImpl implements SpatialModeImpl {
       event.pairs.forEach(pair => {
         const a = this._componentsByBodyId.get(pair.bodyA.id);
         const b = this._componentsByBodyId.get(pair.bodyB.id);
+
+        if (!this._collisions.has(pair.id)) {
+          this._collisions.set(pair.id, pair);
+
+          if (a && b) {
+            const event: EEntityCollision = {
+              type: GameEventType.ENTITY_COLLISION,
+              entities: [ a.entityId, b.entityId ],
+              entityA: a.entityId,
+              entityB: b.entityId
+            };
+            this._em.postEvent(event);
+          }
+        }
 
         Object.values(pair.activeContacts).forEach((contact: any) => {
           if (a && isGroundContact(a.body, contact)) {
@@ -76,6 +96,10 @@ export class FreeModeImpl implements SpatialModeImpl {
       event.pairs.forEach(pair => {
         const a = this._componentsByBodyId.get(pair.bodyA.id);
         const b = this._componentsByBodyId.get(pair.bodyB.id);
+
+        if (this._collisions.has(pair.id)) {
+          this._collisions.delete(pair.id);
+        }
 
         Object.values(pair.contacts).forEach((contact: any) => {
           if (a) {

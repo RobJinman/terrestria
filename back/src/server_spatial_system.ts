@@ -39,7 +39,8 @@ export class ServerSpatialSystem implements ServerSystem {
                                           gravityRegion,
                                           attemptTransitionFn,
                                           logger);
-    this._freeModeImpl = new FreeModeImpl(gravityRegion,
+    this._freeModeImpl = new FreeModeImpl(em,
+                                          gravityRegion,
                                           attemptTransitionFn);
     this._w = w;
     this._h = h;

@@ -7,6 +7,7 @@ export enum GameEventType {
   ENTITY_SQUASHED = "ENTITY_SQUASHED",
   ENTITY_HIT = "ENTITY_HIT",
   ENTITY_BURNED = "ENTITY_BURNED",
+  ENTITY_COLLISION = "ENTITY_COLLISION",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
@@ -47,6 +48,11 @@ export interface EEntitySquashed extends GameEvent {
 }
 
 export interface EEntityBurned extends GameEvent {}
+
+export interface EEntityCollision extends GameEvent {
+  entityA: EntityId;
+  entityB: EntityId;
+}
 
 export enum AgentActionType {
   PUSH = "PUSH",
