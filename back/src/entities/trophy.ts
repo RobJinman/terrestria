@@ -6,7 +6,8 @@ import { ServerSpatialComponent } from "../server_spatial_component";
 import { Rectangle } from "../common/geometry";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
-import { GameEventType, EAgentEnterCell, EAwardGranted } from "../common/event";
+import { GameEventType, EAgentEnterCell, EAwardGranted,
+         EEntityCollision } from "../common/event";
 import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
 import { CreateAwardResult } from "../pinata";
 import { GameError } from "../common/error";
@@ -39,38 +40,13 @@ export function constructTrophy(em: ServerEntityManager,
                                                  freeModeProps,
                                                  new Rectangle(64, 64));
 
-  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   const invComp = new CCollectable(id, "trophies", 1);
 
-  const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
-
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
-    const event = <EAgentEnterCell>e;
-    inventorySys.collectItem(event.entityId, id);
-
-    agentSys.grantAward(event.entityId, "special_item_collect")
-    .then(response => {
-      if (response !== null) {
-        if (response.result == CreateAwardResult.SUCCESS) {
-          const awardEvent: EAwardGranted = {
-            type: GameEventType.AWARD_GRANTED,
-            entities: [event.entityId],
-            name: "special_item_collect",
-            fetti: response.fetti
-          };
-          em.submitEvent(awardEvent);
-        }
-      }
-      else {
-        // TODO: Handle not logged-in user
-      }
-    }, reason => {
-      throw new GameError(`failed to grant award: ${reason}`);
-    });
-
-    em.removeEntity_onClients(id);
-  });
+  targetedEvents.set(GameEventType.AGENT_ENTER_CELL,
+                     e => onAgentEnterCell(em, id, <EAgentEnterCell>e));
+  targetedEvents.set(GameEventType.ENTITY_COLLISION,
+                     e => onEntityCollision(em, id, <EEntityCollision>e));
 
   const behaviourComp = new BehaviourComponent(id, targetedEvents);
 
@@ -81,4 +57,49 @@ export function constructTrophy(em: ServerEntityManager,
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   return id;
+}
+
+function onAgentEnterCell(em: ServerEntityManager,
+                          trophyId: EntityId,
+                          event: EAgentEnterCell) {
+  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+  const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
+
+  inventorySys.collectItem(event.entityId, trophyId);
+
+  agentSys.grantAward(event.entityId, "special_item_collect")
+  .then(response => {
+    if (response !== null) {
+      if (response.result == CreateAwardResult.SUCCESS) {
+        const awardEvent: EAwardGranted = {
+          type: GameEventType.AWARD_GRANTED,
+          entities: [event.entityId],
+          name: "special_item_collect",
+          fetti: response.fetti
+        };
+        em.submitEvent(awardEvent);
+      }
+    }
+    else {
+      // TODO: Handle not logged-in user
+    }
+  }, reason => {
+    throw new GameError(`failed to grant award: ${reason}`);
+  });
+
+  em.removeEntity_onClients(trophyId);
+}
+
+function onEntityCollision(em: ServerEntityManager,
+                           trophyId: EntityId,
+                           event: EEntityCollision) {
+  const agentSys = <InventorySystem>em.getSystem(ComponentType.AGENT);
+  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+
+  const other = event.entityA == trophyId ? event.entityB : event.entityA;
+
+  if (agentSys.hasComponent(other)) {
+    inventorySys.collectItem(other, trophyId);
+    em.removeEntity_onClients(trophyId);
+  }
 }

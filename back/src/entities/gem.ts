@@ -5,7 +5,8 @@ import { ServerSpatialSystem } from "../server_spatial_system";
 import { ComponentType } from "../common/component_types";
 import { ServerSpatialComponent } from "../server_spatial_component";
 import { InventorySystem, CCollectable } from "../inventory_system";
-import { GameEventType, EAgentEnterCell, EEntityCollision } from "../common/event";
+import { GameEventType, EAgentEnterCell,
+         EEntityCollision } from "../common/event";
 import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
