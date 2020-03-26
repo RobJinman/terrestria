@@ -1,6 +1,6 @@
 import { EntityId } from "./common/system";
 import { ServerSystem } from "./common/server_system";
-import { ServerSpatialComponent } from "./server_spatial_component";
+import { ServerSpatialComponent } from "./spatial_component";
 import { Span2d } from "./common/span";
 import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
@@ -10,20 +10,18 @@ import { GameEvent } from "./common/event";
 import { Direction } from "./common/definitions";
 import { SpatialComponentPacket,
          SpatialMode } from "./common/spatial_component_packet";
-import { ServerEntityManager } from "./server_entity_manager";
-import { EntityManager } from "./common/entity_manager";
+import { EntityManager } from "./entity_manager";
 import { directionToVector } from "./common/geometry";
 import { Logger } from "./logger";
 
 export class ServerSpatialSystem implements ServerSystem {
-  private _em: EntityManager;
   private _components: Map<EntityId, ServerSpatialComponent>;
   private _w = 0;
   private _h = 0;
   private _gridModeImpl: GridModeImpl;
   private _freeModeImpl: FreeModeImpl;
 
-  constructor(em: ServerEntityManager,
+  constructor(em: EntityManager,
               w: number,
               h: number,
               gravityRegion: Span2d,
@@ -31,7 +29,6 @@ export class ServerSpatialSystem implements ServerSystem {
 
     const attemptTransitionFn = this._attemptModeTransition.bind(this);
 
-    this._em = em;
     this._components = new Map<EntityId, ServerSpatialComponent>();
     this._gridModeImpl = new GridModeImpl(em,
                                           w,

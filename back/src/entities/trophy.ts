@@ -1,8 +1,8 @@
-import { ServerEntityManager, getNextEntityId } from "../server_entity_manager";
+import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { ServerSpatialSystem } from "../server_spatial_system";
+import { ServerSpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../server_spatial_component";
+import { ServerSpatialComponent } from "../spatial_component";
 import { Rectangle } from "../common/geometry";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
@@ -13,8 +13,8 @@ import { CreateAwardResult } from "../pinata";
 import { GameError } from "../common/error";
 import { EntityType } from "../common/game_objects";
 
-export function constructTrophy(em: ServerEntityManager,
-                         desc: any): EntityId {
+export function constructTrophy(em: EntityManager,
+                                desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -59,7 +59,7 @@ export function constructTrophy(em: ServerEntityManager,
   return id;
 }
 
-function onAgentEnterCell(em: ServerEntityManager,
+function onAgentEnterCell(em: EntityManager,
                           trophyId: EntityId,
                           event: EAgentEnterCell) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
@@ -90,7 +90,7 @@ function onAgentEnterCell(em: ServerEntityManager,
   em.removeEntity_onClients(trophyId);
 }
 
-function onEntityCollision(em: ServerEntityManager,
+function onEntityCollision(em: EntityManager,
                            trophyId: EntityId,
                            event: EEntityCollision) {
   const agentSys = <InventorySystem>em.getSystem(ComponentType.AGENT);

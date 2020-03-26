@@ -1,13 +1,13 @@
-import { ServerEntityManager, getNextEntityId } from "../server_entity_manager";
+import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { ServerSpatialSystem } from "../server_spatial_system";
+import { ServerSpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../server_spatial_component";
+import { ServerSpatialComponent } from "../spatial_component";
 import { GameEventType } from "../common/event";
 import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
-export function constructSoil(em: ServerEntityManager, desc: any): EntityId {
+export function constructSoil(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {

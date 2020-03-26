@@ -4,11 +4,11 @@ import { GameEvent } from "./common/event";
 import { ClientSystem } from "./common/client_system";
 import { ComponentType } from "./common/component_types";
 import { AdComponentPacket } from "./common/ad_component_packet";
-import { EntityManager } from "./common/entity_manager";
 import { RenderSystem } from "./render_system";
 import { Scheduler } from "./scheduler";
+import { EntityManager } from "./entity_manager";
 
-export class ClientAdComponent extends Component {
+export class CAdvert extends Component {
   adName: string|null = null;
 
   constructor(entityId: EntityId) {
@@ -16,16 +16,16 @@ export class ClientAdComponent extends Component {
   }
 }
 
-export class ClientAdSystem implements ClientSystem {
+export class AdvertSystem implements ClientSystem {
   private _em: EntityManager;
   private _scheduler: Scheduler;
-  private _components: Map<number, ClientAdComponent>;
+  private _components: Map<number, CAdvert>;
   private _placeholders = new Map<string, string>();
 
   constructor(em: EntityManager, scheduler: Scheduler) {
     this._em = em;
     this._scheduler = scheduler;
-    this._components = new Map<number, ClientAdComponent>();
+    this._components = new Map<number, CAdvert>();
   }
 
   addPlaceholder(adName: string, imageName: string) {
@@ -57,7 +57,7 @@ export class ClientAdSystem implements ClientSystem {
 
   update() {}
 
-  addComponent(component: ClientAdComponent) {
+  addComponent(component: CAdvert) {
     this._components.set(component.entityId, component);
   }
 

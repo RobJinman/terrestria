@@ -1,4 +1,4 @@
-import { EntityManager } from "./common/entity_manager";
+import { IEntityManager } from "./common/entity_manager";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { ComponentPacket, EntityId } from "./common/system";
@@ -12,7 +12,7 @@ export function getNextEntityId() {
   return ++nextEntityId;
 }
 
-export class ServerEntityManager extends EntityManager {
+export class EntityManager extends IEntityManager {
   private _pipe: Pipe;
   private _eventsPendingTransmission: GameEvent[] = [];
 

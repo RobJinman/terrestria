@@ -1,23 +1,23 @@
 import { PlayerAction, ActionType, UserInputAction, UserInput,
          InputState } from "./common/action";
 import { ComponentType } from "./common/component_types";
-import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
+import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { EntityType } from "./common/game_objects";
-import { ServerSpatialSystem } from "./server_spatial_system";
+import { ServerSpatialSystem } from "./spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { Logger } from "./logger";
 
 export class GameLogic {
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
   private _logger: Logger;
   private _entityId: EntityId = getNextEntityId();
   private _inputStates = new Map<EntityId, Record<UserInput, InputState>>();
 
-  constructor(em: ServerEntityManager, logger: Logger) {
+  constructor(em: EntityManager, logger: Logger) {
     this._em = em;
     this._logger = logger;
 

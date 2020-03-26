@@ -1,9 +1,9 @@
 import { Component, EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { EEntityMoved, GameEventType } from "./common/event";
-import { EntityManager } from "./common/entity_manager";
+import { EntityManager } from "./entity_manager";
 
-export class ClientSpatialComponent extends Component {
+export class CSpatial extends Component {
   private _em: EntityManager;
   private _posX = 0;
   private _posY = 0;

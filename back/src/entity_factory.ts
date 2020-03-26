@@ -1,6 +1,6 @@
 import { EntityType } from "./common/game_objects";
 import { EntityId } from "./common/system";
-import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
+import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityDesc } from "./common/map_data";
 import { GameError } from "./common/error";
 import { constructPlayer } from "./entities/player";
@@ -11,7 +11,7 @@ import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
 import { constructAd } from "./entities/ad";
 
-function constructEarth(em: ServerEntityManager, desc: any): EntityId {
+function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   em.addEntity(id, EntityType.EARTH, desc, []);
@@ -19,7 +19,7 @@ function constructEarth(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-function constructParallaxSprite(em: ServerEntityManager, desc: any) {
+function constructParallaxSprite(em: EntityManager, desc: any) {
   const id = getNextEntityId();
 
   em.addEntity(id, EntityType.PARALLAX_SPRITE, desc, []);
@@ -28,9 +28,9 @@ function constructParallaxSprite(em: ServerEntityManager, desc: any) {
 }
 
 export class ServerEntityFactory {
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
 
-  constructor(em: ServerEntityManager) {
+  constructor(em: EntityManager) {
     this._em = em;
   }
 

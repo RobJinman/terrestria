@@ -8,7 +8,7 @@ import { Span2d, getPerimeter, EdgeOrientation,
 import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
-import { ServerEntityManager } from "./server_entity_manager";
+import { EntityManager } from "./entity_manager";
 import { EEntityCollision, GameEventType } from "./common/event";
 
 const PLAYER_VELOCITY_H = 6;
@@ -43,7 +43,7 @@ function isGroundContact(body: Body, contact: any): boolean {
 }
 
 export class FreeModeImpl implements SpatialModeImpl {
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
   private _engine = Engine.create();
   private _gravRegion: Span2d;
   private _componentsByEntityId = new Map<number, FreeModeSubcomponent>();
@@ -53,7 +53,7 @@ export class FreeModeImpl implements SpatialModeImpl {
   private _grounded = new Map<EntityId, string>();
   private _collisions = new Map<number, Matter.IPair>();
 
-  constructor(em: ServerEntityManager,
+  constructor(em: EntityManager,
               gravRegion: Span2d,
               attemptModeTransitionFn: AttemptModeTransitionFn) {
     this._em = em;

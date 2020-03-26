@@ -10,7 +10,7 @@ export interface Entity {
   desc: any;
 }
 
-export class EntityManager {
+export class IEntityManager {
   protected systems: Map<ComponentType, System>;
   protected entities: Map<EntityId, Entity>;
   private _pendingDeletion: Set<EntityId>;

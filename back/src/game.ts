@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
-import { ServerEntityFactory } from "./server_entity_factory";
+import { ServerEntityFactory } from "./entity_factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
@@ -11,13 +11,13 @@ import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
-import { ServerEntityManager, getNextEntityId } from "./server_entity_manager";
+import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { debounce } from "./common/utils";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
-import { ServerSpatialComponent } from "./server_spatial_component";
+import { ServerSpatialComponent } from "./spatial_component";
 import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
@@ -41,7 +41,7 @@ export class Game {
   private _mapData: MapData;
   private _id: number;
   private _pipe: Pipe;
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
   private _factory: ServerEntityFactory;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
@@ -55,7 +55,7 @@ export class Game {
     this._pinata = pinata;
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
-    this._em = new ServerEntityManager(this._pipe);
+    this._em = new EntityManager(this._pipe);
     this._factory = new ServerEntityFactory(this._em);
 
     const mapLoader = new MapLoader(this._em,

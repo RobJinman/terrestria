@@ -1,16 +1,16 @@
-import { ServerEntityManager, getNextEntityId } from "../server_entity_manager";
+import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
 import { Polygon } from "../common/geometry";
-import { ServerSpatialSystem } from "../server_spatial_system";
+import { ServerSpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../server_spatial_component";
+import { ServerSpatialComponent } from "../spatial_component";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { GameEventType, EAgentEnterCell,
          EEntityCollision } from "../common/event";
 import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
-export function constructGem(em: ServerEntityManager, desc: any): EntityId {
+export function constructGem(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -65,7 +65,7 @@ export function constructGem(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-function onAgentEnterCell(em: ServerEntityManager,
+function onAgentEnterCell(em: EntityManager,
                           gemId: EntityId,
                           event: EAgentEnterCell) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
@@ -74,7 +74,7 @@ function onAgentEnterCell(em: ServerEntityManager,
   em.removeEntity_onClients(gemId);
 }
 
-function onEntityCollision(em: ServerEntityManager,
+function onEntityCollision(em: EntityManager,
                            gemId: EntityId,
                            event: EEntityCollision) {
   const agentSys = <InventorySystem>em.getSystem(ComponentType.AGENT);

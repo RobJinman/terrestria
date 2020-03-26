@@ -1,27 +1,27 @@
 import _ from "underscore";
 import { ComponentType } from "./common/component_types";
-import { ServerEntityManager } from "./server_entity_manager";
+import { EntityManager } from "./entity_manager";
 import { BLOCK_SZ } from "./common/constants";
 import { Span, Span2d } from "./common/span";
-import { ServerSpatialSystem } from "./server_spatial_system";
+import { ServerSpatialSystem } from "./spatial_system";
 import { AgentSystem } from "./agent_system";
 import { BehaviourSystem } from "./common/behaviour_system";
 import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
-import { ServerEntityFactory } from "./server_entity_factory";
-import { ServerAdSystem } from "./server_ad_system";
+import { ServerEntityFactory } from "./entity_factory";
+import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
 
 export class MapLoader {
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
   private _pinata: Pinata;
   private _factory: ServerEntityFactory;
   private _logger: Logger;
   private _mapData: MapData|null = null;
 
-  constructor(em: ServerEntityManager,
+  constructor(em: EntityManager,
               pinata: Pinata,
               factory: ServerEntityFactory,
               logger: Logger) {
@@ -44,7 +44,7 @@ export class MapLoader {
     const agentSystem = new AgentSystem(this._em, this._pinata);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
-    const adSystem = new ServerAdSystem(pinata);
+    const adSystem = new AdvertSystem(pinata);
 
     this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);

@@ -1,14 +1,14 @@
-import { ServerEntityManager, getNextEntityId } from "../server_entity_manager";
+import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
 import { FreeModeProperties } from "../free_mode_properties";
-import { ServerSpatialSystem } from "../server_spatial_system";
+import { ServerSpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../server_spatial_component";
+import { ServerSpatialComponent } from "../spatial_component";
 import { DEFAULT_GRID_MODE_PROPS } from "../grid_mode_properties";
 import { SpatialMode } from "../common/spatial_component_packet";
 import { EntityType } from "../common/game_objects";
 
-export function constructBlimp(em: ServerEntityManager, desc: any): EntityId {
+export function constructBlimp(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
   const freeModeProps: FreeModeProperties = {

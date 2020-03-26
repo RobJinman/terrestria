@@ -3,10 +3,10 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
-import { ServerEntityManager } from "./server_entity_manager";
+import { EntityManager } from "./entity_manager";
 import { Pinata, CreateAwardResponse } from "./pinata";
 
-export class AgentComponent extends Component {
+export class CAgent extends Component {
   dirty: boolean = true;
   private _pinataId?: string;
   private _pinataToken?: string;
@@ -28,12 +28,12 @@ export class AgentComponent extends Component {
 }
 
 export class AgentSystem implements ServerSystem {
-  private _components: Map<number, AgentComponent>;
-  private _em: ServerEntityManager;
+  private _components: Map<number, CAgent>;
+  private _em: EntityManager;
   private _pinata: Pinata;
 
-  constructor(em: ServerEntityManager, pinata: Pinata) {
-    this._components = new Map<number, AgentComponent>();
+  constructor(em: EntityManager, pinata: Pinata) {
+    this._components = new Map<number, CAgent>();
     this._em = em;
     this._pinata = pinata;
   }
@@ -52,7 +52,7 @@ export class AgentSystem implements ServerSystem {
     return this._components.size;
   }
 
-  addComponent(component: AgentComponent) {
+  addComponent(component: CAgent) {
     this._components.set(component.entityId, component);
   }
 

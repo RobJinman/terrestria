@@ -6,7 +6,7 @@ import { GameEvent } from "./common/event";
 import { AdComponentPacket } from "./common/ad_component_packet";
 import { Pinata, AdSlice } from "./pinata";
 
-export class ServerAdComponent extends Component {
+export class CAdvert extends Component {
   dirty: boolean = true;
   readonly adName: string;
   private _slices: AdSlice[] = [];
@@ -40,8 +40,8 @@ export class ServerAdComponent extends Component {
   }
 }
 
-export class ServerAdSystem implements ServerSystem {
-  private _components = new Map<EntityId, ServerAdComponent>();
+export class AdvertSystem implements ServerSystem {
+  private _components = new Map<EntityId, CAdvert>();
   private _pinata: Pinata;
 
   constructor(pinata: Pinata) {
@@ -52,7 +52,7 @@ export class ServerAdSystem implements ServerSystem {
     return this._components.size;
   }
 
-  addComponent(component: ServerAdComponent) {
+  addComponent(component: CAdvert) {
     this._components.set(component.entityId, component);
 
     const region = "GB"; // TODO

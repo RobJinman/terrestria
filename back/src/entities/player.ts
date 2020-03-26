@@ -1,20 +1,20 @@
-import { ServerEntityManager, getNextEntityId } from "../server_entity_manager";
+import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { AgentComponent } from "../agent_system";
+import { CAgent } from "../agent_system";
 import { Circle } from "../common/geometry";
 import { BLOCK_SZ } from "../common/constants";
-import { ServerSpatialSystem } from "../server_spatial_system";
+import { ServerSpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../server_spatial_component";
+import { ServerSpatialComponent } from "../spatial_component";
 import { CCollector, Bucket } from "../inventory_system";
 import { GameEventType, EEntityBurned, EPlayerKilled } from "../common/event";
 import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
-export function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
+export function constructPlayer(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
 
-  const agentComp = new AgentComponent(id, desc.pinataId, desc.pinataToken);
+  const agentComp = new CAgent(id, desc.pinataId, desc.pinataToken);
 
   const gridModeProps = {
     solid: true,
@@ -59,7 +59,7 @@ export function constructPlayer(em: ServerEntityManager, desc: any): EntityId {
   return id;
 }
 
-function onPlayerSquashed(em: ServerEntityManager, playerId: EntityId) {
+function onPlayerSquashed(em: EntityManager, playerId: EntityId) {
   const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
   const spatialComp = spatialSys.getComponent(playerId);
 

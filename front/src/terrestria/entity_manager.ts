@@ -1,4 +1,4 @@
-import { EntityManager } from "./common/entity_manager";
+import { IEntityManager } from "./common/entity_manager";
 import { ClientSystem } from "./common/client_system";
 import { ComponentPacket, EntityId, Component } from "./common/system";
 import { EntityType } from "./common/game_objects";
@@ -11,7 +11,7 @@ export function getNextEntityId() {
   return nextEntityId++;
 }
 
-export class ClientEntityManager extends EntityManager {
+export class EntityManager extends IEntityManager {
   constructor() {
     super();
   }

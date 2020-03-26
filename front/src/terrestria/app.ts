@@ -12,14 +12,14 @@ import { CLIENT_FRAME_RATE, BLOCK_SZ } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { waitForCondition } from './common/utils';
-import { ClientEntityManager } from './client_entity_manager';
+import { EntityManager } from './entity_manager';
 import { EntityId } from './common/system';
-import { ClientSpatialSystem } from './client_spatial_system';
+import { SpatialSystem } from './spatial_system';
 import { GameError, ErrorCode } from './common/error';
 import { Scheduler } from './scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
-import { ClientAdSystem } from './client_ad_system';
-import { ClientSpatialComponent } from './client_spatial_component';
+import { AdvertSystem } from './advert_system';
+import { CSpatial } from './spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
 import { GameState } from "./definitions";
@@ -52,7 +52,7 @@ export class App {
   private _ws?: WebSocket;
   private _responseQueue: GameResponse[] = [];
   private _actionQueue: UserInputAction[] = [];
-  private _em: ClientEntityManager;
+  private _em: EntityManager;
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
@@ -71,13 +71,13 @@ export class App {
 
     this._scheduler = new Scheduler();
 
-    this._em = new ClientEntityManager();
-    const spatialSystem = new ClientSpatialSystem(CLIENT_FRAME_RATE);
+    this._em = new EntityManager();
+    const spatialSystem = new SpatialSystem(CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,
                                           this._tick.bind(this));
     const behaviourSystem = new BehaviourSystem();
-    const adSystem = new ClientAdSystem(this._em, this._scheduler);
+    const adSystem = new AdvertSystem(this._em, this._scheduler);
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
@@ -310,7 +310,7 @@ export class App {
   private _centreStage() {
     if (this._playerId >= 0) {
       const player =
-        <ClientSpatialComponent>this._em.getComponent(ComponentType.SPATIAL,
+        <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                       this._playerId);
 
       const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);

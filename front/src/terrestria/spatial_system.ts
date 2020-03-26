@@ -1,19 +1,19 @@
 import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
-import { ClientSpatialComponent } from "./client_spatial_component";
+import { CSpatial } from "./spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
 import { SpatialComponentPacket,
          SpatialMode } from "./common/spatial_component_packet";
 import { SYNC_INTERVAL_MS } from "./common/constants";
 
-export class ClientSpatialSystem implements ClientSystem {
-  private _components: Map<number, ClientSpatialComponent>;
+export class SpatialSystem implements ClientSystem {
+  private _components: Map<number, CSpatial>;
   private _frameRate: number;
 
   constructor(frameRate: number) {
-    this._components = new Map<number, ClientSpatialComponent>();
+    this._components = new Map<number, CSpatial>();
     this._frameRate = frameRate;
   }
 
@@ -45,7 +45,7 @@ export class ClientSpatialSystem implements ClientSystem {
     });
   }
 
-  addComponent(component: ClientSpatialComponent) {
+  addComponent(component: CSpatial) {
     this._components.set(component.entityId, component);
   }
 
@@ -71,7 +71,7 @@ export class ClientSpatialSystem implements ClientSystem {
 
   handleEvent(event: GameEvent) {}
 
-  private _updateEntityPos(c: ClientSpatialComponent) {
+  private _updateEntityPos(c: CSpatial) {
     const v: Vec2 = {
       x: c.destX - c.x,
       y: c.destY - c.y

@@ -1,8 +1,8 @@
 import { UserInput } from "./common/action";
 import { EntityType } from "./common/game_objects";
-import { SpriteRenderComponent, StaticImage, RenderOptions, 
+import { CSprite, StaticImage, RenderOptions, 
          RenderSystem } from "./render_system";
-import { ClientEntityManager, getNextEntityId } from "./client_entity_manager";
+import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType } from "./common/event";
@@ -23,7 +23,7 @@ function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
 }
 
 export class UserInputManager {
-  private _em: ClientEntityManager;
+  private _em: EntityManager;
   private _scheduler: Scheduler;
   private _entityId?: EntityId;
   private _onDirectionPressHandler: DirectionInputHandlerFn;
@@ -39,7 +39,7 @@ export class UserInputManager {
   private _onKeyUpFn = this._onKeyUp.bind(this);
   private _onFullscreenChangeFn = this._onFullscreenChange.bind(this);
 
-  constructor(em: ClientEntityManager,
+  constructor(em: EntityManager,
               scheduler: Scheduler,
               onDirectionPressHandler: DirectionInputHandlerFn,
               onDirectionReleaseHandler: DirectionInputHandlerFn,
@@ -318,7 +318,7 @@ export class UserInputManager {
       onRelease
     };
 
-    const renderComp = new SpriteRenderComponent(id,
+    const renderComp = new CSprite(id,
                                                  staticImages,
                                                  [],
                                                  `${buttonName}.png`,

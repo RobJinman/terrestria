@@ -7,18 +7,18 @@ import { directionToVector, normalise } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
          AgentActionType, EEntityHit } from "./common/event";
 import { Direction } from "./common/definitions";
-import { ServerEntityManager } from "./server_entity_manager";
+import { EntityManager } from "./entity_manager";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { Span2d } from "./common/span";
 import { ComponentType } from "./common/component_types";
 import { Logger } from "./logger";
 
 export class GridModeImpl implements SpatialModeImpl {
-  private _em: ServerEntityManager;
+  private _em: EntityManager;
   private _components = new Map<number, GridModeSubcomponent>();
   private _grid: Grid;
 
-  constructor(entityManager: ServerEntityManager,
+  constructor(entityManager: EntityManager,
               w: number,
               h: number,
               gravRegion: Span2d,

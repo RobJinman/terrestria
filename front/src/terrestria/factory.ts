@@ -1,21 +1,20 @@
 import { Entity } from "./common/entity_manager";
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
-import { StaticImage, AnimationDesc, RenderSystem, SpriteRenderComponent,
-         TiledRegionRenderComponent, ShapeRenderComponent, Colour, 
-         ParallaxRenderComponent } from "./render_system";
+import { StaticImage, AnimationDesc, RenderSystem, CSprite, CTiledRegion,
+         CShape, Colour, CParallax } from "./render_system";
 import { PLAYER_SPEED, BLOCK_SZ } from "./common/constants";
 import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
-import { ClientSpatialComponent } from "./client_spatial_component";
+import { CSpatial } from "./spatial_component";
 import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
-import { ClientAdComponent } from "./client_ad_system";
-import { ClientEntityManager, getNextEntityId } from "./client_entity_manager";
+import { CAdvert } from "./advert_system";
+import { EntityManager, getNextEntityId } from "./entity_manager";
 
-function constructGem(em: ClientEntityManager, entity: Entity) {
+function constructGem(em: EntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -31,12 +30,12 @@ function constructGem(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(id,
-                                               staticImages,
-                                               animations,
-                                               "gem.png");
+  const renderComp = new CSprite(id,
+                                 staticImages,
+                                 animations,
+                                 "gem.png");
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -54,7 +53,7 @@ function constructGem(em: ClientEntityManager, entity: Entity) {
                                      behaviourComp ]);
 }
 
-function constructTrophy(em: ClientEntityManager, entity: Entity) {
+function constructTrophy(em: EntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -63,18 +62,18 @@ function constructTrophy(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(id,
-                                               staticImages,
-                                               [],
-                                               "trophy.png");
+  const renderComp = new CSprite(id,
+                                 staticImages,
+                                 [],
+                                 "trophy.png");
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
 
   em.addEntity(id, EntityType.TROPHY, [ spatialComp,
                                         renderComp ]);
 }
 
-function constructRock(em: ClientEntityManager, entity: Entity) {
+function constructRock(em: EntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -90,12 +89,12 @@ function constructRock(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(id,
-                                               staticImages,
-                                               animations,
-                                               "rock.png");
+  const renderComp = new CSprite(id,
+                                 staticImages,
+                                 animations,
+                                 "rock.png");
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -113,7 +112,7 @@ function constructRock(em: ClientEntityManager, entity: Entity) {
                                       behaviourComp ]);
 }
 
-function constructSoil(em: ClientEntityManager, entity: Entity) {
+function constructSoil(em: EntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -129,12 +128,12 @@ function constructSoil(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(id,
-                                               staticImages,
-                                               animations,
-                                               "soil.png");
+  const renderComp = new CSprite(id,
+                                 staticImages,
+                                 animations,
+                                 "soil.png");
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -165,10 +164,9 @@ function directionToLetter(direction: Direction): string {
     case Direction.DOWN: return "d";
     case Direction.LEFT: return "l";
   }
-  return "";
 }
 
-function constructPlayer(em: ClientEntityManager, entity: Entity) {
+function constructPlayer(em: EntityManager, entity: Entity) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -257,12 +255,12 @@ function constructPlayer(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(id,
-                                               staticImages,
-                                               animations,
-                                               "man_run_d0.png");
+  const renderComp = new CSprite(id,
+                                 staticImages,
+                                 animations,
+                                 "man_run_d0.png");
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
@@ -302,7 +300,7 @@ function constructPlayer(em: ClientEntityManager, entity: Entity) {
                                         behaviourComp ]);
 }
 
-function constructEarth(em: ClientEntityManager, mapData: ClientMapData) {
+function constructEarth(em: EntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const gravRegion = Span2d.fromDesc(mapData.gravityRegion);
@@ -316,67 +314,67 @@ function constructEarth(em: ClientEntityManager, mapData: ClientMapData) {
     }
   ];
 
-  const renderComp = new TiledRegionRenderComponent(id,
-                                                    digRegion,
-                                                    images,
-                                                    "earth.png");
+  const renderComp = new CTiledRegion(id,
+                                      digRegion,
+                                      images,
+                                      "earth.png");
 
   em.addEntity(id, EntityType.EARTH, [ renderComp ]);
 }
 
-function constructSky(em: ClientEntityManager, mapData: ClientMapData) {
+function constructSky(em: EntityManager, mapData: ClientMapData) {
   const id = getNextEntityId();
 
   const shape = new Rectangle(mapData.width * BLOCK_SZ, 5 * BLOCK_SZ);
   const colour = new Colour(0.5, 0.5, 0.99);
 
-  const renderComp = new ShapeRenderComponent(id, shape, colour);
+  const renderComp = new CShape(id, shape, colour);
 
-  const spatialComp = new ClientSpatialComponent(id, em);
+  const spatialComp = new CSpatial(id, em);
   spatialComp.setStaticPos(0, 0);
 
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 }
 
-function constructBlimp(em: ClientEntityManager, entity: Entity) {
+function constructBlimp(em: EntityManager, entity: Entity) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp.png"
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(entity.id,
-                                               staticImages,
-                                               [],
-                                               "blimp.png");
+  const renderComp = new CSprite(entity.id,
+                                 staticImages,
+                                 [],
+                                 "blimp.png");
 
-  const spatialComp = new ClientSpatialComponent(entity.id, em);
+  const spatialComp = new CSpatial(entity.id, em);
 
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
 }
 
-function constructAd(em: ClientEntityManager, entity: Entity) {
+function constructAd(em: EntityManager, entity: Entity) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp_ad_placeholder.png"
     }
   ];
 
-  const renderComp = new SpriteRenderComponent(entity.id,
-                                               staticImages,
-                                               [],
-                                               "blimp_ad_placeholder.png");
+  const renderComp = new CSprite(entity.id,
+                                 staticImages,
+                                 [],
+                                 "blimp_ad_placeholder.png");
 
-  const spatialComp = new ClientSpatialComponent(entity.id, em);
+  const spatialComp = new CSpatial(entity.id, em);
 
-  const adComp = new ClientAdComponent(entity.id);
+  const adComp = new CAdvert(entity.id);
 
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp,
                                               renderComp,
                                               adComp ]);  
 }
 
-function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
+function constructParallaxSprite(em: EntityManager, entity: Entity) {
   const staticImages: StaticImage[] = [
     {
       name: entity.desc.image,
@@ -385,13 +383,13 @@ function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
     }
   ];
 
-  const renderComp = new ParallaxRenderComponent(entity.id,
-                                                 staticImages,
-                                                 [],
-                                                 entity.desc.image,
-                                                 entity.desc.depth);
+  const renderComp = new CParallax(entity.id,
+                                   staticImages,
+                                   [],
+                                   entity.desc.image,
+                                   entity.desc.depth);
 
-  const spatialComp = new ClientSpatialComponent(entity.id, em);
+  const spatialComp = new CSpatial(entity.id, em);
 
   em.addEntity(entity.id, EntityType.PARALLAX_SPRITE, [ spatialComp,
                                                         renderComp ]);
@@ -402,7 +400,7 @@ function constructParallaxSprite(em: ClientEntityManager, entity: Entity) {
   spatialComp.setStaticPos(x, y);
 }
 
-function constructAwardNotification(em: ClientEntityManager) {
+function constructAwardNotification(em: EntityManager) {
   const id = getNextEntityId();
 
   const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -419,7 +417,7 @@ function constructAwardNotification(em: ClientEntityManager) {
   em.addEntity(id, EntityType.OTHER, [ behaviourComp ]);
 }
 
-export function constructEntities(entityManager: ClientEntityManager,
+export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
                                   response: RNewEntities) {
   response.entities.forEach(entity => {
@@ -461,7 +459,7 @@ export function constructEntities(entityManager: ClientEntityManager,
 }
 
 // Construct any client-side only entities from map data
-export function constructInitialEntitiesFromMapData(em: ClientEntityManager,
+export function constructInitialEntitiesFromMapData(em: EntityManager,
                                                     mapData: ClientMapData) {
   constructEarth(em, mapData);
   constructSky(em, mapData);
