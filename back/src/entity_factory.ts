@@ -9,7 +9,7 @@ import { constructRock } from "./entities/rock";
 import { constructSoil } from "./entities/soil";
 import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
-import { constructAd } from "./entities/ad";
+import { constructAd } from "./entities/advert";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();

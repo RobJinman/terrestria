@@ -5,7 +5,7 @@ import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
 import { FreeModeProperties } from "./free_mode_properties";
 import { ComponentType } from "./common/component_types";
-import { SpatialMode } from "./common/spatial_component_packet";
+import { SpatialMode } from "./common/spatial_packet";
 import { Shape } from "./common/geometry";
 
 export class ServerSpatialComponent extends Component {

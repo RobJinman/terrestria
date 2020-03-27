@@ -8,8 +8,7 @@ import { ComponentType } from "./common/component_types";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { Direction } from "./common/definitions";
-import { SpatialComponentPacket,
-         SpatialMode } from "./common/spatial_component_packet";
+import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
 import { EntityManager } from "./entity_manager";
 import { directionToVector } from "./common/geometry";
 import { Logger } from "./logger";
@@ -44,7 +43,7 @@ export class ServerSpatialSystem implements ServerSystem {
   }
 
   getState() {
-    const packets: SpatialComponentPacket[] = [];
+    const packets: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
       packets.push({
@@ -142,7 +141,7 @@ export class ServerSpatialSystem implements ServerSystem {
   }
 
   getDirties() {
-    const dirties: SpatialComponentPacket[] = [];
+    const dirties: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
       if (c.isDirty()) {

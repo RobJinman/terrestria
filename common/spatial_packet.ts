@@ -5,7 +5,7 @@ export enum SpatialMode {
   FREE_MODE = "FREE_MODE"
 }
 
-export interface SpatialComponentPacket extends ComponentPacket {
+export interface SpatialPacket extends ComponentPacket {
   mode: SpatialMode;
   x: number;
   y: number;

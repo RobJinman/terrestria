@@ -3,7 +3,7 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
-import { AdComponentPacket } from "./common/ad_component_packet";
+import { AdvertPacket } from "./common/advert_packet";
 import { Pinata, AdSlice } from "./pinata";
 
 export class CAdvert extends Component {
@@ -84,7 +84,7 @@ export class AdvertSystem implements ServerSystem {
   update() {}
 
   getState() {
-    const packets: AdComponentPacket[] = [];
+    const packets: AdvertPacket[] = [];
 
     this._components.forEach(c => {
       packets.push({
@@ -99,7 +99,7 @@ export class AdvertSystem implements ServerSystem {
   }
 
   getDirties() {
-    const dirties: AdComponentPacket[] = [];
+    const dirties: AdvertPacket[] = [];
 
     this._components.forEach(c => {
       if (c.dirty) {

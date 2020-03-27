@@ -3,7 +3,7 @@ import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { ClientSystem } from "./common/client_system";
 import { ComponentType } from "./common/component_types";
-import { AdComponentPacket } from "./common/ad_component_packet";
+import { AdvertPacket } from "./common/advert_packet";
 import { RenderSystem } from "./render_system";
 import { Scheduler } from "./scheduler";
 import { EntityManager } from "./entity_manager";
@@ -32,7 +32,7 @@ export class AdvertSystem implements ClientSystem {
     this._placeholders.set(adName, imageName);
   }
 
-  updateComponent(packet: AdComponentPacket) {
+  updateComponent(packet: AdvertPacket) {
     const c = this.getComponent(packet.entityId);
     c.adName = packet.adName;
 

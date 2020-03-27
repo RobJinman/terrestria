@@ -4,8 +4,7 @@ import { GameEvent } from "./common/event";
 import { CSpatial } from "./spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
-import { SpatialComponentPacket,
-         SpatialMode } from "./common/spatial_component_packet";
+import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
 import { SYNC_INTERVAL_MS } from "./common/constants";
 
 export class SpatialSystem implements ClientSystem {
@@ -17,7 +16,7 @@ export class SpatialSystem implements ClientSystem {
     this._frameRate = frameRate;
   }
 
-  updateComponent(packet: SpatialComponentPacket) {
+  updateComponent(packet: SpatialPacket) {
     const c = this.getComponent(packet.entityId);
     if (packet.mode == SpatialMode.GRID_MODE) {
       if (packet.speed > 0) {
