@@ -1,9 +1,9 @@
 import { PinataApiErrorCode } from "./pinata_api";
-import { Entity } from "./entity_manager";
 import { ErrorCode } from "./error";
 import { EntityId, ComponentPacket } from "./system";
 import { GameEvent } from "./event";
 import { MapData } from "./map_data";
+import { EntityData } from "./entity_manager";
 
 // TODO: Use numbers, not strings
 export enum GameResponseType {
@@ -59,11 +59,11 @@ export interface RGameState extends GameResponse {
 }
 
 export interface RNewEntities extends GameResponse {
-  entities: Entity[];
+  entities: EntityData[];
 }
 
 export interface REntitiesDeleted extends GameResponse {
-  entities: Entity[];
+  entities: EntityData[];
 }
 
 export interface REvent extends GameResponse {

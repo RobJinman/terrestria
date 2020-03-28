@@ -30,7 +30,7 @@ export abstract class System {
   abstract hasComponent(entityId: EntityId): boolean;
   abstract getComponent(entityId: EntityId): Component;
   abstract addComponent(component: Component): void;
-  abstract removeComponent(entityId: EntityId): void;
+  abstract removeComponent(id: EntityId): void;
   abstract numComponents(): number;
   abstract handleEvent(event: GameEvent): void;
   abstract update(): void;

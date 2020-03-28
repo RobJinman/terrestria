@@ -1,4 +1,3 @@
-import { Entity } from "./common/entity_manager";
 import { RNewEntities, ClientMapData } from "./common/response";
 import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, CSprite, CTiledRegion,
@@ -14,8 +13,9 @@ import { Rectangle } from "./common/geometry";
 import { CAdvert } from "./advert_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { CInventory } from "./inventory_system";
+import { EntityData } from "./common/entity_manager";
 
-function constructGem(em: EntityManager, entity: Entity) {
+function constructGem(em: EntityManager, entity: EntityData) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -54,7 +54,7 @@ function constructGem(em: EntityManager, entity: Entity) {
                                      behaviourComp ]);
 }
 
-function constructTrophy(em: EntityManager, entity: Entity) {
+function constructTrophy(em: EntityManager, entity: EntityData) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -74,7 +74,7 @@ function constructTrophy(em: EntityManager, entity: Entity) {
                                         renderComp ]);
 }
 
-function constructRock(em: EntityManager, entity: Entity) {
+function constructRock(em: EntityManager, entity: EntityData) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -113,7 +113,7 @@ function constructRock(em: EntityManager, entity: Entity) {
                                       behaviourComp ]);
 }
 
-function constructSoil(em: EntityManager, entity: Entity) {
+function constructSoil(em: EntityManager, entity: EntityData) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -167,7 +167,7 @@ function directionToLetter(direction: Direction): string {
   }
 }
 
-function constructPlayer(em: EntityManager, entity: Entity) {
+function constructPlayer(em: EntityManager, entity: EntityData) {
   const id = entity.id;
 
   const staticImages: StaticImage[] = [
@@ -335,12 +335,13 @@ function constructSky(em: EntityManager, mapData: ClientMapData) {
   const renderComp = new CShape(id, shape, colour);
 
   const spatialComp = new CSpatial(id, em);
-  spatialComp.setStaticPos(0, 0);
 
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
+
+  spatialComp.setStaticPos(0, 0);
 }
 
-function constructBlimp(em: EntityManager, entity: Entity) {
+function constructBlimp(em: EntityManager, entity: EntityData) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp.png"
@@ -357,7 +358,7 @@ function constructBlimp(em: EntityManager, entity: Entity) {
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
 }
 
-function constructAd(em: EntityManager, entity: Entity) {
+function constructAd(em: EntityManager, entity: EntityData) {
   const staticImages: StaticImage[] = [
     {
       name: "blimp_ad_placeholder.png"
@@ -378,7 +379,7 @@ function constructAd(em: EntityManager, entity: Entity) {
                                               adComp ]);  
 }
 
-function constructParallaxSprite(em: EntityManager, entity: Entity) {
+function constructParallaxSprite(em: EntityManager, entity: EntityData) {
   const staticImages: StaticImage[] = [
     {
       name: entity.desc.image,

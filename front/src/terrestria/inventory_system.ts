@@ -74,6 +74,7 @@ export class InventorySystem implements ClientSystem {
 
   private _updateIndicators(c: CInventory) {
     c.indicatorIds.forEach(id => this._em.removeEntity(id));
+    c.indicatorIds.clear();
 
     c.buckets.forEach(bucket => {
       if (bucket.name == "gems") {
@@ -83,16 +84,13 @@ export class InventorySystem implements ClientSystem {
   }
 
   private _constructGemsIndicator(c: CInventory, bucket: Bucket) {
-    const spatialComp = this._em.getComponent(ComponentType.SPATIAL,
-                                              c.entityId);
-
     for (let i = 0; i < bucket.value; ++i) {
-      const id = this._constructGemsIndicatorDot(<CSpatial>spatialComp, i);
+      const id = this._constructGemsIndicatorDot(c.entityId, i);
       c.indicatorIds.add(id);
     }
   }
 
-  private _constructGemsIndicatorDot(agentSpatialComp: CSpatial, idx: number) {
+  private _constructGemsIndicatorDot(agentId: EntityId, idx: number) {
     const id = getNextEntityId();
 
     const w = 10;
@@ -100,16 +98,18 @@ export class InventorySystem implements ClientSystem {
     const margin = 2;
 
     const spatialComp = new CSpatial(id, this._em);
-    const x = agentSpatialComp.x + (w + margin) * idx;
-    const y = agentSpatialComp.y;
-
-    spatialComp.setStaticPos(x, y);
-
     const renderComp = new CShape(id,
                                   new Rectangle(w, h),
                                   new Colour(1, 0, 0));
 
     this._em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
+
+    const x = (w + margin) * idx;
+    const y = 0;
+    spatialComp.setStaticPos(x, y);
+
+    this._em.addChildToEntity(agentId, id);
+
     return id;
   }
 }

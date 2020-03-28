@@ -481,8 +481,8 @@ export class RenderSystem implements ClientSystem {
       const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                       c.entityId);
       if (c.stagedSprite) {
-        const x = spatial.x;
-        const y = spatial.y;
+        const x = spatial.x_abs;
+        const y = spatial.y_abs;
         const w = c.stagedSprite.width;
         const h = c.stagedSprite.height;
         const centreX = x + 0.5 * w;
@@ -669,6 +669,9 @@ export class RenderSystem implements ClientSystem {
       const c = this.getComponent(id);
       this._setWorldPosition(c);
     }
+
+    const children = this._em.getEntityChildren(id);
+    children.forEach(child => this._onEntityMoved(child));
   }
 
   private _updateSpritePosition(c: CRender) {
@@ -688,16 +691,16 @@ export class RenderSystem implements ClientSystem {
         // TODO: Shouldn't always assume pivot point
         c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
         // The pivot needs to be added here to keep the position the same
-        c.stagedSprite.position.set(spatialComp.x + c.stagedSprite.pivot.x,
-                                    spatialComp.y + c.stagedSprite.pivot.y);
+        c.stagedSprite.position.set(spatialComp.x_abs + c.stagedSprite.pivot.x,
+                                    spatialComp.y_abs + c.stagedSprite.pivot.y);
         c.stagedSprite.rotation = spatialComp.angle;
       }
     }
     else if (c instanceof CShape) {
       c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-      c.graphics.position.set(spatialComp.x + c.graphics.pivot.x,
-                              spatialComp.y + c.graphics.pivot.y);
-      c.graphics.rotation = spatialComp.angle;
+      c.graphics.position.set(spatialComp.x_abs + c.graphics.pivot.x,
+                              spatialComp.y_abs + c.graphics.pivot.y);
+      c.graphics.rotation = spatialComp.angle_abs;
     }
   }
 

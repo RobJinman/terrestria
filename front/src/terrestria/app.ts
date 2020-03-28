@@ -73,7 +73,7 @@ export class App {
     this._scheduler = new Scheduler();
 
     this._em = new EntityManager();
-    const spatialSystem = new SpatialSystem(CLIENT_FRAME_RATE);
+    const spatialSystem = new SpatialSystem(this._em, CLIENT_FRAME_RATE);
     const renderSystem = new RenderSystem(this._em,
                                           this._scheduler,
                                           this._tick.bind(this));

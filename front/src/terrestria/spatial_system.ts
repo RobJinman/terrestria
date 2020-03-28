@@ -6,12 +6,15 @@ import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
 import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
 import { SYNC_INTERVAL_MS } from "./common/constants";
+import { EntityManager } from "./entity_manager";
 
 export class SpatialSystem implements ClientSystem {
+  private _em: EntityManager;
   private _components: Map<number, CSpatial>;
   private _frameRate: number;
 
-  constructor(frameRate: number) {
+  constructor(em: EntityManager, frameRate: number) {
+    this._em = em;
     this._components = new Map<number, CSpatial>();
     this._frameRate = frameRate;
   }
