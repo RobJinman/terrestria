@@ -40,10 +40,10 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new CSpatial(id,
-                                                 spatialSys.grid,
-                                                 gridModeProps,
-                                                 freeModeProps,
-                                                 shape);
+                                   spatialSys.grid,
+                                   gridModeProps,
+                                   freeModeProps,
+                                   shape);
 
   const invComp = new CCollectable(id, "gems", 1);
 
@@ -70,8 +70,9 @@ function onAgentEnterCell(em: EntityManager,
                           event: EAgentEnterCell) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
 
-  inventorySys.collectItem(event.entityId, gemId);
-  em.removeEntity_onClients(gemId);
+  if (inventorySys.collectItem(event.entityId, gemId)) {
+    em.removeEntity_onClients(gemId);
+  }
 }
 
 function onEntityCollision(em: EntityManager,
@@ -83,7 +84,8 @@ function onEntityCollision(em: EntityManager,
   const other = event.entityA == gemId ? event.entityB : event.entityA;
 
   if (agentSys.hasComponent(other)) {
-    inventorySys.collectItem(other, gemId);
-    em.removeEntity_onClients(gemId);
+    if (inventorySys.collectItem(other, gemId)) {
+      em.removeEntity_onClients(gemId);
+    }
   }
 }

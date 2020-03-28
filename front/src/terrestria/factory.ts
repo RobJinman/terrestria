@@ -12,7 +12,7 @@ import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
 import { CAdvert } from "./advert_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
-import { CInventory } from "./inventory_system";
+import { CInventory, InventorySystem } from "./inventory_system";
 import { EntityData } from "./common/entity_manager";
 
 function constructGem(em: EntityManager, entity: EntityData) {
@@ -466,6 +466,9 @@ export function constructEntities(entityManager: EntityManager,
 // Construct any client-side only entities from map data
 export function constructInitialEntitiesFromMapData(em: EntityManager,
                                                     mapData: ClientMapData) {
+  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+  inventorySys.setDisplayedBucket("gems");
+
   constructEarth(em, mapData);
   constructSky(em, mapData);
   constructAwardNotification(em);

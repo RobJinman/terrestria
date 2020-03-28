@@ -27,10 +27,15 @@ export class CInventory extends Component {
 export class InventorySystem implements ClientSystem {
   private _em: EntityManager;
   private _components: Map<number, CInventory>;
+  private _displayedBucket?: string;
 
   constructor(em: EntityManager) {
     this._em = em;
     this._components = new Map<number, CInventory>();
+  }
+
+  setDisplayedBucket(bucketName: string) {
+    this._displayedBucket = bucketName;
   }
 
   updateComponent(packet: InventoryPacket) {
@@ -39,8 +44,8 @@ export class InventorySystem implements ClientSystem {
 
     const entity = this._em.getEntity(packet.entityId);
 
-    if (entity.type == EntityType.PLAYER) {
-      this._updateIndicators(c);
+    if (this._displayedBucket && entity.type == EntityType.PLAYER) {
+      this._updateBucketDisplay(c);
     }
   }
 
@@ -72,25 +77,25 @@ export class InventorySystem implements ClientSystem {
 
   handleEvent(event: GameEvent) {}
 
-  private _updateIndicators(c: CInventory) {
+  private _updateBucketDisplay(c: CInventory) {
     c.indicatorIds.forEach(id => this._em.removeEntity(id));
     c.indicatorIds.clear();
 
     c.buckets.forEach(bucket => {
-      if (bucket.name == "gems") {
-        this._constructGemsIndicator(c, bucket);
+      if (bucket.name == this._displayedBucket) {
+        this._constructBucketDisplay(c, bucket);
       }
     });
   }
 
-  private _constructGemsIndicator(c: CInventory, bucket: Bucket) {
+  private _constructBucketDisplay(c: CInventory, bucket: Bucket) {
     for (let i = 0; i < bucket.value; ++i) {
-      const id = this._constructGemsIndicatorDot(c.entityId, i);
+      const id = this._constructBucketDisplayDot(c.entityId, i);
       c.indicatorIds.add(id);
     }
   }
 
-  private _constructGemsIndicatorDot(agentId: EntityId, idx: number) {
+  private _constructBucketDisplayDot(agentId: EntityId, idx: number) {
     const id = getNextEntityId();
 
     const w = 10;

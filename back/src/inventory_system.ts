@@ -28,11 +28,15 @@ export class Bucket {
     return this._value;
   }
 
-  addItem(item: CCollectable) {
+  addItem(item: CCollectable): boolean {
+    const prevValue = this._value;
+
     this._value += item.value;
     if (this._max >= 0 && this._value > this._max) {
       this._value = this._max;
     }
+
+    return this._value !== prevValue;
   }
 }
 
@@ -89,14 +93,14 @@ export class CCollector extends CInventory {
     this._buckets.set(bucket.name, bucket);
   }
 
-  collect(item: CCollectable) {
+  collect(item: CCollectable): boolean {
     const bucket = this._buckets.get(item.bucket);
     if (!bucket) {
       throw new GameError(`Entity ${this.entityId} does not have ` +
                           `${item.bucket} bucket`);
     }
-    bucket.addItem(item);
     this.dirty = true;
+    return bucket.addItem(item);
   }
 }
 
@@ -172,7 +176,7 @@ export class InventorySystem implements ServerSystem {
     return packets;
   }
 
-  collectItem(collectorId: EntityId, collectableId: EntityId) {
+  collectItem(collectorId: EntityId, collectableId: EntityId): boolean {
     const collector = this._collectors.get(collectorId);
     const collectable = this._collectables.get(collectableId);
 
@@ -183,7 +187,7 @@ export class InventorySystem implements ServerSystem {
       throw new GameError(`No collectable with id ${collectableId}`);
     }
 
-    collector.collect(collectable);
+    return collector.collect(collectable);
   }
 
   private _makePacket(c: CCollector): InventoryPacket {

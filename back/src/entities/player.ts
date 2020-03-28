@@ -42,7 +42,7 @@ export function constructPlayer(em: EntityManager, desc: any): EntityId {
                                    shape);
 
   const invComp = new CCollector(id);
-  invComp.addBucket(new Bucket("gems", -1));
+  invComp.addBucket(new Bucket("gems", 5));
   invComp.addBucket(new Bucket("trophies", -1));
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
