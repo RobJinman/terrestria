@@ -8,7 +8,7 @@ import { ComponentType } from "./common/component_types";
 import { SpatialMode } from "./common/spatial_packet";
 import { Shape } from "./common/geometry";
 
-export class ServerSpatialComponent extends Component {
+export class CSpatial extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
   gridMode: GridModeSubcomponent;
   freeMode: FreeModeSubcomponent;

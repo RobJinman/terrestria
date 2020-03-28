@@ -23,6 +23,7 @@ import { CSpatial } from './spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
 import { GameState } from "./definitions";
+import { InventorySystem } from "./inventory_system";
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -78,10 +79,12 @@ export class App {
                                           this._tick.bind(this));
     const behaviourSystem = new BehaviourSystem();
     const adSystem = new AdvertSystem(this._em, this._scheduler);
+    const inventorySystem = new InventorySystem(this._em);
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
+    this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
 
     this._userInputManager
       = new UserInputManager(this._em,

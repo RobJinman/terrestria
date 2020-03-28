@@ -3,13 +3,13 @@ import { ComponentType } from "./common/component_types";
 import { EntityManager } from "./entity_manager";
 import { BLOCK_SZ } from "./common/constants";
 import { Span, Span2d } from "./common/span";
-import { ServerSpatialSystem } from "./spatial_system";
+import { SpatialSystem } from "./spatial_system";
 import { AgentSystem } from "./agent_system";
 import { BehaviourSystem } from "./common/behaviour_system";
 import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
-import { ServerEntityFactory } from "./entity_factory";
+import { EntityFactory } from "./entity_factory";
 import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
@@ -17,13 +17,13 @@ import { Logger } from "./logger";
 export class MapLoader {
   private _em: EntityManager;
   private _pinata: Pinata;
-  private _factory: ServerEntityFactory;
+  private _factory: EntityFactory;
   private _logger: Logger;
   private _mapData: MapData|null = null;
 
   constructor(em: EntityManager,
               pinata: Pinata,
-              factory: ServerEntityFactory,
+              factory: EntityFactory,
               logger: Logger) {
     this._em = em;
     this._pinata = pinata;
@@ -36,17 +36,17 @@ export class MapLoader {
 
     const gravRegion = this._constructGravRegion(this._mapData.gravityRegion);
 
-    const serverSpatialSystem = new ServerSpatialSystem(this._em,
-                                                        this._mapData.width,
-                                                        this._mapData.height,
-                                                        gravRegion,
-                                                        this._logger);
+    const spatialSystem = new SpatialSystem(this._em,
+                                            this._mapData.width,
+                                            this._mapData.height,
+                                            gravRegion,
+                                            this._logger);
     const agentSystem = new AgentSystem(this._em, this._pinata);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
     const adSystem = new AdvertSystem(pinata);
 
-    this._em.addSystem(ComponentType.SPATIAL, serverSpatialSystem);
+    this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);

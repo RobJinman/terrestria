@@ -12,7 +12,7 @@ function newEventHandlerMap() {
   return new Map<GameEventType, EventHandlerFn>();
 }
 
-export class BehaviourComponent extends Component {
+export class CBehaviour extends Component {
   private _targetedHandlers: EventHandlerMap;
   private _broadcastHandlers: EventHandlerMap;
 
@@ -60,12 +60,12 @@ function addToMapOfSets<K, V>(m: Map<K, Set<V>>, key: K, value: V) {
 }
 
 export class BehaviourSystem implements ServerSystem, ClientSystem {
-  private _components: Map<number, BehaviourComponent>;
+  private _components: Map<number, CBehaviour>;
   private _targetedEvents: Map<GameEventType, Set<EntityId>>;
   private _broadcastEvents: Map<GameEventType, Set<EntityId>>;
 
   constructor() {
-    this._components = new Map<number, BehaviourComponent>();
+    this._components = new Map<number, CBehaviour>();
     this._targetedEvents = new Map<GameEventType, Set<EntityId>>();
     this._broadcastEvents = new Map<GameEventType, Set<EntityId>>();
   }
@@ -76,7 +76,7 @@ export class BehaviourSystem implements ServerSystem, ClientSystem {
     return this._components.size;
   }
 
-  addComponent(component: BehaviourComponent) {
+  addComponent(component: CBehaviour) {
     this._components.set(component.entityId, component);
 
     component.targetedEvents.forEach(type => {

@@ -1,14 +1,14 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { ServerSpatialSystem } from "../spatial_system";
+import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../spatial_component";
+import { CSpatial } from "../spatial_component";
 import { Rectangle } from "../common/geometry";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
 import { GameEventType, EAgentEnterCell, EAwardGranted,
          EEntityCollision } from "../common/event";
-import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
+import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { CreateAwardResult } from "../pinata";
 import { GameError } from "../common/error";
 import { EntityType } from "../common/game_objects";
@@ -32,13 +32,13 @@ export function constructTrophy(em: EntityManager,
     fixedAngle: false
   };
 
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new ServerSpatialComponent(id,
-                                                 spatialSys.grid,
-                                                 gridModeProps,
-                                                 freeModeProps,
-                                                 new Rectangle(64, 64));
+  const spatialComp = new CSpatial(id,
+                                   spatialSys.grid,
+                                   gridModeProps,
+                                   freeModeProps,
+                                   new Rectangle(64, 64));
 
   const invComp = new CCollectable(id, "trophies", 1);
 
@@ -48,7 +48,7 @@ export function constructTrophy(em: EntityManager,
   targetedEvents.set(GameEventType.ENTITY_COLLISION,
                      e => onEntityCollision(em, id, <EEntityCollision>e));
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.TROPHY, desc, [ spatialComp,
                                               invComp,

@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import _ from "underscore";
 import { PlayerAction } from "./common/action";
-import { ServerEntityFactory } from "./entity_factory";
+import { EntityFactory } from "./entity_factory";
 import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
@@ -10,14 +10,14 @@ import { GameLogic } from "./game_logic";
 import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
-import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
+import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { debounce } from "./common/utils";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
-import { ServerSpatialComponent } from "./spatial_component";
+import { CSpatial } from "./spatial_component";
 import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
@@ -42,7 +42,7 @@ export class Game {
   private _id: number;
   private _pipe: Pipe;
   private _em: EntityManager;
-  private _factory: ServerEntityFactory;
+  private _factory: EntityFactory;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
   private _gameLogic: GameLogic;
@@ -56,7 +56,7 @@ export class Game {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new EntityManager(this._pipe);
-    this._factory = new ServerEntityFactory(this._em);
+    this._factory = new EntityFactory(this._em);
 
     const mapLoader = new MapLoader(this._em,
                                     this._pinata,
@@ -73,9 +73,9 @@ export class Game {
     broadcastHandlers.set(GameEventType.PLAYER_KILLED,
                           event => this._onPlayerKilled(event));
 
-    const behaviourComp = new BehaviourComponent(this._entityId,
-                                                 targetedHandlers,
-                                                 broadcastHandlers);
+    const behaviourComp = new CBehaviour(this._entityId,
+                                         targetedHandlers,
+                                         broadcastHandlers);
 
     this._em.addEntity(this._entityId, EntityType.OTHER, {}, [behaviourComp]);
 
@@ -98,8 +98,7 @@ export class Game {
         pinataToken
       }
     });
-    const spatial =
-      <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+    const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
                          this._mapData.spawnPoint.y * BLOCK_SZ);
 
@@ -158,8 +157,7 @@ export class Game {
         pinataId, pinataToken
       }
     });
-    const spatial =
-      <ServerSpatialComponent>this._em.getComponent(ComponentType.SPATIAL, id);
+    const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
                          this._mapData.spawnPoint.y * BLOCK_SZ);
 

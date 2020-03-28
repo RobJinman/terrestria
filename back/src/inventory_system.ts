@@ -3,11 +3,12 @@ import { GameError } from "./common/error";
 import { GameEvent } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
+import { InventoryPacket } from "./common/inventory_packet";
 
-export class Bucket {
-  _name: string;
-  _max: number;
-  _value: number = 0;
+export class Bucket { 
+  private _name: string;
+  private _max: number;
+  private _value: number = 0;
 
   // If max is negative, the bucket has infinite capacity
   constructor(name: string, max: number) {
@@ -41,7 +42,7 @@ export enum CInventoryType {
 }
 
 export abstract class CInventory extends Component {
-  _invType: CInventoryType;
+  private _invType: CInventoryType;
 
   constructor(entityId: EntityId, inventoryType: CInventoryType) {
     super(entityId, ComponentType.INVENTORY);
@@ -55,8 +56,8 @@ export abstract class CInventory extends Component {
 }
 
 export class CCollectable extends CInventory {
-  _bucket: string;
-  _value: number;
+  private _bucket: string;
+  private _value: number;
 
   constructor(entityId: EntityId, bucket: string, value: number) {
     super(entityId, CInventoryType.COLLECTABLE);
@@ -75,7 +76,8 @@ export class CCollectable extends CInventory {
 }
 
 export class CCollector extends CInventory {
-  _buckets: Map<string, Bucket>;
+  _buckets: Map<string, Bucket>; // Non-private so InventorySystem has access
+  dirty = true;
 
   constructor(entityId: EntityId) {
     super(entityId, CInventoryType.COLLECTOR);
@@ -94,6 +96,7 @@ export class CCollector extends CInventory {
                           `${item.bucket} bucket`);
     }
     bucket.addItem(item);
+    this.dirty = true;
   }
 }
 
@@ -147,11 +150,26 @@ export class InventorySystem implements ServerSystem {
   update() {}
 
   getState() {
-    return [];
+    const packets: InventoryPacket[] = [];
+
+    this._collectors.forEach((c, id) => {
+      packets.push(this._makePacket(c));
+    });
+
+    return packets;
   }
 
   getDirties() {
-    return [];
+    const packets: InventoryPacket[] = [];
+
+    this._collectors.forEach((c, id) => {
+      if (c.dirty) {
+        packets.push(this._makePacket(c));
+        c.dirty = false;
+      }
+    });
+
+    return packets;
   }
 
   collectItem(collectorId: EntityId, collectableId: EntityId) {
@@ -166,5 +184,19 @@ export class InventorySystem implements ServerSystem {
     }
 
     collector.collect(collectable);
+  }
+
+  private _makePacket(c: CCollector): InventoryPacket {
+    const buckets = Array.from(c._buckets.entries())
+                        .map(([name, bucket]) => ({
+      name,
+      value: bucket.value
+    }));
+
+    return {
+      componentType: ComponentType.INVENTORY,
+      entityId: c.entityId,
+      buckets
+    };
   }
 }

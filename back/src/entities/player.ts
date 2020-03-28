@@ -3,12 +3,12 @@ import { EntityId } from "../common/system";
 import { CAgent } from "../agent_system";
 import { Circle } from "../common/geometry";
 import { BLOCK_SZ } from "../common/constants";
-import { ServerSpatialSystem } from "../spatial_system";
+import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../spatial_component";
+import { CSpatial } from "../spatial_component";
 import { CCollector, Bucket } from "../inventory_system";
 import { GameEventType, EEntityBurned, EPlayerKilled } from "../common/event";
-import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
+import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
 export function constructPlayer(em: EntityManager, desc: any): EntityId {
@@ -33,13 +33,13 @@ export function constructPlayer(em: EntityManager, desc: any): EntityId {
 
   const shape = new Circle(BLOCK_SZ * 0.5);
 
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new ServerSpatialComponent(id,
-                                                 spatialSys.grid,
-                                                 gridModeProps,
-                                                 freeModeProps,
-                                                 shape);
+  const spatialComp = new CSpatial(id,
+                                   spatialSys.grid,
+                                   gridModeProps,
+                                   freeModeProps,
+                                   shape);
 
   const invComp = new CCollector(id);
   invComp.addBucket(new Bucket("gems", -1));
@@ -49,7 +49,7 @@ export function constructPlayer(em: EntityManager, desc: any): EntityId {
   targetedEvents.set(GameEventType.ENTITY_SQUASHED,
                      e => onPlayerSquashed(em, id));
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.PLAYER, {}, [ spatialComp,
                                             agentComp,
@@ -60,7 +60,7 @@ export function constructPlayer(em: EntityManager, desc: any): EntityId {
 }
 
 function onPlayerSquashed(em: EntityManager, playerId: EntityId) {
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
   const spatialComp = spatialSys.getComponent(playerId);
 
   const gridX = spatialComp.gridMode.gridX;

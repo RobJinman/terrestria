@@ -1,10 +1,10 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { ServerSpatialSystem } from "../spatial_system";
+import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../spatial_component";
+import { CSpatial } from "../spatial_component";
 import { GameEventType } from "../common/event";
-import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
+import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
 export function constructSoil(em: EntityManager, desc: any): EntityId {
@@ -25,12 +25,12 @@ export function constructSoil(em: EntityManager, desc: any): EntityId {
     fixedAngle: true
   };
 
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new ServerSpatialComponent(id,
-                                                 spatialSys.grid,
-                                                 gridModeProps,
-                                                 freeModeProps);
+  const spatialComp = new CSpatial(id,
+                                   spatialSys.grid,
+                                   gridModeProps,
+                                   freeModeProps);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL, e => {
@@ -40,7 +40,7 @@ export function constructSoil(em: EntityManager, desc: any): EntityId {
     em.removeEntity(id);
   });
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.SOIL, desc, [ spatialComp, behaviourComp ]);
 

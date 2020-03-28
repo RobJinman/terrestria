@@ -1,6 +1,6 @@
 import { EntityId } from "./common/system";
 import { ServerSystem } from "./common/server_system";
-import { ServerSpatialComponent } from "./spatial_component";
+import { CSpatial } from "./spatial_component";
 import { Span2d } from "./common/span";
 import { GridModeImpl } from "./grid_mode_impl";
 import { FreeModeImpl } from "./free_mode_impl";
@@ -13,8 +13,8 @@ import { EntityManager } from "./entity_manager";
 import { directionToVector } from "./common/geometry";
 import { Logger } from "./logger";
 
-export class ServerSpatialSystem implements ServerSystem {
-  private _components: Map<EntityId, ServerSpatialComponent>;
+export class SpatialSystem implements ServerSystem {
+  private _components: Map<EntityId, CSpatial>;
   private _w = 0;
   private _h = 0;
   private _gridModeImpl: GridModeImpl;
@@ -28,7 +28,7 @@ export class ServerSpatialSystem implements ServerSystem {
 
     const attemptTransitionFn = this._attemptModeTransition.bind(this);
 
-    this._components = new Map<EntityId, ServerSpatialComponent>();
+    this._components = new Map<EntityId, CSpatial>();
     this._gridModeImpl = new GridModeImpl(em,
                                           w,
                                           h,
@@ -77,7 +77,7 @@ export class ServerSpatialSystem implements ServerSystem {
     this._freeModeImpl.update();
   }
 
-  addComponent(component: ServerSpatialComponent) {
+  addComponent(component: CSpatial) {
     this._components.set(component.entityId, component);
 
     const x = component.x;
@@ -181,7 +181,7 @@ export class ServerSpatialSystem implements ServerSystem {
     return c.gridMode.moving();
   }
 
-  private _doModeTransition(c: ServerSpatialComponent,
+  private _doModeTransition(c: CSpatial,
                             x: number,
                             y: number,
                             direction: Direction): boolean {

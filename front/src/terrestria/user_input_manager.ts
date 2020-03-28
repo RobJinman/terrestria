@@ -1,10 +1,9 @@
 import { UserInput } from "./common/action";
 import { EntityType } from "./common/game_objects";
-import { CSprite, StaticImage, RenderOptions, 
-         RenderSystem } from "./render_system";
+import { CSprite, StaticImage, RenderOptions, RenderSystem } from "./render_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
-import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
+import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Scheduler } from "./scheduler";
@@ -90,9 +89,9 @@ export class UserInputManager {
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
     broadcastHandlers.set(GameEventType.WINDOW_RESIZED,
                           this._onWindowResized.bind(this));
-    const behaviourComp = new BehaviourComponent(this._entityId,
-                                                 targetedHandlers,
-                                                 broadcastHandlers);
+    const behaviourComp = new CBehaviour(this._entityId,
+                                         targetedHandlers,
+                                         broadcastHandlers);
     this._em.addEntity(this._entityId, EntityType.OTHER, [ behaviourComp ]);
 
     const btnUp =
@@ -319,10 +318,10 @@ export class UserInputManager {
     };
 
     const renderComp = new CSprite(id,
-                                                 staticImages,
-                                                 [],
-                                                 `${buttonName}.png`,
-                                                 renderOpts);
+                                   staticImages,
+                                   [],
+                                   `${buttonName}.png`,
+                                   renderOpts);
 
     this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 

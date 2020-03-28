@@ -1,13 +1,13 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
 import { Polygon } from "../common/geometry";
-import { ServerSpatialSystem } from "../spatial_system";
+import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
-import { ServerSpatialComponent } from "../spatial_component";
+import { CSpatial } from "../spatial_component";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { GameEventType, EAgentEnterCell,
          EEntityCollision } from "../common/event";
-import { EventHandlerFn, BehaviourComponent } from "../common/behaviour_system";
+import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
 export function constructGem(em: EntityManager, desc: any): EntityId {
@@ -37,9 +37,9 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   ];
   const shape = new Polygon(points);
 
-  const spatialSys = <ServerSpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
-  const spatialComp = new ServerSpatialComponent(id,
+  const spatialComp = new CSpatial(id,
                                                  spatialSys.grid,
                                                  gridModeProps,
                                                  freeModeProps,
@@ -54,7 +54,7 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   targetedEvents.set(GameEventType.ENTITY_COLLISION,
                      e => onEntityCollision(em, id, <EEntityCollision>e));
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.GEM, desc, [ spatialComp,
                                            invComp,

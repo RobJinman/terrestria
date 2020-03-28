@@ -53,6 +53,16 @@ export class IEntityManager {
     return Array.from(this.entities.values());
   }
 
+  getEntity(id: EntityId): Entity {
+    const entity = this.entities.get(id);
+
+    if (!entity) {
+      throw new GameError(`No entity with id ${id}`);
+    }
+
+    return entity;
+  }
+
   hasEntity(id: EntityId) {
     return this.entities.has(id);
   }

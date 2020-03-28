@@ -27,7 +27,7 @@ function constructParallaxSprite(em: EntityManager, desc: any) {
   return id;
 }
 
-export class ServerEntityFactory {
+export class EntityFactory {
   private _em: EntityManager;
 
   constructor(em: EntityManager) {

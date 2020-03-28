@@ -478,8 +478,7 @@ export class RenderSystem implements ClientSystem {
 
   private _computeParallaxOffsets() {
     this._parallaxComponents.forEach(c => {
-      const spatial =
-        <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
+      const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                       c.entityId);
       if (c.stagedSprite) {
         const x = spatial.x;
@@ -682,9 +681,8 @@ export class RenderSystem implements ClientSystem {
   }
 
   private _setWorldPosition(c: CRender) {
-    const spatialComp =
-      <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                    c.entityId);
+    const spatialComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
+                                                        c.entityId);
     if (c instanceof CSprite) {
       if (c.stagedSprite) {
         // TODO: Shouldn't always assume pivot point

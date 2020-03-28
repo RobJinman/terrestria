@@ -4,7 +4,7 @@ import { EntityType } from "./common/game_objects";
 import { StaticImage, AnimationDesc, RenderSystem, CSprite, CTiledRegion,
          CShape, Colour, CParallax } from "./render_system";
 import { PLAYER_SPEED, BLOCK_SZ } from "./common/constants";
-import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
+import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, EAgentAction, AgentActionType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Direction } from "./common/definitions";
@@ -13,6 +13,7 @@ import { Span2d } from "./common/span";
 import { Rectangle } from "./common/geometry";
 import { CAdvert } from "./advert_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
+import { CInventory } from "./inventory_system";
 
 function constructGem(em: EntityManager, entity: Entity) {
   const id = entity.id;
@@ -46,7 +47,7 @@ function constructGem(em: EntityManager, entity: Entity) {
     });
   });
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.GEM, [ spatialComp,
                                      renderComp,
@@ -105,7 +106,7 @@ function constructRock(em: EntityManager, entity: Entity) {
     });
   });
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.ROCK, [ spatialComp,
                                       renderComp,
@@ -152,7 +153,7 @@ function constructSoil(em: EntityManager, entity: Entity) {
     });
   });
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
 
   em.addEntity(id, EntityType.SOIL, [ spatialComp, renderComp, behaviourComp ]);
 }
@@ -293,11 +294,14 @@ function constructPlayer(em: EntityManager, entity: Entity) {
     }
   });
 
-  const behaviourComp = new BehaviourComponent(id, targetedEvents);
+  const behaviourComp = new CBehaviour(id, targetedEvents);
+
+  const inventoryComp = new CInventory(id);
 
   em.addEntity(id, EntityType.PLAYER, [ spatialComp,
                                         renderComp,
-                                        behaviourComp ]);
+                                        behaviourComp,
+                                        inventoryComp ]);
 }
 
 function constructEarth(em: EntityManager, mapData: ClientMapData) {
@@ -410,7 +414,7 @@ function constructAwardNotification(em: EntityManager) {
     console.log(event);
   });
 
-  const behaviourComp = new BehaviourComponent(id,
+  const behaviourComp = new CBehaviour(id,
                                                targetedHandlers,
                                                broadcastHandlers);
 

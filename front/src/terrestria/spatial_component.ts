@@ -10,6 +10,7 @@ export class CSpatial extends Component {
   private _destX = 0;
   private _destY = 0;
   private _angle = 0;
+
   speed = 0;
 
   constructor(entityId: EntityId, em: EntityManager) {

@@ -3,10 +3,10 @@ import { PlayerAction, ActionType, UserInputAction, UserInput,
 import { ComponentType } from "./common/component_types";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
-import { BehaviourComponent, EventHandlerFn } from "./common/behaviour_system";
+import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
 import { EntityType } from "./common/game_objects";
-import { ServerSpatialSystem } from "./spatial_system";
+import { SpatialSystem } from "./spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { Logger } from "./logger";
@@ -25,9 +25,9 @@ export class GameLogic {
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
     broadcastHandlers.set(GameEventType.PLAYER_KILLED,
                           event => this._onPlayerKilled(event));
-    const behaviourComp = new BehaviourComponent(this._entityId,
-                                                 targetedHandlers,
-                                                 broadcastHandlers);
+    const behaviourComp = new CBehaviour(this._entityId,
+                                         targetedHandlers,
+                                         broadcastHandlers);
 
     em.addEntity(this._entityId, EntityType.OTHER, {}, [behaviourComp]);
   }
@@ -64,7 +64,7 @@ export class GameLogic {
 
   private _processUserInputs() {
     const spatialSys =
-      <ServerSpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+      <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     this._inputStates.forEach((states, playerId) => {
       const player = spatialSys.getComponent(playerId);
