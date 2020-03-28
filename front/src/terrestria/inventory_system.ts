@@ -57,6 +57,11 @@ export class InventorySystem implements ClientSystem {
 
   addComponent(component: CInventory) {
     this._components.set(component.entityId, component);
+
+    const entity = this._em.getEntity(component.entityId);
+    if (this._displayedBucket && entity.type == EntityType.PLAYER) {
+      this._updateBucketDisplay(component);
+    }
   }
 
   hasComponent(id: EntityId) {
@@ -115,6 +120,7 @@ export class InventorySystem implements ClientSystem {
     const h = w;
 
     const id = getNextEntityId();
+
     const spatialComp = new CSpatial(id, this._em);
     const renderComp = new CShape(id,
                                   new Rectangle(w, h),

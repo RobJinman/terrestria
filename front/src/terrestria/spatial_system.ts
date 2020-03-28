@@ -1,6 +1,7 @@
 import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
-import { GameEvent } from "./common/event";
+import { GameEvent, GameEventType, EEntityMoved, 
+         EEntityHierarchyChanged } from "./common/event";
 import { CSpatial } from "./spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
@@ -71,7 +72,28 @@ export class SpatialSystem implements ClientSystem {
     return this._components.size;
   }
 
-  handleEvent(event: GameEvent) {}
+  handleEvent(event: GameEvent) {
+    switch (event.type) {
+      case GameEventType.ENTITY_HIERARCHY_CHANGED: {
+        this._handleHierarchyChange(<EEntityHierarchyChanged>event);
+        break;
+      }
+    }
+  }
+
+  private _handleHierarchyChange(event: EEntityHierarchyChanged) {
+    const child = this._components.get(event.child);
+    if (child) {
+      const moveEvent: EEntityMoved = {
+        type: GameEventType.ENTITY_MOVED,
+        x: child.x_abs,
+        y: child.y_abs,
+        entityId: child.entityId,
+        entities: [ child.entityId ]
+      };
+      this._em.postEvent(moveEvent);
+    }
+  }
 
   private _updateEntityPos(c: CSpatial) {
     const v: Vec2 = {

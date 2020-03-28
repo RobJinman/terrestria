@@ -8,6 +8,7 @@ export enum GameEventType {
   ENTITY_HIT = "ENTITY_HIT",
   ENTITY_BURNED = "ENTITY_BURNED",
   ENTITY_COLLISION = "ENTITY_COLLISION",
+  ENTITY_HIERARCHY_CHANGED = "ENTITY_HIERARCHY_CHANGED",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
@@ -52,6 +53,17 @@ export interface EEntityBurned extends GameEvent {}
 export interface EEntityCollision extends GameEvent {
   entityA: EntityId;
   entityB: EntityId;
+}
+
+export enum EntityHierarchyChangeType {
+  ADDITION = "ADDITION",
+  REMOVAL = "REMOVAL"
+}
+
+export interface EEntityHierarchyChanged extends GameEvent {
+  parent: EntityId;
+  child: EntityId;
+  changeType: EntityHierarchyChangeType;
 }
 
 export enum AgentActionType {

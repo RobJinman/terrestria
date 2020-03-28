@@ -1,6 +1,6 @@
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
-import { GameEvent } from "./event";
+import { GameEvent, EEntityHierarchyChanged, GameEventType, EntityHierarchyChangeType } from "./event";
 import { EntityType } from "./game_objects";
 import { EntityId, System, Component } from "./system";
 
@@ -51,6 +51,16 @@ export class IEntityManager {
 
     parent.children.add(childId);
     child.parent = id;
+
+    const event: EEntityHierarchyChanged = {
+      type: GameEventType.ENTITY_HIERARCHY_CHANGED,
+      parent: id,
+      child: childId,
+      changeType: EntityHierarchyChangeType.ADDITION,
+      entities: [ id, childId ]
+    };
+
+    this.postEvent(event);
   }
 
   getEntityChildren(id: EntityId): EntityId[] {
