@@ -194,7 +194,8 @@ export class InventorySystem implements ServerSystem {
     const buckets = Array.from(c._buckets.entries())
                         .map(([name, bucket]) => ({
       name,
-      value: bucket.value
+      value: bucket.value,
+      max: bucket.max
     }));
 
     return {

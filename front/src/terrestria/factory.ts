@@ -14,6 +14,7 @@ import { CAdvert } from "./advert_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { CInventory, InventorySystem } from "./inventory_system";
 import { EntityData } from "./common/entity_manager";
+import { PLAYER_Z_INDEX } from "./constants";
 
 function constructGem(em: EntityManager, entity: EntityData) {
   const id = entity.id;
@@ -259,7 +260,8 @@ function constructPlayer(em: EntityManager, entity: EntityData) {
   const renderComp = new CSprite(id,
                                  staticImages,
                                  animations,
-                                 "man_run_d0.png");
+                                 "man_run_d0.png",
+                                 { zIndex: PLAYER_Z_INDEX });
 
   const spatialComp = new CSpatial(id, em);
 

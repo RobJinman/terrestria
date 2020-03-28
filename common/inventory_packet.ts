@@ -4,5 +4,6 @@ export interface InventoryPacket extends ComponentPacket {
   buckets: {
     name: string;
     value: number;
+    max: number;
   }[];
 }

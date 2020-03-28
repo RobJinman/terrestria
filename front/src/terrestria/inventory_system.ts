@@ -9,14 +9,17 @@ import { CShape, Colour } from "./render_system";
 import { Rectangle } from "./common/geometry";
 import { EntityType } from "./common/game_objects";
 import { CSpatial } from "./spatial_component";
+import { PLAYER_Z_INDEX } from "./constants";
+import { BLOCK_SZ } from "./common/constants";
 
 interface Bucket {
   name: string;
   value: number;
+  max: number;
 }
 
 export class CInventory extends Component {
-  buckets: Bucket[] = [];
+  buckets: Map<string, Bucket> = new Map<string, Bucket>();
   indicatorIds = new Set<EntityId>();
 
   constructor(entityId: EntityId) {
@@ -40,7 +43,8 @@ export class InventorySystem implements ClientSystem {
 
   updateComponent(packet: InventoryPacket) {
     const c = this.getComponent(packet.entityId);
-    c.buckets = packet.buckets;
+    c.buckets.clear();
+    packet.buckets.forEach(bucket => c.buckets.set(bucket.name, bucket));
 
     const entity = this._em.getEntity(packet.entityId);
 
@@ -90,30 +94,40 @@ export class InventorySystem implements ClientSystem {
 
   private _constructBucketDisplay(c: CInventory, bucket: Bucket) {
     for (let i = 0; i < bucket.value; ++i) {
-      const id = this._constructBucketDisplayDot(c.entityId, i);
+      const id = this._constructBucketDisplayDot(c, i);
       c.indicatorIds.add(id);
     }
   }
 
-  private _constructBucketDisplayDot(agentId: EntityId, idx: number) {
-    const id = getNextEntityId();
+  private _constructBucketDisplayDot(agent: CInventory, idx: number) {
+    if (!this._displayedBucket) {
+      throw new GameError("No display bucket set");
+    }
 
-    const w = 10;
-    const h = 10;
+    const bucket = agent.buckets.get(this._displayedBucket);
+    if (!bucket) {
+      throw new GameError(`No bucket with name ${this._displayedBucket}`);
+    }
+
+    const n = bucket.max;
     const margin = 2;
+    const w = (BLOCK_SZ - margin * (n - 1)) / n;
+    const h = w;
 
+    const id = getNextEntityId();
     const spatialComp = new CSpatial(id, this._em);
     const renderComp = new CShape(id,
                                   new Rectangle(w, h),
-                                  new Colour(1, 0, 0));
+                                  new Colour(1, 0, 0),
+                                  { zIndex: PLAYER_Z_INDEX + 1 });
 
     this._em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 
     const x = (w + margin) * idx;
-    const y = 0;
+    const y = -h - margin;
     spatialComp.setStaticPos(x, y);
 
-    this._em.addChildToEntity(agentId, id);
+    this._em.addChildToEntity(agent.entityId, id);
 
     return id;
   }

@@ -7,6 +7,7 @@ import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Scheduler } from "./scheduler";
+import { UI_Z_INDEX } from "./constants";
 
 export type DirectionInputHandlerFn = (input: UserInput) => void;
 export type VoidInputHandlerFn = () => void;
@@ -311,7 +312,7 @@ export class UserInputManager {
     ];
 
     const renderOpts: RenderOptions = {
-      zIndex: 1,
+      zIndex: UI_Z_INDEX,
       screenPosition: { x: 0, y: 0 },
       onPress,
       onRelease
