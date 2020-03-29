@@ -38,6 +38,14 @@ export class Bucket {
 
     return this._value !== prevValue;
   }
+
+  clear(): boolean {
+    if (this._value === 0) {
+      return false;
+    }
+    this._value = 0;
+    return true;
+  }
 }
 
 export enum CInventoryType {
@@ -94,13 +102,32 @@ export class CCollector extends CInventory {
   }
 
   collect(item: CCollectable): boolean {
-    const bucket = this._buckets.get(item.bucket);
-    if (!bucket) {
-      throw new GameError(`Entity ${this.entityId} does not have ` +
-                          `${item.bucket} bucket`);
-    }
+    const bucket = this._getBucket(item.bucket);
     this.dirty = true;
     return bucket.addItem(item);
+  }
+
+  clearBucket(bucketName: string): boolean {
+    const bucket = this._buckets.get(bucketName);
+    if (!bucket) {
+      throw new GameError(`Entity has no bucket with name ${bucketName}`);
+    }
+    this.dirty = true;
+    return bucket.clear();
+  }
+
+  bucketValue(bucketName: string): number {
+    const bucket = this._getBucket(bucketName);
+    return bucket.value;
+  }
+
+  private _getBucket(bucketName: string): Bucket {
+    const bucket = this._buckets.get(bucketName);
+    if (!bucket) {
+      throw new GameError(`Entity ${this.entityId} does not have ` +
+                          `${bucketName} bucket`);
+    }
+    return bucket;
   }
 }
 
@@ -177,17 +204,35 @@ export class InventorySystem implements ServerSystem {
   }
 
   collectItem(collectorId: EntityId, collectableId: EntityId): boolean {
-    const collector = this._collectors.get(collectorId);
-    const collectable = this._collectables.get(collectableId);
-
-    if (!collector) {
-      throw new GameError(`No collector with id ${collectorId}`);
-    }
-    if (!collectable) {
-      throw new GameError(`No collectable with id ${collectableId}`);
-    }
+    const collector = this._getCollector(collectorId);
+    const collectable = this._getCollectable(collectableId);
 
     return collector.collect(collectable);
+  }
+
+  clearBucket(collectorId: EntityId, bucketName: string): boolean {
+    const collector = this._getCollector(collectorId);
+    return collector.clearBucket(bucketName);
+  }
+
+  private _getCollector(id: EntityId): CCollector {
+    const collector = this._collectors.get(id);
+
+    if (!collector) {
+      throw new GameError(`No collector with id ${id}`);
+    }
+
+    return collector;
+  }
+
+  private _getCollectable(id: EntityId): CCollectable {
+    const collectable = this._collectables.get(id);
+
+    if (!collectable) {
+      throw new GameError(`No collectable with id ${id}`);
+    }
+
+    return collectable;
   }
 
   private _makePacket(c: CCollector): InventoryPacket {

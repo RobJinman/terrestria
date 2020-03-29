@@ -11,6 +11,7 @@ import { CBehaviour, EventHandlerFn } from "../common/behaviour_system";
 import { GameEventType, EAgentEnterCell } from "../common/event";
 import { BLOCK_SZ } from "../common/constants";
 import { SpatialMode } from "../common/spatial_packet";
+import { CCollector } from "../inventory_system";
 
 export function constructGemBank(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -34,40 +35,37 @@ export function constructGemBank(em: EntityManager, desc: any): EntityId {
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 
-  const entryId = constructEntry(em, desc.x, desc.y + BLOCK_SZ * 2.5);
-  const exitId = constructExit(em, id);
+  const entranceX = desc.x;
+  const entranceY = desc.y + BLOCK_SZ * 2.5;
+  const exitX = entranceX + BLOCK_SZ * 3;
+  const exitY = entranceY;
 
-  em.addChildToEntity(id, entryId);
+  const exitId = constructExit(em, exitX, exitY);
+  const entranceId = constructEntrance(em, exitId, entranceX, entranceY);
+
+  em.addChildToEntity(id, entranceId);
+  em.addChildToEntity(id, exitId);
 
   return id;
 }
 
-function constructEntry(em: EntityManager,
-                        x: number,
-                        y: number) {
+function constructEntrance(em: EntityManager,
+                           exitId: EntityId,
+                           x: number,
+                           y: number) {
   const id = getNextEntityId();
-
-  const gridModeProps = {
-    solid: false,
-    blocking: false,
-    stackable: false,
-    squashable: false,
-    heavy: false,
-    movable: false,
-    isAgent: false
-  };
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new CSpatial(id,
                                    true,
                                    spatialSys.grid,
-                                   gridModeProps,
+                                   DEFAULT_GRID_MODE_PROPS,
                                    DEFAULT_FREE_MODE_PROPS);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL,
-                     e => onAgentEnter(em, <EAgentEnterCell>e));
+                     e => onAgentEnter(em, exitId, <EAgentEnterCell>e));
 
   const behaviourComp = new CBehaviour(id, targetedEvents);
 
@@ -78,10 +76,40 @@ function constructEntry(em: EntityManager,
   return id;
 }
 
-function constructExit(em: EntityManager, parentId: EntityId) {
+function constructExit(em: EntityManager, x: number, y: number) {
+  const id = getNextEntityId();
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+
+  const spatialComp = new CSpatial(id,
+                                   true,
+                                   spatialSys.grid,
+                                   DEFAULT_GRID_MODE_PROPS,
+                                   DEFAULT_FREE_MODE_PROPS);
+
+  em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);
+
+  spatialSys.positionEntity(id, x, y);
+
+  return id;
 }
 
-function onAgentEnter(em: EntityManager, event: EAgentEnterCell) {
-  console.log(`Entity ${event.entityId} enters gem bank`);
+function onAgentEnter(em: EntityManager,
+                      exitId: EntityId,
+                      event: EAgentEnterCell) {
+  const collector = <CCollector>em.getComponent(ComponentType.INVENTORY,
+                                                event.entityId);
+  const collected = collector.bucketValue("gems");
+  if (collected > 0) {
+    collector.clearBucket("gems");
+
+    const agentSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
+                                                   event.entityId);
+    const exitSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
+                                                  exitId);
+
+    agentSpatial.setStaticPos(exitSpatial.x, exitSpatial.y);
+
+    console.log(`${collected} gems banked!`);
+  }
 }
