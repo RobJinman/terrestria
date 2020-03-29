@@ -1,6 +1,7 @@
 import { GameError } from "./error";
 import { ComponentType } from "./component_types";
-import { GameEvent, EEntityHierarchyChanged, GameEventType, EntityHierarchyChangeType } from "./event";
+import { GameEvent, EEntityHierarchyChanged, GameEventType,
+         EntityHierarchyChangeType } from "./event";
 import { EntityType } from "./game_objects";
 import { EntityId, System, Component } from "./system";
 

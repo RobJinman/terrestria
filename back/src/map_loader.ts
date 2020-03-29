@@ -187,6 +187,14 @@ export class MapLoader {
       }
     });
 
+    entities.push({
+      type: EntityType.GEM_BANK,
+      data: {
+        x: BLOCK_SZ * 22,
+        y: BLOCK_SZ * 10.5
+      }
+    });
+
     return {
       width: WORLD_W,
       height: WORLD_H,

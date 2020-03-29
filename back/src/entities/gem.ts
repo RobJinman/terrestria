@@ -40,6 +40,7 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new CSpatial(id,
+                                   false,
                                    spatialSys.grid,
                                    gridModeProps,
                                    freeModeProps,

@@ -35,6 +35,7 @@ export function constructTrophy(em: EntityManager,
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new CSpatial(id,
+                                   false,
                                    spatialSys.grid,
                                    gridModeProps,
                                    freeModeProps,

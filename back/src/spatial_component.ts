@@ -14,11 +14,12 @@ export class CSpatial extends Component {
   freeMode: FreeModeSubcomponent;
 
   constructor(entityId: EntityId,
+              isLocalOnly: boolean,
               grid: Grid,
               gridModeProperties: GridModeProperties,
               freeModeProperties: FreeModeProperties,
               shape?: Shape) {
-    super(entityId, ComponentType.SPATIAL);
+    super(entityId, ComponentType.SPATIAL, isLocalOnly);
 
     this.gridMode = new GridModeSubcomponent(entityId,
                                              grid,

@@ -378,7 +378,7 @@ function constructAd(em: EntityManager, entity: EntityData) {
 
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp,
                                               renderComp,
-                                              adComp ]);  
+                                              adComp ]);
 }
 
 function constructParallaxSprite(em: EntityManager, entity: EntityData) {
@@ -407,6 +407,23 @@ function constructParallaxSprite(em: EntityManager, entity: EntityData) {
   spatialComp.setStaticPos(x, y);
 }
 
+function constructGemBank(em: EntityManager, entity: EntityData) {
+  const staticImages: StaticImage[] = [
+    {
+      name: "gem_bank.png"
+    }
+  ];
+
+  const renderComp = new CSprite(entity.id,
+                                 staticImages,
+                                 [],
+                                 "gem_bank.png");
+
+  const spatialComp = new CSpatial(entity.id, em);
+
+  em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);  
+}
+
 function constructAwardNotification(em: EntityManager) {
   const id = getNextEntityId();
 
@@ -418,8 +435,8 @@ function constructAwardNotification(em: EntityManager) {
   });
 
   const behaviourComp = new CBehaviour(id,
-                                               targetedHandlers,
-                                               broadcastHandlers);
+                                       targetedHandlers,
+                                       broadcastHandlers);
 
   em.addEntity(id, EntityType.OTHER, [ behaviourComp ]);
 }
@@ -459,6 +476,10 @@ export function constructEntities(entityManager: EntityManager,
       }
       case EntityType.PARALLAX_SPRITE: {
         constructParallaxSprite(entityManager, entity);
+        break;
+      }
+      case EntityType.GEM_BANK: {
+        constructGemBank(entityManager, entity);
         break;
       }
     }

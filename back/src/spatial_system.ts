@@ -46,17 +46,19 @@ export class SpatialSystem implements ServerSystem {
     const packets: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
-      packets.push({
-        componentType: ComponentType.SPATIAL,
-        entityId: c.entityId,
-        mode: c.currentMode,
-        x: c.x,
-        y: c.y,
-        // Ignore angle if fixed. Workaround for
-        // https://github.com/liabru/matter-js/issues/800
-        angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
-        speed: 0
-      });
+      if (!c.isLocalOnly) {
+        packets.push({
+          componentType: ComponentType.SPATIAL,
+          entityId: c.entityId,
+          mode: c.currentMode,
+          x: c.x,
+          y: c.y,
+          // Ignore angle if fixed. Workaround for
+          // https://github.com/liabru/matter-js/issues/800
+          angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
+          speed: 0
+        });
+      }
     });
 
     return packets;
@@ -144,7 +146,7 @@ export class SpatialSystem implements ServerSystem {
     const dirties: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
-      if (c.isDirty()) {
+      if (!c.isLocalOnly && c.isDirty()) {
         if (c.currentMode == SpatialMode.GRID_MODE) {
           dirties.push({
             entityId: c.entityId,

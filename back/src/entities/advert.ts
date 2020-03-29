@@ -20,6 +20,7 @@ export function constructAd(em: EntityManager, desc: any): EntityId {
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
   const spatialComp = new CSpatial(id,
+                                   false,
                                    spatialSys.grid,
                                    DEFAULT_GRID_MODE_PROPS,
                                    freeModeProps);

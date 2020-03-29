@@ -312,9 +312,8 @@ export class App {
 
   private _centreStage() {
     if (this._playerId >= 0) {
-      const player =
-        <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                      this._playerId);
+      const player = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
+                                                     this._playerId);
 
       const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 

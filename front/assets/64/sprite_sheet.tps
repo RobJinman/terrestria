@@ -382,6 +382,19 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">gem_bank.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>63,64,125,127</rect>
+                <key>scale9Paddings</key>
+                <rect>63,64,125,127</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
         </map>
         <key>fileList</key>
         <array>
@@ -466,6 +479,7 @@
             <filename>button_sound_off_active.png</filename>
             <filename>button_sound_on.png</filename>
             <filename>button_sound_on_active.png</filename>
+            <filename>gem_bank.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

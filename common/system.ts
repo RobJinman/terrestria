@@ -11,10 +11,12 @@ export interface ComponentPacket {
 export abstract class Component {
   private _entityId: EntityId;
   private _type: ComponentType;
+  private _isLocalOnly: boolean;
 
-  constructor(entityId: EntityId, type: ComponentType) {
+  constructor(entityId: EntityId, type: ComponentType, isLocalOnly = false) {
     this._entityId = entityId;
     this._type = type;
+    this._isLocalOnly = isLocalOnly;
   }
 
   get entityId(): EntityId {
@@ -23,6 +25,10 @@ export abstract class Component {
 
   get type(): ComponentType {
     return this._type;
+  }
+
+  get isLocalOnly() {
+    return this._isLocalOnly;
   }
 }
 

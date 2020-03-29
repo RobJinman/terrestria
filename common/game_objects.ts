@@ -8,5 +8,6 @@ export enum EntityType {
   AD = "AD",
   PARALLAX_SPRITE = "PARALLAX_SPRITE",
   TROPHY = "TROPHY",
+  GEM_BANK = "GEM_BANK",
   OTHER = "OTHER"
 }
