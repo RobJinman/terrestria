@@ -5,7 +5,7 @@ import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
-         AgentActionType, EEntityHit } from "./common/event";
+         AgentActionType, EEntityHit, EAgentBlocked } from "./common/event";
 import { Direction } from "./common/definitions";
 import { EntityManager } from "./entity_manager";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
@@ -116,6 +116,23 @@ export class GridModeImpl implements SpatialModeImpl {
       entities: items,
       gridX: newDestGridX,
       gridY: newDestGridY,
+      direction
+    };
+
+    this._em.postEvent(event);
+  }
+
+  private _postAgentBlockedEvent(c: GridModeSubcomponent,
+                                 direction: Direction,
+                                 destX: number,
+                                 destY: number,
+                                 blockedBy: EntityId[]) {
+    const event: EAgentBlocked = {
+      type: GameEventType.AGENT_BLOCKED,
+      entityId: c.entityId,
+      entities: blockedBy,
+      gridX: destX,
+      gridY: destY,
       direction
     };
 
@@ -321,6 +338,11 @@ export class GridModeImpl implements SpatialModeImpl {
                                               destX,
                                               destY,
                                               direction);
+    }
+
+    if (!moved) {
+      const blockingIds = Array.from(blocking).map(c => c.entityId);
+      this._postAgentBlockedEvent(c, direction, destX, destY, blockingIds);
     }
 
     return moved;

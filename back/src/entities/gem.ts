@@ -5,8 +5,8 @@ import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
 import { InventorySystem, CCollectable } from "../inventory_system";
-import { GameEventType, EAgentEnterCell,
-         EEntityCollision } from "../common/event";
+import { GameEventType, EEntityCollision,
+         EAgentBlocked } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
@@ -15,7 +15,7 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
 
   const gridModeProps = {
     solid: true,
-    blocking: false,
+    blocking: true,
     stackable: false,
     squashable: false,
     heavy: true,
@@ -49,8 +49,8 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   const invComp = new CCollectable(id, "gems", 1);
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.AGENT_ENTER_CELL,
-                     e => onAgentEnterCell(em, id, <EAgentEnterCell>e));
+  targetedEvents.set(GameEventType.AGENT_BLOCKED,
+                     e => onAgentBlocked(em, id, <EAgentBlocked>e));
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => em.removeEntity(id));
   targetedEvents.set(GameEventType.ENTITY_COLLISION,
                      e => onEntityCollision(em, id, <EEntityCollision>e));
@@ -66,9 +66,9 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   return id;
 }
 
-function onAgentEnterCell(em: EntityManager,
-                          gemId: EntityId,
-                          event: EAgentEnterCell) {
+function onAgentBlocked(em: EntityManager,
+                        gemId: EntityId,
+                        event: EAgentBlocked) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
 
   if (inventorySys.collectItem(event.entityId, gemId)) {

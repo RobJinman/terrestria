@@ -10,6 +10,7 @@ export enum GameEventType {
   ENTITY_COLLISION = "ENTITY_COLLISION",
   ENTITY_HIERARCHY_CHANGED = "ENTITY_HIERARCHY_CHANGED",
   AGENT_ENTER_CELL = "AGENT_ENTER_CELL",
+  AGENT_BLOCKED = "AGENT_BLOCKED",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
   WINDOW_RESIZED = "WINDOW_RESIZED",
@@ -30,6 +31,13 @@ export interface EEntityMoved extends GameEvent {
 }
 
 export interface EAgentEnterCell extends GameEvent {
+  entityId: EntityId;
+  gridX: number;
+  gridY: number;
+  direction: Direction;
+}
+
+export interface EAgentBlocked extends GameEvent {
   entityId: EntityId;
   gridX: number;
   gridY: number;

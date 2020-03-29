@@ -60,6 +60,10 @@ export class Grid {
   outOfRange(x: number, y: number): boolean {
     const col = this.toGridX(x);
     const row = this.toGridY(y);
+    return this.gridCoordsOutOfRange(col, row);
+  }
+
+  gridCoordsOutOfRange(col: number, row: number) {
     return col < 0 || col > this._w - 1 ||
            row < 0 || row > this._h - 1;
   }
