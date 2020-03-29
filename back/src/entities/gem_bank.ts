@@ -10,10 +10,13 @@ import { DEFAULT_GRID_MODE_PROPS,
 import { EntityType } from "../common/game_objects";
 import { CBehaviour, EventHandlerFn } from "../common/behaviour_system";
 import { GameEventType, EAgentEnterCell } from "../common/event";
-import { BLOCK_SZ } from "../common/constants";
+import { BLOCK_SZ, PLAYER_SPEED } from "../common/constants";
 import { CCollector } from "../inventory_system";
+import { Scheduler } from "../common/scheduler";
 
-export function constructGemBank(em: EntityManager, desc: any): EntityId {
+export function constructGemBank(em: EntityManager,
+                                 desc: any,
+                                 scheduler: Scheduler): EntityId {
   const id = getNextEntityId();
 
   const freeModeProps: FreeModeProperties = {
@@ -34,7 +37,7 @@ export function constructGemBank(em: EntityManager, desc: any): EntityId {
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   const exitId = constructExit(em, id);
-  constructEntrance(em, id, exitId);
+  constructEntrance(em, scheduler, id, exitId);
   constructBlockingSpaces(em, id);
 
   return id;
@@ -76,6 +79,7 @@ function constructBlockingSpaces(em: EntityManager, parentId: EntityId) {
 }
 
 function constructEntrance(em: EntityManager,
+                           scheduler: Scheduler,
                            parentId: EntityId,
                            exitId: EntityId) {
   const id = getNextEntityId();
@@ -90,7 +94,10 @@ function constructEntrance(em: EntityManager,
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.AGENT_ENTER_CELL,
-                     e => onAgentEnter(em, exitId, <EAgentEnterCell>e));
+                     e => onAgentEnter(em,
+                                       scheduler,
+                                       exitId,
+                                       <EAgentEnterCell>e));
 
   const behaviourComp = new CBehaviour(id, targetedEvents);
 
@@ -120,6 +127,7 @@ function constructExit(em: EntityManager, parentId: EntityId) {
 }
 
 function onAgentEnter(em: EntityManager,
+                      scheduler: Scheduler,
                       exitId: EntityId,
                       event: EAgentEnterCell) {
   const collector = <CCollector>em.getComponent(ComponentType.INVENTORY,
@@ -133,9 +141,11 @@ function onAgentEnter(em: EntityManager,
     const exitSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
                                                   exitId);
 
-    agentSpatial.gridMode.stop();
-    agentSpatial.gridMode.moveToPos(exitSpatial.x, exitSpatial.y, 0.1);
+    scheduler.addFunction(() => {
+      agentSpatial.gridMode.stop();
+      agentSpatial.gridMode.moveToPos(exitSpatial.x, exitSpatial.y, 0.5);
 
-    console.log(`${collected} gems banked!`);
+      console.log(`${collected} gems banked!`);
+    }, 1000.0 / PLAYER_SPEED);
   }
 }

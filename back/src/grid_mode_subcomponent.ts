@@ -93,7 +93,7 @@ export class GridModeSubcomponent extends SpatialSubcomponent {
 
       this._gridX = x;
       this._gridY = y;
-    
+
       this._grid.onItemMoved(this, oldX, oldY, x, y);
 
       this._dirty = true;

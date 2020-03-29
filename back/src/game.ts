@@ -22,6 +22,7 @@ import { MapLoader } from "./map_loader";
 import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
+import { Scheduler } from "./common/scheduler";
 
 function noThrow(logger: Logger, fn: () => any) {
   try {
@@ -42,6 +43,7 @@ export class Game {
   private _id: number;
   private _pipe: Pipe;
   private _em: EntityManager;
+  private _scheduler: Scheduler;
   private _factory: EntityFactory;
   private _loopTimeout: NodeJS.Timeout;
   private _actionQueue: PlayerAction[] = [];
@@ -56,7 +58,8 @@ export class Game {
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new EntityManager(this._pipe);
-    this._factory = new EntityFactory(this._em);
+    this._scheduler = new Scheduler();
+    this._factory = new EntityFactory(this._em, this._scheduler);
 
     const mapLoader = new MapLoader(this._em,
                                     this._pinata,
@@ -238,6 +241,7 @@ export class Game {
 
   private _tick() {
     this._em.update();
+    this._scheduler.update();
 
     try {
       this._gameLogic.update(this._actionQueue);

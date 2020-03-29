@@ -11,6 +11,7 @@ import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
 import { constructAd } from "./entities/advert";
 import { constructGemBank } from "./entities/gem_bank";
+import { Scheduler } from "./common/scheduler";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -30,9 +31,11 @@ function constructParallaxSprite(em: EntityManager, desc: any) {
 
 export class EntityFactory {
   private _em: EntityManager;
+  private _scheduler: Scheduler;
 
-  constructor(em: EntityManager) {
+  constructor(em: EntityManager, scheduler: Scheduler) {
     this._em = em;
+    this._scheduler = scheduler;
   }
 
   constructEntity(desc: EntityDesc): EntityId {
@@ -65,7 +68,7 @@ export class EntityFactory {
         return constructParallaxSprite(this._em, desc.data);
       }
       case EntityType.GEM_BANK: {
-        return constructGemBank(this._em, desc.data);
+        return constructGemBank(this._em, desc.data, this._scheduler);
       }
     }
 

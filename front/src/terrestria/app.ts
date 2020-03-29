@@ -16,7 +16,7 @@ import { EntityManager } from './entity_manager';
 import { EntityId } from './common/system';
 import { SpatialSystem } from './spatial_system';
 import { GameError, ErrorCode } from './common/error';
-import { Scheduler } from './scheduler';
+import { Scheduler } from './common/scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
 import { AdvertSystem } from './advert_system';
 import { CSpatial } from './spatial_component';

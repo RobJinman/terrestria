@@ -13,6 +13,7 @@ import { EntityFactory } from "./entity_factory";
 import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
+import { Scheduler } from "./common/scheduler";
 
 export class MapLoader {
   private _em: EntityManager;
