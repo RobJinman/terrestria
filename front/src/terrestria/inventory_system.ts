@@ -9,7 +9,7 @@ import { CShape, Colour } from "./render_system";
 import { Rectangle } from "./common/geometry";
 import { EntityType } from "./common/game_objects";
 import { CSpatial } from "./spatial_component";
-import { PLAYER_Z_INDEX } from "./constants";
+import { PLAYER_BUCKET_VALUE_Z_INDEX } from "./constants";
 import { BLOCK_SZ } from "./common/constants";
 
 interface Bucket {
@@ -125,7 +125,7 @@ export class InventorySystem implements ClientSystem {
     const renderComp = new CShape(id,
                                   new Rectangle(w, h),
                                   new Colour(1, 0, 0),
-                                  { zIndex: PLAYER_Z_INDEX + 1 });
+                                  { zIndex: PLAYER_BUCKET_VALUE_Z_INDEX });
 
     this._em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 

@@ -37,7 +37,7 @@ export function constructGemBank(em: EntityManager, desc: any): EntityId {
 
   const entranceX = desc.x;
   const entranceY = desc.y + BLOCK_SZ * 2.5;
-  const exitX = entranceX + BLOCK_SZ * 3;
+  const exitX = entranceX + BLOCK_SZ * 4;
   const exitY = entranceY;
 
   const exitId = constructExit(em, exitX, exitY);
@@ -108,7 +108,8 @@ function onAgentEnter(em: EntityManager,
     const exitSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
                                                   exitId);
 
-    agentSpatial.setStaticPos(exitSpatial.x, exitSpatial.y);
+    agentSpatial.gridMode.stop();
+    agentSpatial.gridMode.moveToPos(exitSpatial.x, exitSpatial.y, 0.1);
 
     console.log(`${collected} gems banked!`);
   }
