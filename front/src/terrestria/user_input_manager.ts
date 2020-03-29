@@ -7,7 +7,7 @@ import { EntityId } from "./common/system";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { GameEventType } from "./common/event";
 import { ComponentType } from "./common/component_types";
-import { Scheduler } from "./scheduler";
+import { Scheduler } from "./common/scheduler";
 import { UI_Z_INDEX } from "./constants";
 
 export type DirectionInputHandlerFn = (input: UserInput) => void;

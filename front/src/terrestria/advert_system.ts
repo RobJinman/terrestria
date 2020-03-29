@@ -5,7 +5,7 @@ import { ClientSystem } from "./common/client_system";
 import { ComponentType } from "./common/component_types";
 import { AdvertPacket } from "./common/advert_packet";
 import { RenderSystem } from "./render_system";
-import { Scheduler } from "./scheduler";
+import { Scheduler } from "./common/scheduler";
 import { EntityManager } from "./entity_manager";
 
 export class CAdvert extends Component {

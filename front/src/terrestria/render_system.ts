@@ -4,7 +4,7 @@ import { GameEvent, GameEventType, EEntityMoved } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
-import { Scheduler, ScheduledFnHandle } from './scheduler';
+import { Scheduler, ScheduledFnHandle } from './common/scheduler';
 import { CSpatial } from './spatial_component';
 import { BLOCK_SZ, CLIENT_FRAME_RATE } from './common/constants';
 import { Span2d } from './common/span';
