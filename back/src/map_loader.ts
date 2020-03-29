@@ -91,6 +91,18 @@ export class MapLoader {
     const numRocks = 20;
     const numGems = 10;
 
+    entities.push({
+      type: EntityType.GEM_BANK,
+      data: {
+        x: BLOCK_SZ * 22,
+        y: BLOCK_SZ * 10
+      }
+    });
+    const gemBankSpan = new Span2d();
+    gemBankSpan.addHorizontalSpan(11, new Span(22, 25));
+    gemBankSpan.addHorizontalSpan(12, new Span(22, 25));
+    gemBankSpan.addHorizontalSpan(13, new Span(22, 26));
+
     const trophyCoords = { x: 5, y: 10 };
 
     let coords: [number, number][] = [];
@@ -103,6 +115,9 @@ export class MapLoader {
           continue;
         }
         if (gr.contains(c, r)) {
+          continue;
+        }
+        if (gemBankSpan.contains(c, r)) {
           continue;
         }
         coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
@@ -184,14 +199,6 @@ export class MapLoader {
       data: {
         x: trophyCoords.x * BLOCK_SZ,
         y: trophyCoords.y * BLOCK_SZ
-      }
-    });
-
-    entities.push({
-      type: EntityType.GEM_BANK,
-      data: {
-        x: BLOCK_SZ * 22,
-        y: BLOCK_SZ * 10.5
       }
     });
 

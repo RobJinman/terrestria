@@ -48,6 +48,10 @@ export class AdvertSystem implements ServerSystem {
     this._pinata = pinata;
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   numComponents() {
     return this._components.size;
   }

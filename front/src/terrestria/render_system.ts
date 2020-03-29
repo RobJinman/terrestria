@@ -236,6 +236,10 @@ export class RenderSystem implements ClientSystem {
     this._pixi.ticker.add(updateFn);
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   get viewW() {
     return this._viewW;
   }

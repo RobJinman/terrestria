@@ -142,6 +142,10 @@ export class InventorySystem implements ServerSystem {
     this._collectables = new Map<number, CCollectable>();
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   updateComponent(packet: ComponentPacket) {}
 
   numComponents() {

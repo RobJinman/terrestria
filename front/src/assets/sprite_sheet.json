@@ -34,7 +34,7 @@
 },
 "button_fullscreen.png":
 {
-	"frame": {"x":0,"y":1014,"w":398,"h":121},
+	"frame": {"x":598,"y":814,"w":398,"h":121},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":398,"h":121},
@@ -42,7 +42,7 @@
 },
 "button_fullscreen_active.png":
 {
-	"frame": {"x":479,"y":814,"w":398,"h":121},
+	"frame": {"x":200,"y":814,"w":398,"h":121},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":398,"h":121},
@@ -146,7 +146,7 @@
 },
 "cave.png":
 {
-	"frame": {"x":0,"y":1187,"w":800,"h":588},
+	"frame": {"x":0,"y":1206,"w":800,"h":588},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":588},
@@ -194,7 +194,7 @@
 },
 "foliage.png":
 {
-	"frame": {"x":398,"y":1014,"w":400,"h":173},
+	"frame": {"x":279,"y":1014,"w":400,"h":173},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":400,"h":173},
@@ -210,11 +210,11 @@
 },
 "gem_bank.png":
 {
-	"frame": {"x":200,"y":814,"w":279,"h":160},
+	"frame": {"x":0,"y":1014,"w":279,"h":192},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":279,"h":160},
-	"sourceSize": {"w":279,"h":160}
+	"spriteSourceSize": {"x":0,"y":0,"w":279,"h":192},
+	"sourceSize": {"w":279,"h":192}
 },
 "gem_bank_strip.png":
 {
@@ -685,8 +685,8 @@
 	"version": "1.0",
 	"image": "sprite_sheet.png",
 	"format": "RGBA8888",
-	"size": {"w":1024,"h":1775},
+	"size": {"w":1024,"h":1794},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:ecae3b7aacd99cf5f07b0996333122af:17866cac082c59d83139fb5ab6b4c349:6cc8953523e0367402f95f3c9a630665$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c91c78835b8b41e757d08341b4bb090f:a16d3bcab565cbc0a52552f866310905:6cc8953523e0367402f95f3c9a630665$"
 }
 }

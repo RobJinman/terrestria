@@ -40,4 +40,6 @@ export abstract class System {
   abstract numComponents(): number;
   abstract handleEvent(event: GameEvent): void;
   abstract update(): void;
+  abstract addChildToEntity(id: EntityId, childId: EntityId): void;
+  abstract removeChildFromEntity(id: EntityId, childId: EntityId): void;
 }

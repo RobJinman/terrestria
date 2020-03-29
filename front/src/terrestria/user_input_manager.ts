@@ -1,6 +1,7 @@
 import { UserInput } from "./common/action";
 import { EntityType } from "./common/game_objects";
-import { CSprite, StaticImage, RenderOptions, RenderSystem } from "./render_system";
+import { CSprite, StaticImage, RenderOptions,
+         RenderSystem } from "./render_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";

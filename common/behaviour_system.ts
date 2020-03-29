@@ -25,6 +25,10 @@ export class CBehaviour extends Component {
     this._broadcastHandlers = broadcastHandlers;
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   handleBroadcastEvent(event: GameEvent) {
     const handler = this._broadcastHandlers.get(event.type);
     if (!handler) {
@@ -69,6 +73,10 @@ export class BehaviourSystem implements ServerSystem, ClientSystem {
     this._targetedEvents = new Map<GameEventType, Set<EntityId>>();
     this._broadcastEvents = new Map<GameEventType, Set<EntityId>>();
   }
+
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
 
   updateComponent(packet: ComponentPacket) {}
 

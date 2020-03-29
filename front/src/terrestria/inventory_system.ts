@@ -37,6 +37,10 @@ export class InventorySystem implements ClientSystem {
     this._components = new Map<number, CInventory>();
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   setDisplayedBucket(bucketName: string) {
     this._displayedBucket = bucketName;
   }

@@ -20,6 +20,10 @@ export class SpatialSystem implements ClientSystem {
     this._frameRate = frameRate;
   }
 
+  // Implement these similarly to on back-end
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   updateComponent(packet: SpatialPacket) {
     const c = this.getComponent(packet.entityId);
     if (packet.mode == SpatialMode.GRID_MODE) {

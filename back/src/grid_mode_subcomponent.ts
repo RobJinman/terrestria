@@ -25,7 +25,7 @@ function vectorToDirection(x: number, y: number): Direction {
   throw new GameError(`Vector ${x}, ${y} is not a valid direction`);
 }
 
-export class GridModeSubcomponent implements SpatialSubcomponent {
+export class GridModeSubcomponent extends SpatialSubcomponent {
   falling = false;
 
   private _entityId: EntityId;
@@ -40,12 +40,14 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
   constructor(entityId: EntityId,
               grid: Grid,
               properties: GridModeProperties) {
+    super(entityId);
+
     this._entityId = entityId;
     this._grid = grid;
     this._properties = properties;
   }
 
-  get entityId() {
+  id() {
     return this._entityId;
   }
 
@@ -69,6 +71,7 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
     return now < this._lockedUntil;
   }
 
+  // x and y are absolute
   setGridPos(x: number, y: number, noModeTransition = false): boolean {
     if (this.moving()) {
       return false;
@@ -104,8 +107,10 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
       return false;
     }
 
-    const gridX = this._grid.toGridX(x);
-    const gridY = this._grid.toGridY(y);
+    const [ xAbs, yAbs ] = this._toAbsPos(x, y);
+
+    const gridX = this._grid.toGridX(xAbs);
+    const gridY = this._grid.toGridY(yAbs);
     this.setGridPos(gridX, gridY);
 
     return true;
@@ -180,5 +185,12 @@ export class GridModeSubcomponent implements SpatialSubcomponent {
 
   get isAgent() {
     return this._properties.isAgent;
+  }
+
+  private _toAbsPos(x: number, y: number): [ number, number ] {
+    if (this.parent) {
+      return [ this.parent.x_abs() + x, this.parent.y_abs() + y ];
+    }
+    return [ x, y ];
   }
 }

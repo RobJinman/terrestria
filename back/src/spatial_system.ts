@@ -64,6 +64,21 @@ export class SpatialSystem implements ServerSystem {
     return packets;
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {
+    const parent = this.getComponent(id);
+    const child = this.getComponent(childId);
+
+    parent.gridMode.addChild(child.gridMode);
+    parent.freeMode.addChild(child.freeMode);
+  }
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {
+    const parent = this.getComponent(id);
+
+    parent.gridMode.removeChild(childId);
+    parent.freeMode.removeChild(childId);
+  }
+
   moveAgent(id: EntityId, direction: Direction): boolean {
     const c = this.getComponent(id);
     if (c.currentMode == SpatialMode.GRID_MODE) {

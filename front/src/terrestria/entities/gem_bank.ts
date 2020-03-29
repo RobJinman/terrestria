@@ -46,7 +46,7 @@ function constructStrip(em: EntityManager) {
 
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 
-  spatialComp.setStaticPos(0, BLOCK_SZ * 2.5);
+  spatialComp.setStaticPos(0, BLOCK_SZ * 3);
 
   return id;
 }

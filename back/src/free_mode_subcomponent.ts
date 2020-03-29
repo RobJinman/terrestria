@@ -11,7 +11,7 @@ function notEqual(a: number, b: number) {
   return Math.abs(a - b) >= 0.1;
 }
 
-export class FreeModeSubcomponent implements SpatialSubcomponent {
+export class FreeModeSubcomponent extends SpatialSubcomponent {
   private _entityId: EntityId;
   private _properties: FreeModeProperties;
   private _body: Body;
@@ -25,6 +25,8 @@ export class FreeModeSubcomponent implements SpatialSubcomponent {
   constructor(entityId: EntityId,
               properties: FreeModeProperties,
               shape?: Shape) {
+    super(entityId);
+
     this._entityId = entityId;
     this._properties = properties;
 

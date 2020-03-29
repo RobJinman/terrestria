@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "./build.sh && npm run test",
-    "run": "cd dist && node ./index.js",
+    "run": "cd dist && node --inspect=9228 ./index.js",
     "test": "jasmine-ts --config=jasmine.json"
   },
   "author": "Rob Jinman",

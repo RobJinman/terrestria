@@ -53,6 +53,12 @@ export class IEntityManager {
     parent.children.add(childId);
     child.parent = id;
 
+    this.systems.forEach(system => {
+      if (system.hasComponent(id) && system.hasComponent(childId)) {
+        system.addChildToEntity(id, childId);
+      }
+    });
+
     const event: EEntityHierarchyChanged = {
       type: GameEventType.ENTITY_HIERARCHY_CHANGED,
       parent: id,

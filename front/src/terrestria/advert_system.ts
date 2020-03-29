@@ -28,6 +28,10 @@ export class AdvertSystem implements ClientSystem {
     this._components = new Map<number, CAdvert>();
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   addPlaceholder(adName: string, imageName: string) {
     this._placeholders.set(adName, imageName);
   }

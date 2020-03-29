@@ -38,6 +38,10 @@ export class AgentSystem implements ServerSystem {
     this._pinata = pinata;
   }
 
+  addChildToEntity(id: EntityId, childId: EntityId) {}
+
+  removeChildFromEntity(id: EntityId, childId: EntityId) {}
+
   async grantAward(entityId: EntityId,
                    name: string): Promise<CreateAwardResponse|null> {
     const c = this.getComponent(entityId);
