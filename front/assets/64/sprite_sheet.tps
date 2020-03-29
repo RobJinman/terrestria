@@ -302,6 +302,7 @@
             <key type="filename">explosion2.png</key>
             <key type="filename">explosion3.png</key>
             <key type="filename">gem.png</key>
+            <key type="filename">gem_bank_entrance.png</key>
             <key type="filename">gem_burn0.png</key>
             <key type="filename">gem_burn1.png</key>
             <key type="filename">gem_burn2.png</key>
@@ -395,19 +396,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">gem_bank_strip.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>80,16,160,32</rect>
-                <key>scale9Paddings</key>
-                <rect>80,16,160,32</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
         </map>
         <key>fileList</key>
         <array>
@@ -493,7 +481,7 @@
             <filename>button_sound_on.png</filename>
             <filename>button_sound_on_active.png</filename>
             <filename>gem_bank.png</filename>
-            <filename>gem_bank_strip.png</filename>
+            <filename>gem_bank_entrance.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

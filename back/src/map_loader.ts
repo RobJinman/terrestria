@@ -13,7 +13,6 @@ import { EntityFactory } from "./entity_factory";
 import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
-import { Scheduler } from "./common/scheduler";
 
 export class MapLoader {
   private _em: EntityManager;
@@ -102,7 +101,7 @@ export class MapLoader {
     const gemBankSpan = new Span2d();
     gemBankSpan.addHorizontalSpan(11, new Span(22, 25));
     gemBankSpan.addHorizontalSpan(12, new Span(22, 25));
-    gemBankSpan.addHorizontalSpan(13, new Span(22, 26));
+    gemBankSpan.addHorizontalSpan(13, new Span(22, 25));
 
     const trophyCoords = { x: 5, y: 10 };
 

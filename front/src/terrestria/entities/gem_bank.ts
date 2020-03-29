@@ -23,23 +23,23 @@ export function constructGemBank(em: EntityManager, entity: EntityData) {
 
   em.addEntity(entity.id, EntityType.OTHER, [ spatialComp, renderComp ]);
 
-  const stripId = constructStrip(em);
-  em.addChildToEntity(entity.id, stripId);
+  const entranceId = constructEntrance(em);
+  em.addChildToEntity(entity.id, entranceId);
 }
 
-function constructStrip(em: EntityManager) {
+function constructEntrance(em: EntityManager) {
   const id = getNextEntityId();
 
   const staticImages: StaticImage[] = [
     {
-      name: "gem_bank_strip.png"
+      name: "gem_bank_entrance.png"
     }
   ];
 
   const renderComp = new CSprite(id,
                                  staticImages,
                                  [],
-                                 "gem_bank_strip.png",
+                                 "gem_bank_entrance.png",
                                  { zIndex: PLAYER_Z_INDEX - 1 });
 
   const spatialComp = new CSpatial(id, em);

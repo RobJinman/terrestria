@@ -47,7 +47,7 @@ function constructBlockingSpaces(em: EntityManager, parentId: EntityId) {
   const coords = [
     [ 0, 1 ], [ 1, 1 ], [ 2, 1 ], [ 3, 1 ],
     [ 0, 2 ], [ 1, 2 ], [ 2, 2 ], [ 3, 2 ],
-              [ 1, 3 ], [ 2, 3 ], [ 3, 3 ]
+              [ 1, 3 ], [ 2, 3 ]
   ];
 
   for (const [ i, j ] of coords) {
@@ -58,7 +58,7 @@ function constructBlockingSpaces(em: EntityManager, parentId: EntityId) {
       blocking: true,
       heavy: false,
       movable: false,
-      stackable: false,
+      stackable: true,
       squashable: false,
       isAgent: false
     };
@@ -121,7 +121,7 @@ function constructExit(em: EntityManager, parentId: EntityId) {
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);
   em.addChildToEntity(parentId, id);
 
-  spatialSys.positionEntity(id, BLOCK_SZ * 4, BLOCK_SZ * 3);
+  spatialSys.positionEntity(id, BLOCK_SZ * 3, BLOCK_SZ * 3);
 
   return id;
 }
