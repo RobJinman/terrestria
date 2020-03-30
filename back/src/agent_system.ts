@@ -34,7 +34,7 @@ export class CAgent extends Component {
 
   constructor(entityId: EntityId, pinataId?: string, pinataToken?: string) {
     super(entityId, ComponentType.AGENT);
-    
+
     this._pinataId = pinataId;
     this._pinataToken = pinataToken;
 
@@ -196,28 +196,32 @@ export class AgentSystem implements ServerSystem {
       <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
     this._components.forEach(c => {
-      const player = spatialSys.getComponent(c.entityId);
-      const mode = player.currentMode;
+      const spatialComp = spatialSys.getComponent(c.entityId);
+      const mode = spatialComp.currentMode;
 
       if (c._input.lockedUntil <= now) {
         c._input.lockedUntil = 0;
-        let moved = false;
 
+        let direction: Direction|null = null;
         if (c._input.states[UserInput.UP] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(c.entityId, Direction.UP);
+          direction = Direction.UP;
         }
         if (c._input.states[UserInput.RIGHT] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(c.entityId, Direction.RIGHT);
+          direction = Direction.RIGHT;
         }
         if (c._input.states[UserInput.DOWN] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(c.entityId, Direction.DOWN);
+          direction = Direction.DOWN;
         }
         if (c._input.states[UserInput.LEFT] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(c.entityId, Direction.LEFT);
+          direction = Direction.LEFT;
         }
 
-        if (player.currentMode == SpatialMode.FREE_MODE &&
-          player.currentMode != mode) {
+        if (direction !== null) {
+          spatialSys.moveAgent(c.entityId, direction);
+        }
+
+        if (spatialComp.currentMode == SpatialMode.FREE_MODE &&
+          spatialComp.currentMode != mode) {
 
           c._input.lockedUntil = (new Date()).getTime() +
                                  LOCK_DURATION_ON_FREE_MODE_TRANSITION;

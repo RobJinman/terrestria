@@ -6,6 +6,11 @@ import { Shape, ShapeType, Circle, Rectangle,
          Polygon } from "./common/geometry";
 import { BLOCK_SZ } from "./common/constants";
 import { GameError } from "./common/error";
+import { Direction } from "./common/definitions";
+import { EntityManager } from "./entity_manager";
+import { EAgentAction, GameEventType, AgentActionType } from "./common/event";
+
+const DEBOUNCE_MOVE_EVENTS_DURATION = 250;
 
 function notEqual(a: number, b: number) {
   return Math.abs(a - b) >= 0.1;
@@ -16,6 +21,7 @@ export class FreeModeSubcomponent extends SpatialSubcomponent {
   private _properties: FreeModeProperties;
   private _body: Body;
   private _offset: Vector;
+  private _lastMoveEvent = 0;
 
   private _prev: {
     x: number,
@@ -93,6 +99,24 @@ export class FreeModeSubcomponent extends SpatialSubcomponent {
 
   get angle() {
     return this._body.angle;
+  }
+
+  // Non-private so FreeModeImpl has access
+  _postMoveEvent(em: EntityManager, direction: Direction) {
+    const now = (new Date()).getTime();
+
+    if (now - this._lastMoveEvent >= DEBOUNCE_MOVE_EVENTS_DURATION) {
+      const event: EAgentAction = {
+        type: GameEventType.AGENT_ACTION,
+        actionType: AgentActionType.RUN,
+        agentId: this.entityId,
+        entities: [this.entityId],
+        direction
+      };
+
+      em.submitEvent(event);
+      this._lastMoveEvent = now;
+    }
   }
 
   private _createBodyFromShape(shape: Shape): Body {
