@@ -76,6 +76,8 @@ export class CSpatial extends Component {
     return this._angle;
   }
 
+  // TODO: Handle hierarchy same way as on back-end
+
   get x_abs(): number {
     const parent = this._em.getEntityParent(this.entityId);
     if (parent) {

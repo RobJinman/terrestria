@@ -99,9 +99,9 @@ export class MapLoader {
       }
     });
     const gemBankSpan = new Span2d();
-    gemBankSpan.addHorizontalSpan(11, new Span(22, 25));
-    gemBankSpan.addHorizontalSpan(12, new Span(22, 25));
-    gemBankSpan.addHorizontalSpan(13, new Span(22, 25));
+    gemBankSpan.addHorizontalSpan(10, new Span(23, 25));
+    gemBankSpan.addHorizontalSpan(11, new Span(23, 25));
+    gemBankSpan.addHorizontalSpan(12, new Span(23, 25));
 
     const trophyCoords = { x: 5, y: 10 };
 

@@ -303,6 +303,7 @@
             <key type="filename">explosion3.png</key>
             <key type="filename">gem.png</key>
             <key type="filename">gem_bank_entrance.png</key>
+            <key type="filename">gem_bank_exit.png</key>
             <key type="filename">gem_burn0.png</key>
             <key type="filename">gem_burn1.png</key>
             <key type="filename">gem_burn2.png</key>
@@ -482,6 +483,7 @@
             <filename>button_sound_on_active.png</filename>
             <filename>gem_bank.png</filename>
             <filename>gem_bank_entrance.png</filename>
+            <filename>gem_bank_exit.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

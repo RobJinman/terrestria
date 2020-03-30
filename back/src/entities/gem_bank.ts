@@ -14,6 +14,12 @@ import { BLOCK_SZ, PLAYER_SPEED } from "../common/constants";
 import { CCollector } from "../inventory_system";
 import { Scheduler } from "../common/scheduler";
 
+const GEM_BANK_OFFSET = [ 1, 0 ];
+const GEM_BANK_SIZE = [ 3, 3 ];   // Assumes rectangular
+const ENTRANCE_POS = [ 1, 1 ];
+const EXIT_POS = [ 3, 1 ];
+const GEM_DEPOSIT_DURATION = 0.5;
+
 export function constructGemBank(em: EntityManager,
                                  desc: any,
                                  scheduler: Scheduler): EntityId {
@@ -44,11 +50,22 @@ export function constructGemBank(em: EntityManager,
 }
 
 function constructBlockingSpaces(em: EntityManager, parentId: EntityId) {
-  const coords = [
-    [ 0, 1 ], [ 1, 1 ], [ 2, 1 ], [ 3, 1 ],
-    [ 0, 2 ], [ 1, 2 ], [ 2, 2 ], [ 3, 2 ],
-              [ 1, 3 ], [ 2, 3 ]
-  ];
+  const coords: [number, number][] = [];
+  for (let i = 0; i < GEM_BANK_SIZE[0]; ++i) {
+    for (let j = 0; j < GEM_BANK_SIZE[1]; ++j) {
+      const x = i + GEM_BANK_OFFSET[0];
+      const y = j + GEM_BANK_OFFSET[1];
+
+      if (x == ENTRANCE_POS[0] && y == ENTRANCE_POS[1]) {
+        continue;
+      }
+      if (x == EXIT_POS[0] && y == EXIT_POS[1]) {
+        continue;
+      }
+
+      coords.push([ x, y ]);
+    }
+  }
 
   for (const [ i, j ] of coords) {
     const id = getNextEntityId();
@@ -104,7 +121,8 @@ function constructEntrance(em: EntityManager,
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp, behaviourComp ]);
   em.addChildToEntity(parentId, id);
 
-  spatialSys.positionEntity(id, 0, BLOCK_SZ * 3);
+  spatialSys.positionEntity(id, ENTRANCE_POS[0] * BLOCK_SZ,
+                                ENTRANCE_POS[1] * BLOCK_SZ);
 }
 
 function constructExit(em: EntityManager, parentId: EntityId) {
@@ -121,7 +139,7 @@ function constructExit(em: EntityManager, parentId: EntityId) {
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);
   em.addChildToEntity(parentId, id);
 
-  spatialSys.positionEntity(id, BLOCK_SZ * 3, BLOCK_SZ * 3);
+  spatialSys.positionEntity(id, EXIT_POS[0] * BLOCK_SZ, EXIT_POS[1] * BLOCK_SZ);
 
   return id;
 }
@@ -143,7 +161,9 @@ function onAgentEnter(em: EntityManager,
 
     scheduler.addFunction(() => {
       agentSpatial.gridMode.stop();
-      agentSpatial.gridMode.moveToPos(exitSpatial.x, exitSpatial.y, 0.5);
+      agentSpatial.gridMode.moveToPos(exitSpatial.x,
+                                      exitSpatial.y,
+                                      GEM_DEPOSIT_DURATION);
 
       console.log(`${collected} gems banked!`);
     }, 1000.0 / PLAYER_SPEED);
