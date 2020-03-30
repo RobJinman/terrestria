@@ -14,6 +14,7 @@ import { constructParallaxSprite } from "./entities/parallax_sprite";
 import { constructGemBank } from "./entities/gem_bank";
 import { constructEarth, constructSky } from "./entities/scenery";
 import { constructAwardNotification } from "./entities/awards";
+import { constructGemBundle } from "./entities/gem_bundle";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -26,6 +27,10 @@ export function constructEntities(entityManager: EntityManager,
       }
       case EntityType.GEM: {
         constructGem(entityManager, entity);
+        break;
+      }
+      case EntityType.GEM_BUNDLE: {
+        constructGemBundle(entityManager, entity);
         break;
       }
       case EntityType.ROCK: {

@@ -304,6 +304,31 @@
             <key type="filename">gem.png</key>
             <key type="filename">gem_bank_entrance.png</key>
             <key type="filename">gem_bank_exit.png</key>
+            <key type="filename">gem_bundle_1.png</key>
+            <key type="filename">gem_bundle_1_burn0.png</key>
+            <key type="filename">gem_bundle_1_burn1.png</key>
+            <key type="filename">gem_bundle_1_burn2.png</key>
+            <key type="filename">gem_bundle_1_burn3.png</key>
+            <key type="filename">gem_bundle_2.png</key>
+            <key type="filename">gem_bundle_2_burn0.png</key>
+            <key type="filename">gem_bundle_2_burn1.png</key>
+            <key type="filename">gem_bundle_2_burn2.png</key>
+            <key type="filename">gem_bundle_2_burn3.png</key>
+            <key type="filename">gem_bundle_3.png</key>
+            <key type="filename">gem_bundle_3_burn0.png</key>
+            <key type="filename">gem_bundle_3_burn1.png</key>
+            <key type="filename">gem_bundle_3_burn2.png</key>
+            <key type="filename">gem_bundle_3_burn3.png</key>
+            <key type="filename">gem_bundle_4.png</key>
+            <key type="filename">gem_bundle_4_burn0.png</key>
+            <key type="filename">gem_bundle_4_burn1.png</key>
+            <key type="filename">gem_bundle_4_burn2.png</key>
+            <key type="filename">gem_bundle_4_burn3.png</key>
+            <key type="filename">gem_bundle_5.png</key>
+            <key type="filename">gem_bundle_5_burn0.png</key>
+            <key type="filename">gem_bundle_5_burn1.png</key>
+            <key type="filename">gem_bundle_5_burn2.png</key>
+            <key type="filename">gem_bundle_5_burn3.png</key>
             <key type="filename">gem_burn0.png</key>
             <key type="filename">gem_burn1.png</key>
             <key type="filename">gem_burn2.png</key>
@@ -484,6 +509,31 @@
             <filename>gem_bank.png</filename>
             <filename>gem_bank_entrance.png</filename>
             <filename>gem_bank_exit.png</filename>
+            <filename>gem_bundle_1.png</filename>
+            <filename>gem_bundle_2.png</filename>
+            <filename>gem_bundle_3.png</filename>
+            <filename>gem_bundle_4.png</filename>
+            <filename>gem_bundle_5.png</filename>
+            <filename>gem_bundle_1_burn0.png</filename>
+            <filename>gem_bundle_1_burn1.png</filename>
+            <filename>gem_bundle_1_burn2.png</filename>
+            <filename>gem_bundle_1_burn3.png</filename>
+            <filename>gem_bundle_2_burn0.png</filename>
+            <filename>gem_bundle_2_burn1.png</filename>
+            <filename>gem_bundle_2_burn2.png</filename>
+            <filename>gem_bundle_2_burn3.png</filename>
+            <filename>gem_bundle_3_burn0.png</filename>
+            <filename>gem_bundle_3_burn1.png</filename>
+            <filename>gem_bundle_3_burn2.png</filename>
+            <filename>gem_bundle_3_burn3.png</filename>
+            <filename>gem_bundle_4_burn0.png</filename>
+            <filename>gem_bundle_4_burn1.png</filename>
+            <filename>gem_bundle_4_burn2.png</filename>
+            <filename>gem_bundle_4_burn3.png</filename>
+            <filename>gem_bundle_5_burn0.png</filename>
+            <filename>gem_bundle_5_burn1.png</filename>
+            <filename>gem_bundle_5_burn2.png</filename>
+            <filename>gem_bundle_5_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

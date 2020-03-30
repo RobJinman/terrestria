@@ -12,6 +12,7 @@ import { constructTrophy } from "./entities/trophy";
 import { constructAd } from "./entities/advert";
 import { constructGemBank } from "./entities/gem_bank";
 import { Scheduler } from "./common/scheduler";
+import { constructGemBundle } from "./entities/gem_bundle";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -48,6 +49,9 @@ export class EntityFactory {
       }
       case EntityType.GEM: {
         return constructGem(this._em, desc.data);
+      }
+      case EntityType.GEM_BUNDLE: {
+        return constructGemBundle(this._em, desc.data);
       }
       case EntityType.ROCK: {
         return constructRock(this._em, desc.data);

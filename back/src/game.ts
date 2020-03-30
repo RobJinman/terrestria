@@ -68,7 +68,10 @@ export class Game {
     mapLoader.loadMap(pinata);
     this._mapData = <MapData>mapLoader.mapData;
 
-    this._gameLogic = new GameLogic(this._em, this._logger);
+    this._gameLogic = new GameLogic(this._em,
+                                    this._factory,
+                                    this._pipe,
+                                    this._logger);
 
     this._entityId = getNextEntityId();
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();

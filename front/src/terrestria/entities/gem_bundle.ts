@@ -8,19 +8,25 @@ import { ComponentType } from "../common/component_types";
 import { GameEventType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
+import { GameError } from "../common/error";
 
-export function constructGem(em: EntityManager, entity: EntityData) {
+export function constructGemBundle(em: EntityManager, entity: EntityData) {
   const id = entity.id;
+  const value = entity.desc.value;
+
+  if (value < 1 || value > 5) {
+    throw new GameError(`Cannot construct gem bundle with value ${value}`);
+  }
 
   const staticImages: StaticImage[] = [
     {
-      name: "gem.png"
+      name: `gem_bundle_${value}.png`
     }
   ];
 
   const animations: AnimationDesc[] = [
     {
-      name: "gem_burn",
+      name: `gem_bundle_${value}_burn`,
       duration: 1.0 / PLAYER_SPEED
     }
   ];
@@ -28,7 +34,7 @@ export function constructGem(em: EntityManager, entity: EntityData) {
   const renderComp = new CSprite(id,
                                  staticImages,
                                  animations,
-                                 "gem.png");
+                                 `gem_bundle_${value}.png`);
 
   const spatialComp = new CSpatial(id, em);
 
@@ -36,16 +42,16 @@ export function constructGem(em: EntityManager, entity: EntityData) {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
-    renderSys.playAnimation(id, "gem_burn", () => {
+    renderSys.playAnimation(id, `gem_bundle_${value}_burn`, () => {
       em.removeEntity(id);
     });
   });
 
   const behaviourComp = new CBehaviour(id, targetedEvents);
 
-  em.addEntity(id, EntityType.GEM, [ spatialComp,
-                                     renderComp,
-                                     behaviourComp ]);
+  em.addEntity(id, EntityType.GEM_BUNDLE, [ spatialComp,
+                                            renderComp,
+                                            behaviourComp ]);
 
   spatialComp.setStaticPos(entity.desc.x, entity.desc.y);
 }

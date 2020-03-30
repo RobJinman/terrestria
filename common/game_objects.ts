@@ -1,6 +1,7 @@
 export enum EntityType {
   PLAYER = "PLAYER",
   GEM = "GEM",
+  GEM_BUNDLE = "GEM_BUNDLE",
   ROCK = "ROCK",
   SOIL = "SOIL",
   EARTH = "EARTH",

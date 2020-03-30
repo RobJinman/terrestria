@@ -9,9 +9,9 @@ import { CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 import { addCollectableBehaviour } from "./utils/collectables";
 
-export function constructGem(em: EntityManager, desc: any): EntityId {
+export function constructGemBundle(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
-
+  
   const gridModeProps = {
     solid: true,
     blocking: true,
@@ -28,11 +28,10 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
   };
 
   const points = [
-    { x: 0, y: 20 },
+    { x: 32, y: 0 },
+    { x: 64, y: 32 },
     { x: 32, y: 64 },
-    { x: 64, y: 20 },
-    { x: 54, y: 0 },
-    { x: 10, y: 0 }
+    { x: 0, y: 32 }
   ];
   const shape = new Polygon(points);
 
@@ -45,12 +44,12 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
                                    freeModeProps,
                                    shape);
 
-  const invComp = new CCollectable(id, "gems", 1);
+  const invComp = new CCollectable(id, "gems", desc.value);
   const behaviourComp = new CBehaviour(id);
 
-  em.addEntity(id, EntityType.GEM, desc, [ spatialComp,
-                                           invComp,
-                                           behaviourComp ]);
+  em.addEntity(id, EntityType.GEM_BUNDLE, desc, [ spatialComp,
+                                                  invComp,
+                                                  behaviourComp ]);
 
   addCollectableBehaviour(em, id);
 
@@ -58,4 +57,3 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
 
   return id;
 }
-

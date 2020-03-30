@@ -13,8 +13,9 @@ function newEventHandlerMap() {
 }
 
 export class CBehaviour extends Component {
-  private _targetedHandlers: EventHandlerMap;
-  private _broadcastHandlers: EventHandlerMap;
+  // Non-private to allow BehaviourSystem access
+  _targetedHandlers: EventHandlerMap;
+  _broadcastHandlers: EventHandlerMap;
 
   constructor(entityId: EntityId,
               targetedHandlers: EventHandlerMap = newEventHandlerMap(),
@@ -72,6 +73,22 @@ export class BehaviourSystem implements ServerSystem, ClientSystem {
     this._components = new Map<number, CBehaviour>();
     this._targetedEvents = new Map<GameEventType, Set<EntityId>>();
     this._broadcastEvents = new Map<GameEventType, Set<EntityId>>();
+  }
+
+  addTargetedEventHandler(entityId: EntityId,
+                          eventType: GameEventType,
+                          handler: EventHandlerFn) {
+    const c = this.getComponent(entityId);
+    c._targetedHandlers.set(eventType, handler);
+    addToMapOfSets(this._targetedEvents, eventType, entityId);
+  }
+
+  addBroadcastEventHandler(entityId: EntityId,
+                           eventType: GameEventType,
+                           handler: EventHandlerFn) {
+    const c = this.getComponent(entityId);
+    c._broadcastHandlers.set(eventType, handler);
+    addToMapOfSets(this._broadcastEvents, eventType, entityId);
   }
 
   addChildToEntity(id: EntityId, childId: EntityId) {}
