@@ -30,12 +30,23 @@ export class CAgent extends Component {
   dirty: boolean = true;
   private _pinataId?: string;
   private _pinataToken?: string;
+  _input: Input; // Non-private so AgentSystem has access
 
   constructor(entityId: EntityId, pinataId?: string, pinataToken?: string) {
     super(entityId, ComponentType.AGENT);
     
     this._pinataId = pinataId;
     this._pinataToken = pinataToken;
+
+    this._input = {
+      states: {
+        [UserInput.UP]: InputState.RELEASED,
+        [UserInput.RIGHT]: InputState.RELEASED,
+        [UserInput.DOWN]: InputState.RELEASED,
+        [UserInput.LEFT]: InputState.RELEASED
+      },
+      lockedUntil: 0
+    };
   }
 
   get pinataId() {
@@ -55,7 +66,6 @@ export class AgentSystem implements ServerSystem {
   private _factory: EntityFactory;
   private _pipe: Pipe;
   private _logger: Logger;
-  private _inputs = new Map<EntityId, Input>();
 
   constructor(em: EntityManager,
               factory: EntityFactory,
@@ -94,16 +104,6 @@ export class AgentSystem implements ServerSystem {
 
   addComponent(component: CAgent) {
     this._components.set(component.entityId, component);
-
-    this._inputs.set(component.entityId, {
-      states: {
-        [UserInput.UP]: InputState.RELEASED,
-        [UserInput.RIGHT]: InputState.RELEASED,
-        [UserInput.DOWN]: InputState.RELEASED,
-        [UserInput.LEFT]: InputState.RELEASED
-      },
-      lockedUntil: 0
-    });
   }
 
   hasComponent(id: EntityId) {
@@ -120,7 +120,6 @@ export class AgentSystem implements ServerSystem {
 
   removeComponent(id: EntityId) {
     this._components.delete(id);
-    this._inputs.delete(id);
   }
 
   handleEvent(event: GameEvent) {
@@ -196,32 +195,32 @@ export class AgentSystem implements ServerSystem {
     const spatialSys =
       <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    this._inputs.forEach((input, playerId) => {
-      const player = spatialSys.getComponent(playerId);
+    this._components.forEach(c => {
+      const player = spatialSys.getComponent(c.entityId);
       const mode = player.currentMode;
 
-      if (input.lockedUntil <= now) {
-        input.lockedUntil = 0;
+      if (c._input.lockedUntil <= now) {
+        c._input.lockedUntil = 0;
         let moved = false;
 
-        if (input.states[UserInput.UP] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(playerId, Direction.UP);
+        if (c._input.states[UserInput.UP] == InputState.PRESSED) {
+          moved = spatialSys.moveAgent(c.entityId, Direction.UP);
         }
-        if (input.states[UserInput.RIGHT] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(playerId, Direction.RIGHT);
+        if (c._input.states[UserInput.RIGHT] == InputState.PRESSED) {
+          moved = spatialSys.moveAgent(c.entityId, Direction.RIGHT);
         }
-        if (input.states[UserInput.DOWN] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(playerId, Direction.DOWN);
+        if (c._input.states[UserInput.DOWN] == InputState.PRESSED) {
+          moved = spatialSys.moveAgent(c.entityId, Direction.DOWN);
         }
-        if (input.states[UserInput.LEFT] == InputState.PRESSED) {
-          moved = spatialSys.moveAgent(playerId, Direction.LEFT);
+        if (c._input.states[UserInput.LEFT] == InputState.PRESSED) {
+          moved = spatialSys.moveAgent(c.entityId, Direction.LEFT);
         }
 
         if (player.currentMode == SpatialMode.FREE_MODE &&
           player.currentMode != mode) {
 
-          input.lockedUntil = (new Date()).getTime() +
-                              LOCK_DURATION_ON_FREE_MODE_TRANSITION;
+          c._input.lockedUntil = (new Date()).getTime() +
+                                 LOCK_DURATION_ON_FREE_MODE_TRANSITION;
         }
       }
     });
@@ -231,12 +230,8 @@ export class AgentSystem implements ServerSystem {
     switch (action.type) {
       case ActionType.USER_INPUT: {
         const userInput = <UserInputAction>action;
-        const input = this._inputs.get(action.playerId);
-        if (!input) {
-          throw new GameError("Error handling player action; Unrecognised " +
-                              "player id");
-        }
-        input.states[userInput.input] = userInput.state;
+        const c = this.getComponent(action.playerId);
+        c._input.states[userInput.input] = userInput.state;
         break;
       }
     }
