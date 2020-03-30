@@ -5,6 +5,8 @@ import { EAgentBlocked, EEntityCollision, GameEventType,
 import { InventorySystem } from "../../inventory_system";
 import { ComponentType } from "../../common/component_types";
 import { BehaviourSystem } from "../../common/behaviour_system";
+import { CSpatial } from "../../spatial_component";
+import { PLAYER_SPEED } from "../../common/constants";
 
 function onAgentBlocked(em: EntityManager,
                         collectableId: EntityId,
@@ -12,6 +14,17 @@ function onAgentBlocked(em: EntityManager,
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
 
   if (inventorySys.collectItem(event.entityId, collectableId)) {
+    const collectableSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
+                                                         collectableId);
+
+    const agentSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
+                                                   event.entityId);
+
+    agentSpatial.gridMode.stop();
+    agentSpatial.gridMode.moveToPos(collectableSpatial.x,
+                                    collectableSpatial.y,
+                                    1.0 / PLAYER_SPEED);
+
     em.removeEntity_onClients(collectableId);
   }
 }
