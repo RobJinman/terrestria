@@ -13,21 +13,25 @@ import { EntityFactory } from "./entity_factory";
 import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
+import { Pipe } from "./pipe";
 
 export class MapLoader {
   private _em: EntityManager;
   private _pinata: Pinata;
   private _factory: EntityFactory;
+  private _pipe: Pipe;
   private _logger: Logger;
   private _mapData: MapData|null = null;
 
   constructor(em: EntityManager,
               pinata: Pinata,
               factory: EntityFactory,
+              pipe: Pipe,
               logger: Logger) {
     this._em = em;
     this._pinata = pinata;
     this._factory = factory;
+    this._pipe = pipe;
     this._logger = logger;
   }
 
@@ -41,7 +45,11 @@ export class MapLoader {
                                             this._mapData.height,
                                             gravRegion,
                                             this._logger);
-    const agentSystem = new AgentSystem(this._em, this._pinata);
+    const agentSystem = new AgentSystem(this._em,
+                                        this._factory,
+                                        this._pipe,
+                                        this._pinata,
+                                        this._logger);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
     const adSystem = new AdvertSystem(pinata);

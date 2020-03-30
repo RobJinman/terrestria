@@ -6,7 +6,6 @@ import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
          RMapData } from "./common/response";
-import { GameLogic } from "./game_logic";
 import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
          SYNC_INTERVAL_MS } from "./common/constants";
 import { EntityType } from "./common/game_objects";
@@ -23,6 +22,7 @@ import { MapData } from "./common/map_data";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
 import { Scheduler } from "./common/scheduler";
+import { AgentSystem } from "./agent_system";
 
 function noThrow(logger: Logger, fn: () => any) {
   try {
@@ -46,8 +46,6 @@ export class Game {
   private _scheduler: Scheduler;
   private _factory: EntityFactory;
   private _loopTimeout: NodeJS.Timeout;
-  private _actionQueue: PlayerAction[] = [];
-  private _gameLogic: GameLogic;
   private _entityId: EntityId;
   private _doSyncFn: () => void;
 
@@ -64,15 +62,11 @@ export class Game {
     const mapLoader = new MapLoader(this._em,
                                     this._pinata,
                                     this._factory,
+                                    this._pipe,
                                     this._logger);
     mapLoader.loadMap(pinata);
     this._mapData = <MapData>mapLoader.mapData;
-
-    this._gameLogic = new GameLogic(this._em,
-                                    this._factory,
-                                    this._pipe,
-                                    this._logger);
-
+  
     this._entityId = getNextEntityId();
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -107,8 +101,6 @@ export class Game {
     const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL, id);
     spatial.setStaticPos(this._mapData.spawnPoint.x * BLOCK_SZ,
                          this._mapData.spawnPoint.y * BLOCK_SZ);
-
-    this._gameLogic.addPlayer(id);
 
     this._logger.info(`Adding player ${id} with pinata id ${pinataId}`);
   
@@ -171,8 +163,6 @@ export class Game {
     this._pipe.removeConnection(oldId);
     this._pipe.addConnection(id, socket);
 
-    this._gameLogic.addPlayer(id);
-
     this._logger.info(`Respawning player ${oldId} => ${id}`);
 
     const newPlayerResp: RNewEntities = {
@@ -192,7 +182,6 @@ export class Game {
   removePlayer(playerId: EntityId) {
     this._logger.info(`Removing player ${playerId} from game`);
     this._pipe.removeConnection(playerId);
-    this._gameLogic.removePlayer(playerId);
     this._em.removeEntity_onClients(playerId);
   }
 
@@ -209,7 +198,8 @@ export class Game {
   }
 
   onPlayerAction(action: PlayerAction) {
-    this._actionQueue.push(action);
+    const agentSys = <AgentSystem>this._em.getSystem(ComponentType.AGENT);
+    agentSys.onPlayerAction(action);
   }
 
   terminate() {
@@ -245,16 +235,6 @@ export class Game {
   private _tick() {
     this._em.update();
     this._scheduler.update();
-
-    try {
-      this._gameLogic.update(this._actionQueue);
-    }
-    catch (e) {
-      this._actionQueue = [];
-      throw e;
-    }
-    this._actionQueue = [];
-
     this._doSyncFn();
   }
 }

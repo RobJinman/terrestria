@@ -9,7 +9,7 @@ import { GameError } from "./common/error";
 import { directionToVector, normalise } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { EntityManager } from "./entity_manager";
-import { EEntityCollision, GameEventType } from "./common/event";
+import { EEntityCollision, GameEventType, EAgentAction, AgentActionType } from "./common/event";
 
 const PLAYER_VELOCITY_H = 6;
 const PLAYER_VELOCITY_V = 10;
@@ -183,7 +183,7 @@ export class FreeModeImpl implements SpatialModeImpl {
 
       Body.setVelocity(c.body, Vector.create(velocity.x, velocity.y));
     }
-  
+
     return true;
   }
 

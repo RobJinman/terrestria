@@ -143,6 +143,9 @@ export function constructPlayer(em: EntityManager, entity: EntityData) {
       case AgentActionType.RUN:
         renderSys.playAnimation(id, "man_run_" + dirChar);
         break;
+      case AgentActionType.JUMP:
+        renderSys.playAnimation(id, "man_jump");
+        break;
       case AgentActionType.PUSH:
         renderSys.playAnimation(id, "man_push_" + dirChar);
         break;

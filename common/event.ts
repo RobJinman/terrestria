@@ -77,7 +77,8 @@ export interface EEntityHierarchyChanged extends GameEvent {
 export enum AgentActionType {
   PUSH = "PUSH",
   RUN = "RUN",
-  DIG = "DIG"
+  DIG = "DIG",
+  JUMP = "JUMP"
 }
 
 export interface EAgentAction extends GameEvent {
