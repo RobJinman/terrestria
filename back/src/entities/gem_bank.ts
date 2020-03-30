@@ -130,10 +130,20 @@ function constructExit(em: EntityManager, parentId: EntityId) {
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
+  const gridModeProps: GridModeProperties = {
+    solid: true,
+    blocking: true,
+    heavy: false,
+    movable: false,
+    stackable: true,
+    squashable: false,
+    isAgent: false
+  };
+
   const spatialComp = new CSpatial(id,
                                    true,
                                    spatialSys.grid,
-                                   DEFAULT_GRID_MODE_PROPS,
+                                   gridModeProps,
                                    DEFAULT_FREE_MODE_PROPS);
 
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);

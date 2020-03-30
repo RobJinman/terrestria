@@ -10,12 +10,20 @@ import { SpatialSystem } from "./spatial_system";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { Logger } from "./logger";
+import { SpatialMode } from "./common/spatial_packet";
+
+const LOCK_DURATION_ON_FREE_MODE_TRANSITION = 200;
+
+interface Input {
+  states: Record<UserInput, InputState>;
+  lockedUntil: number;
+}
 
 export class GameLogic {
   private _em: EntityManager;
   private _logger: Logger;
   private _entityId: EntityId = getNextEntityId();
-  private _inputStates = new Map<EntityId, Record<UserInput, InputState>>();
+  private _inputs = new Map<EntityId, Input>();
 
   constructor(em: EntityManager, logger: Logger) {
     this._em = em;
@@ -41,16 +49,19 @@ export class GameLogic {
   }
 
   addPlayer(id: EntityId) {
-    this._inputStates.set(id, {
-      [UserInput.UP]: InputState.RELEASED,
-      [UserInput.RIGHT]: InputState.RELEASED,
-      [UserInput.DOWN]: InputState.RELEASED,
-      [UserInput.LEFT]: InputState.RELEASED
+    this._inputs.set(id, {
+      states: {
+        [UserInput.UP]: InputState.RELEASED,
+        [UserInput.RIGHT]: InputState.RELEASED,
+        [UserInput.DOWN]: InputState.RELEASED,
+        [UserInput.LEFT]: InputState.RELEASED
+      },
+      lockedUntil: 0
     });
   }
 
   removePlayer(id: EntityId) {
-    this._inputStates.delete(id);
+    this._inputs.delete(id);
   }
 
   private _onPlayerKilled(e: GameEvent) {
@@ -63,34 +74,38 @@ export class GameLogic {
   }
 
   private _processUserInputs() {
+    const now = (new Date()).getTime();
+
     const spatialSys =
       <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
 
-    this._inputStates.forEach((states, playerId) => {
+    this._inputs.forEach((input, playerId) => {
       const player = spatialSys.getComponent(playerId);
       const mode = player.currentMode;
 
-      if (states[UserInput.UP] == InputState.PRESSED) {
-        spatialSys.moveAgent(playerId, Direction.UP);
-      }
-      if (states[UserInput.RIGHT] == InputState.PRESSED) {
-        spatialSys.moveAgent(playerId, Direction.RIGHT);
-      }
-      if (states[UserInput.DOWN] == InputState.PRESSED) {
-        spatialSys.moveAgent(playerId, Direction.DOWN);
-      }
-      if (states[UserInput.LEFT] == InputState.PRESSED) {
-        spatialSys.moveAgent(playerId, Direction.LEFT);
-      }
-/*
-      if (player.currentMode == SpatialMode.FREE_MODE &&
-        player.currentMode != mode) {
+      if (input.lockedUntil <= now) {
+        input.lockedUntil = 0;
 
-        states[UserInput.UP] = InputState.RELEASED;
-        states[UserInput.RIGHT] = InputState.RELEASED;
-        states[UserInput.DOWN] = InputState.RELEASED;
-        states[UserInput.LEFT] = InputState.RELEASED;
-      }*/
+        if (input.states[UserInput.UP] == InputState.PRESSED) {
+          spatialSys.moveAgent(playerId, Direction.UP);
+        }
+        if (input.states[UserInput.RIGHT] == InputState.PRESSED) {
+          spatialSys.moveAgent(playerId, Direction.RIGHT);
+        }
+        if (input.states[UserInput.DOWN] == InputState.PRESSED) {
+          spatialSys.moveAgent(playerId, Direction.DOWN);
+        }
+        if (input.states[UserInput.LEFT] == InputState.PRESSED) {
+          spatialSys.moveAgent(playerId, Direction.LEFT);
+        }
+
+        if (player.currentMode == SpatialMode.FREE_MODE &&
+          player.currentMode != mode) {
+
+          input.lockedUntil = (new Date()).getTime() +
+                              LOCK_DURATION_ON_FREE_MODE_TRANSITION;
+        }
+      }
     });
   }
 
@@ -98,12 +113,12 @@ export class GameLogic {
     switch (action.type) {
       case ActionType.USER_INPUT: {
         const userInput = <UserInputAction>action;
-        const states = this._inputStates.get(action.playerId);
-        if (!states) {
+        const input = this._inputs.get(action.playerId);
+        if (!input) {
           throw new GameError("Error handling player action; Unrecognised " +
                               "player id");
         }
-        states[userInput.input] = userInput.state;
+        input.states[userInput.input] = userInput.state;
         break;
       }
     }
