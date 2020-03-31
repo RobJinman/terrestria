@@ -1,12 +1,14 @@
 import { GameError } from "./common/error";
-import { clamp, inRange } from "./common/utils";
+import { clamp, inRange, addToMapOfSets } from "./common/utils";
+import { EntityId } from "./common/system";
 
 const CELL_SZ = 128;
 
-export class SpatialContainer<T> {
+export class SpatialContainer {
   private _gridW = 0;
   private _gridH = 0;
-  private _grid: Set<T>[][];
+  private _grid: Set<PIXI.DisplayObject>[][];
+  private _entityItems = new Map<EntityId, Set<PIXI.DisplayObject>>();
 
   constructor(worldW: number, worldH: number) {
     this._gridW = Math.ceil(worldW / CELL_SZ);
@@ -14,16 +16,19 @@ export class SpatialContainer<T> {
 
     this._grid = [];
     for (let i = 0; i < this._gridW; ++i) {
-      const col: Set<T>[] = [];
+      const col: Set<PIXI.DisplayObject>[] = [];
       for (let j = 0; j < this._gridH; ++j) {
-        col.push(new Set<T>());
+        col.push(new Set<PIXI.DisplayObject>());
       }
       this._grid.push(col);
     }
   }
 
-  itemsInRegion(x: number, y: number, w: number, h: number): Set<T> {
-    const items = new Set<T>();
+  itemsInRegion(x: number,
+                y: number,
+                w: number,
+                h: number): Set<PIXI.DisplayObject> {
+    const items = new Set<PIXI.DisplayObject>();
 
     if (!this._grid) {
       throw new GameError("Spatial system not initialised");
@@ -49,22 +54,30 @@ export class SpatialContainer<T> {
     return items;
   }
 
-  removeItem(id: T) {
+  removeItem(item: PIXI.DisplayObject) {
     // TODO
     for (let i = 0; i < this._gridW; ++i) {
       for (let j = 0; j < this._gridH; ++j) {
-        this._grid[i][j].delete(id);
+        this._grid[i][j].delete(item);
       }
     }
   }
 
-  addItem(id: T, x: number, y: number) {
+  addItem(entityId: EntityId, item: PIXI.DisplayObject, x: number, y: number) {
     const gridX = Math.floor(x / CELL_SZ);
     const gridY = Math.floor(y / CELL_SZ);
 
     if (inRange(gridX, 0, this._gridW - 1) &&
         inRange(gridY, 0, this._gridH - 1)) {
-      this._grid[gridX][gridY].add(id);
+      this._grid[gridX][gridY].add(item);
+      addToMapOfSets(this._entityItems, entityId, item);
+    }
+  }
+
+  removeAllItemsForEntity(entityId: EntityId) {
+    const items = this._entityItems.get(entityId);
+    if (items) {
+      items.forEach(item => this.removeItem(item));
     }
   }
 }

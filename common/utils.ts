@@ -61,3 +61,13 @@ export function addSetToSet<T>(src: Set<T>, dest: Set<T>) {
     dest.add(x);
   }
 }
+
+export function addToMapOfSets<K, V>(map: Map<K, Set<V>>, key: K, value: V) {
+  if (!map.has(key)) {
+    map.set(key, new Set<V>());
+  }
+  const values = map.get(key);
+  if (values) {
+    values.add(value);
+  }
+}
