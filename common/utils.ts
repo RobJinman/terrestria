@@ -71,3 +71,13 @@ export function addToMapOfSets<K, V>(map: Map<K, Set<V>>, key: K, value: V) {
     values.add(value);
   }
 }
+
+export function addToMapOfArrays<K, V>(map: Map<K, V[]>, key: K, value: V) {
+  if (!map.has(key)) {
+    map.set(key, []);
+  }
+  const values = map.get(key);
+  if (values) {
+    values.push(value);
+  }
+}

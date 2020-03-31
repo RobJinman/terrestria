@@ -1,14 +1,14 @@
-import { GameError } from "./common/error";
-import { clamp, inRange, addToMapOfSets } from "./common/utils";
+import { clamp, addToMapOfSets, addToMapOfArrays } from "./common/utils";
 import { EntityId } from "./common/system";
 
-const CELL_SZ = 128;
+const CELL_SZ = 100;
 
 export class SpatialContainer {
   private _gridW = 0;
   private _gridH = 0;
   private _grid: Set<PIXI.DisplayObject>[][];
   private _entityItems = new Map<EntityId, Set<PIXI.DisplayObject>>();
+  private _itemLocations = new Map<PIXI.DisplayObject, [ number, number ][]>();
 
   constructor(worldW: number, worldH: number) {
     this._gridW = Math.ceil(worldW / CELL_SZ);
@@ -30,19 +30,7 @@ export class SpatialContainer {
                 h: number): Set<PIXI.DisplayObject> {
     const items = new Set<PIXI.DisplayObject>();
 
-    if (!this._grid) {
-      throw new GameError("Spatial system not initialised");
-    }
-
-    let x0 = Math.floor(x / CELL_SZ);
-    let x1 = Math.ceil((x + w) / CELL_SZ);
-    let y0 = Math.floor(y / CELL_SZ);
-    let y1 = Math.ceil((y + h) / CELL_SZ);
-
-    x0 = clamp(x0, 0, this._gridW - 1);
-    x1 = clamp(x1, 0, this._gridW - 1);
-    y0 = clamp(y0, 0, this._gridH - 1);
-    y1 = clamp(y1, 0, this._gridH - 1);
+    const [ x0, y0, x1, y1 ] = this._worldRectToGridCoords(x, y, w, h);
 
     for (let i = x0; i <= x1; ++i) {
       for (let j = y0; j <= y1; ++j) {
@@ -55,22 +43,29 @@ export class SpatialContainer {
   }
 
   removeItem(item: PIXI.DisplayObject) {
-    // TODO
-    for (let i = 0; i < this._gridW; ++i) {
-      for (let j = 0; j < this._gridH; ++j) {
-        this._grid[i][j].delete(item);
-      }
+    const locations = this._itemLocations.get(item) || [];
+    for (const [ i, j ] of locations) {
+      this._grid[i][j].delete(item);
     }
+    this._itemLocations.set(item, []);
   }
 
-  addItem(entityId: EntityId, item: PIXI.DisplayObject, x: number, y: number) {
-    const gridX = Math.floor(x / CELL_SZ);
-    const gridY = Math.floor(y / CELL_SZ);
+  addItem(entityId: EntityId,
+          item: PIXI.DisplayObject,
+          x: number,
+          y: number,
+          w: number,
+          h: number) {
+    this.removeItem(item);
 
-    if (inRange(gridX, 0, this._gridW - 1) &&
-        inRange(gridY, 0, this._gridH - 1)) {
-      this._grid[gridX][gridY].add(item);
-      addToMapOfSets(this._entityItems, entityId, item);
+    const [ x0, y0, x1, y1 ] = this._worldRectToGridCoords(x, y, w, h);
+
+    for (let i = x0; i <= x1; ++i) {
+      for (let j = y0; j <= y1; ++j) {
+        this._grid[i][j].add(item);
+        addToMapOfArrays(this._itemLocations, item, [ i, j ]);
+        addToMapOfSets(this._entityItems, entityId, item);
+      }
     }
   }
 
@@ -79,5 +74,19 @@ export class SpatialContainer {
     if (items) {
       items.forEach(item => this.removeItem(item));
     }
+  }
+
+  private _worldRectToGridCoords(x: number, y: number, w: number, h: number) {
+    let x0 = Math.floor(x / CELL_SZ);
+    let x1 = Math.ceil((x + w) / CELL_SZ);
+    let y0 = Math.floor(y / CELL_SZ);
+    let y1 = Math.ceil((y + h) / CELL_SZ);
+
+    x0 = clamp(x0, 0, this._gridW - 1);
+    x1 = clamp(x1, 0, this._gridW - 1);
+    y0 = clamp(y0, 0, this._gridH - 1);
+    y1 = clamp(y1, 0, this._gridH - 1);
+
+    return [ x0, y0, x1, y1 ];
   }
 }
