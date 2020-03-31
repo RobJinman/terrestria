@@ -8,6 +8,7 @@ import { ComponentType } from "../common/component_types";
 import { GameEventType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
+import { SpatialSystem } from "../spatial_system";
 
 export function constructGem(em: EntityManager, entity: EntityData) {
   const id = entity.id;
@@ -47,5 +48,6 @@ export function constructGem(em: EntityManager, entity: EntityData) {
                                      renderComp,
                                      behaviourComp ]);
 
-  spatialComp.setStaticPos(entity.desc.x, entity.desc.y);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  spatialSys.setStaticPos(id, entity.desc.x, entity.desc.y);
 }

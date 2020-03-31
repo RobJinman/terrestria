@@ -1,55 +1,62 @@
 import { Component, EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
-import { EEntityMoved, GameEventType } from "./common/event";
 import { EntityManager } from "./entity_manager";
 
 export class CSpatial extends Component {
-  private _em: EntityManager;
   private _posX = 0;
   private _posY = 0;
   private _destX = 0;
   private _destY = 0;
   private _angle = 0;
+  private _parent?: CSpatial;
+  private _children = new Map<EntityId, CSpatial>();
 
   speed = 0;
 
   constructor(entityId: EntityId, em: EntityManager) {
     super(entityId, ComponentType.SPATIAL);
-    this._em = em;
   }
 
-  setInstantaneousPos(x: number, y: number) {
+  _addChild(child: CSpatial) {
+    if (child._parent) {
+      child._parent._removeChild(child.entityId);
+    }
+    this._children.set(child.entityId, child);
+    child._parent = this;
+  }
+
+  _removeChild(id: EntityId) {
+    const child = this._children.get(id);
+    if (child) {
+      child._parent = undefined;
+      this._children.delete(id);
+    }
+  }
+
+  get parent() {
+    return this._parent;
+  }
+
+  _setInstantaneousPos(x: number, y: number) {
     this._posX = x;
     this._posY = y;
-
-    const event: EEntityMoved = {
-      type: GameEventType.ENTITY_MOVED,
-      entities: [this.entityId],
-      entityId: this.entityId,
-      x: this.x,
-      y: this.y
-    };
-
-    this._em.postEvent(event);
   }
 
-  setStaticPos(x: number, y: number) {
+  _setStaticPos(x: number, y: number) {
     this.speed = 0;
     this._destX = x;
     this._destY = y;
-    this.setInstantaneousPos(x, y);
+    this._setInstantaneousPos(x, y);
   }
 
-  setDestination(x: number, y: number, speed: number) {
+  _setDestination(x: number, y: number, speed: number) {
     this._destX = x;
     this._destY = y;
     this.speed = speed;
   }
 
-  setAngle(angle: number) {
+  _setAngle(angle: number) {
     this._angle = angle;
-    
-    // TODO: EEntityMoved?
   }
 
   moving() {
@@ -76,65 +83,38 @@ export class CSpatial extends Component {
     return this._angle;
   }
 
-  // TODO: Handle hierarchy same way as on back-end
-
   get x_abs(): number {
-    const parent = this._em.getEntityParent(this.entityId);
-    if (parent) {
-      const parentComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                         parent);
-      return parentComp.x_abs + this._posX;
+    if (this._parent) {
+      return this._parent.x_abs + this.x;
     }
-    else {
-      return this._posX;
-    }
+    return this.x;
   }
 
   get y_abs(): number {
-    const parent = this._em.getEntityParent(this.entityId);
-    if (parent) {
-      const parentComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                         parent);
-      return parentComp.y_abs + this._posY;
+    if (this._parent) {
+      return this._parent.y_abs + this.y;
     }
-    else {
-      return this._posY;
-    }
+    return this.y;
   }
 
   get destX_abs(): number {
-    const parent = this._em.getEntityParent(this.entityId);
-    if (parent) {
-      const parentComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                         parent);
-      return parentComp.destX_abs + this._destX;
+    if (this._parent) {
+      return this._parent.destX_abs + this.destX;
     }
-    else {
-      return this._destX;
-    }
+    return this.destX;
   }
 
   get destY_abs(): number {
-    const parent = this._em.getEntityParent(this.entityId);
-    if (parent) {
-      const parentComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                         parent);
-      return parentComp.destY_abs + this._destY;
+    if (this._parent) {
+      return this._parent.destY_abs + this.destY;
     }
-    else {
-      return this._destY;
-    }
+    return this.destY;
   }
 
   get angle_abs(): number {
-    const parent = this._em.getEntityParent(this.entityId);
-    if (parent) {
-      const parentComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                         parent);
-      return parentComp.angle_abs + this._angle;
+    if (this._parent) {
+      return this._parent.angle_abs + this.angle;
     }
-    else {
-      return this._angle;
-    }
+    return this.angle;
   }
 }

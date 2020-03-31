@@ -11,6 +11,7 @@ import { Span2d } from './common/span';
 import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
 import { clamp } from './common/utils';
 import { EntityManager } from './entity_manager';
+import { SpatialContainer } from './spatial_container';
 
 const VERTICAL_RESOLUTION = 10 * BLOCK_SZ;
 const DEFAULT_Z_INDEX = 1000;
@@ -201,6 +202,13 @@ export class CTiledRegion extends CRender {
   }
 }
 
+interface DrawablePosition {
+  drawable: PIXI.DisplayObject;
+  x: number;
+  y: number;
+  rotation?: number;
+}
+
 export class RenderSystem implements ClientSystem {
   private _components: Map<EntityId, CRender>;
   private _parallaxComponents: Map<EntityId, CParallax>;
@@ -210,11 +218,15 @@ export class RenderSystem implements ClientSystem {
   private _pixi: PIXI.Application;
   private _spriteSheet?: PIXI.Spritesheet;
   private _textures = new Map<string, PIXI.Texture>();
+  private _viewX = 0;
+  private _viewY = 0;
   private _viewW = 0;
   private _viewH = VERTICAL_RESOLUTION;
   private _windowW = 0;
   private _windowH = 0;
   private _camera: Vec2 = { x: 0, y: 0 };
+  private _spatialContainer?: SpatialContainer;
+  private _prevVisible = new Set<EntityId>();
 
   constructor(entityManager: EntityManager,
               scheduler: Scheduler,
@@ -225,7 +237,7 @@ export class RenderSystem implements ClientSystem {
     this._parallaxComponents = new Map<EntityId, CParallax>();
     this._screenSpaceComponents = new Map<EntityId, CRender>();
 
-    //PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     PIXI.settings.ROUND_PIXELS = true;
     PIXI.settings.SORTABLE_CHILDREN = true;
 
@@ -256,7 +268,7 @@ export class RenderSystem implements ClientSystem {
     return this._camera.y;
   }
 
-  async init() {
+  async initialise() {
     const resource = await this._loadResource("sprite_sheet",
                                               "assets/sprite_sheet.json");
     if (!resource || !resource.spritesheet) {
@@ -265,21 +277,35 @@ export class RenderSystem implements ClientSystem {
     this._spriteSheet = resource.spritesheet;
   }
 
+  setWorldSize(worldW: number, worldH: number) {
+    this._spatialContainer = new SpatialContainer(worldW, worldH);
+  }
+
+  get ready(): boolean {
+    return this._spatialContainer !== undefined &&
+           this._spriteSheet !== undefined;
+  }
+
   getCanvas() {
     return this._pixi.view;
   }
 
   setCameraPosition(x: number, y: number) {
+    if (Math.abs(x - this._camera.x) < 0.1 &&
+        Math.abs(y - this._camera.y) < 0.1) {
+      return;
+    }
+
     this._camera = { x, y };
 
     // Screen origin in world space
-    const viewX = this._camera.x - 0.5 * this._viewW;
-    const viewY = this._camera.y - 0.5 * this._viewH;
+    this._viewX = this._camera.x - 0.5 * this._viewW;
+    this._viewY = this._camera.y - 0.5 * this._viewH;
 
     const scale = this._windowH / this._viewH;
 
-    this._pixi.stage.x = -viewX * scale;
-    this._pixi.stage.y = -viewY * scale;
+    this._pixi.stage.x = -this._viewX * scale;
+    this._pixi.stage.y = -this._viewY * scale;
 
     this._updateScreenSpaceComponentPositions();
     this._computeParallaxOffsets();
@@ -412,6 +438,9 @@ export class RenderSystem implements ClientSystem {
     else if (c instanceof CShape) {
       this._removeShapeComponent(c);
     }
+    if (this._spatialContainer) {
+      this._spatialContainer.removeEntity(id);
+    }
   }
 
   handleEvent(event: GameEvent) {
@@ -424,7 +453,11 @@ export class RenderSystem implements ClientSystem {
     }
   }
 
-  update() {}
+  update() {
+    if (this.ready) {
+      this._doCull();
+    }
+  }
 
   setScreenPosition(entityId: EntityId, x: number, y: number) {
     const c = this.getComponent(entityId);
@@ -458,6 +491,83 @@ export class RenderSystem implements ClientSystem {
 
     this._pixi.stage.scale.x = scale;
     this._pixi.stage.scale.y = scale;
+
+    this._doCull();
+  }
+
+  private _doCull() {
+    if (!this._spatialContainer) {
+      throw new GameError("Render system not initialised");
+    }
+
+    const visible = this._spatialContainer.entitiesInRegion(this._viewX,
+                                                            this._viewY,
+                                                            this._viewW,
+                                                            this._viewH);
+
+    this._prevVisible.forEach(id => {
+      if (!visible.has(id)) {
+        const c = this._components.get(id);
+        if (c) {
+          this._hide(c);
+        }
+      }
+    });
+
+    visible.forEach(id => {
+      if (!this._prevVisible.has(id)) {
+        const c = this._components.get(id);
+        if (c) {
+          this._show(c);
+        }
+      }
+    });
+
+    this._prevVisible = new Set<EntityId>(visible);
+  }
+
+  private _hide(c: CRender) {
+    if (c instanceof CSprite) {
+      if (c.stagedSprite) {
+        this._pixi.stage.removeChild(c.stagedSprite);
+      }
+    }
+    else if (c instanceof CShape) {
+      this._pixi.stage.removeChild(c.graphics);
+    }
+    else if (c instanceof CTiledRegion) {
+      if (c.stagedSprites) {
+        const sprites = c.sprites.get(c.stagedSprites) || [];
+        sprites.forEach(sprite => this._pixi.stage.removeChild(sprite));
+      }
+    }
+  }
+
+  private _show(c: CRender) {
+    if (c instanceof CSprite) {
+      if (c.stagedSprite) {
+        this._pixi.stage.addChild(c.stagedSprite);
+      }
+    }
+    else if (c instanceof CShape) {
+      this._pixi.stage.addChild(c.graphics);
+    }
+    else if (c instanceof CTiledRegion) {
+      if (c.stagedSprites) {
+        const sprites = c.sprites.get(c.stagedSprites) || [];
+        sprites.forEach(sprite => this._pixi.stage.addChild(sprite));
+      }
+    }
+  }
+
+  private _stageDrawable(entityId: EntityId, drawable: PIXI.DisplayObject) {
+    if (this._prevVisible.has(entityId)) {
+      this._pixi.stage.addChild(drawable);
+    }
+  }
+
+  private _unstageDrawable(drawable: PIXI.DisplayObject) {
+    this._pixi.stage.removeChild(drawable);
   }
 
   private _updateScreenSpaceComponentPositions() {
@@ -496,11 +606,47 @@ export class RenderSystem implements ClientSystem {
         const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
         const newCentreX = this._camera.x - m * dx;
         const newCentreY = this._camera.y - m * dy;
-        c.stagedSprite.x = newCentreX - 0.5 * w + c.stagedSprite.pivot.x;
-        c.stagedSprite.y = newCentreY - 0.5 * h + c.stagedSprite.pivot.y;
+        this._setDrawablePosition(
+          c.entityId,
+          c.stagedSprite,
+          newCentreX - 0.5 * w + c.stagedSprite.pivot.x,
+          newCentreY - 0.5 * h + c.stagedSprite.pivot.y);
         c.stagedSprite.zIndex = DEFAULT_Z_INDEX - 100 * c.depth + c.zIndex;
       }
     });
+  }
+
+  private _setDrawablePosition(entityId: EntityId,
+                               drawable: PIXI.DisplayObject,
+                               x: number,
+                               y: number,
+                               rotation?: number) {
+    if (!this._spatialContainer) {
+      throw new GameError("Render system not initialised");
+    }
+
+    this._spatialContainer.removeEntity(entityId);
+    drawable.position.set(x, y);
+    if (rotation !== undefined) {
+      drawable.rotation = rotation;
+    }
+    this._spatialContainer.addEntity(entityId, x, y);
+  }
+
+  private _setDrawablePositions(entityId: EntityId,
+                                drawables: DrawablePosition[]) {
+    if (!this._spatialContainer) {
+      throw new GameError("Render system not initialised");
+    }
+
+    this._spatialContainer.removeEntity(entityId);
+    for (const { x, y, rotation, drawable } of drawables) {
+      drawable.position.set(x, y);
+      if (rotation !== undefined) {
+        drawable.rotation = rotation;
+      }
+      this._spatialContainer.addEntity(entityId, x, y);
+    }
   }
 
   private _addShapeComponent(c: CShape) {
@@ -527,7 +673,8 @@ export class RenderSystem implements ClientSystem {
 
     c.graphics.endFill();
 
-    this._pixi.stage.addChild(c.graphics);
+    //this._pixi.stage.addChild(c.graphics);
+    this._stageDrawable(c.entityId, c.graphics);
 
     this._updateSpritePosition(c);
 
@@ -548,7 +695,7 @@ export class RenderSystem implements ClientSystem {
   }
 
   private _removeShapeComponent(c: CShape) {
-    this._pixi.stage.removeChild(c.graphics);
+    this._unstageDrawable(c.graphics);
     this._components.delete(c.entityId);
     this._screenSpaceComponents.delete(c.entityId);
   }
@@ -623,7 +770,7 @@ export class RenderSystem implements ClientSystem {
 
   private _removeSpriteComponent(c: CSprite) {
     if (c.stagedSprite) {
-      this._pixi.stage.removeChild(c.stagedSprite);
+      this._unstageDrawable(c.stagedSprite);
     }
     this._components.delete(c.entityId);
     this._screenSpaceComponents.delete(c.entityId);
@@ -635,7 +782,7 @@ export class RenderSystem implements ClientSystem {
 
       if (sprites) {
         sprites.forEach(sprite => {
-          this._pixi.stage.removeChild(sprite);
+          this._unstageDrawable(sprite);
         });
       }
     }
@@ -647,6 +794,7 @@ export class RenderSystem implements ClientSystem {
     c.staticImages.forEach(imgDesc => {
       const texture = this._findTexture(imgDesc.name);
       const sprites: PIXI.TilingSprite[] = [];
+      const drawablePositions: DrawablePosition[] = [];
 
       for (const [j, spans] of c.region.spans) {
         for (const span of spans) {
@@ -659,8 +807,16 @@ export class RenderSystem implements ClientSystem {
           sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
           sprite.position.set(x, y);
           sprites.push(sprite);
+
+          drawablePositions.push({
+            x,
+            y,
+            drawable: sprite
+          });
         }
       }
+
+      this._setDrawablePositions(c.entityId, drawablePositions);
 
       c.sprites.set(imgDesc.name, sprites);
     });
@@ -695,16 +851,20 @@ export class RenderSystem implements ClientSystem {
         // TODO: Shouldn't always assume pivot point
         c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
         // The pivot needs to be added here to keep the position the same
-        c.stagedSprite.position.set(spatialComp.x_abs + c.stagedSprite.pivot.x,
-                                    spatialComp.y_abs + c.stagedSprite.pivot.y);
-        c.stagedSprite.rotation = spatialComp.angle;
+        this._setDrawablePosition(c.entityId,
+                                  c.stagedSprite,
+                                  spatialComp.x_abs + c.stagedSprite.pivot.x,
+                                  spatialComp.y_abs + c.stagedSprite.pivot.y,
+                                  spatialComp.angle_abs);
       }
     }
     else if (c instanceof CShape) {
       c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-      c.graphics.position.set(spatialComp.x_abs + c.graphics.pivot.x,
-                              spatialComp.y_abs + c.graphics.pivot.y);
-      c.graphics.rotation = spatialComp.angle_abs;
+      this._setDrawablePosition(c.entityId,
+                                c.graphics,
+                                spatialComp.x_abs + c.graphics.pivot.x,
+                                spatialComp.y_abs + c.graphics.pivot.y,
+                                spatialComp.angle_abs);
     }
   }
 
@@ -714,14 +874,18 @@ export class RenderSystem implements ClientSystem {
 
     if (c instanceof CSprite) {
       if (c.stagedSprite && c.screenPosition) {
-        c.stagedSprite.position.set(viewX + c.screenPosition.x,
-                                    viewY + c.screenPosition.y);
+        this._setDrawablePosition(c.entityId,
+                                  c.stagedSprite,
+                                  viewX + c.screenPosition.x,
+                                  viewY + c.screenPosition.y);
       }
     }
     else if (c instanceof CShape) {
       if (c.screenPosition) {
-        c.graphics.position.set(viewX + c.screenPosition.x,
-                                viewY + c.screenPosition.y);
+        this._setDrawablePosition(c.entityId,
+                                  c.graphics,
+                                  viewX + c.screenPosition.x,
+                                  viewY + c.screenPosition.y);
       }
     }
   }
@@ -730,7 +894,7 @@ export class RenderSystem implements ClientSystem {
                                      name: string,
                                      animated: boolean) {
     if (c.stagedSprite) {
-      this._pixi.stage.removeChild(c.stagedSprite);
+      this._unstageDrawable(c.stagedSprite);
     }
 
     if (c.activeAnimation) {
@@ -743,7 +907,8 @@ export class RenderSystem implements ClientSystem {
       if (!anim) {
         throw new GameError("Component has no sprite with name " + name);
       }
-      this._pixi.stage.addChild(anim.sprite);
+      //this._pixi.stage.addChild(anim.sprite);
+      this._stageDrawable(c.entityId, anim.sprite);
       c.stagedSprite = anim.sprite;
       c.activeAnimation = anim;
     }
@@ -752,7 +917,8 @@ export class RenderSystem implements ClientSystem {
       if (!sprite) {
         throw new GameError("Component has no sprite with name " + name);
       }
-      this._pixi.stage.addChild(sprite);
+      //this._pixi.stage.addChild(sprite);
+      this._stageDrawable(c.entityId, sprite);
       c.stagedSprite = sprite;
     }
 
@@ -775,7 +941,8 @@ export class RenderSystem implements ClientSystem {
       throw new GameError("Component has no sprite with name " + name);
     }
     sprites.forEach(sprite => {
-      this._pixi.stage.addChild(sprite);
+      //this._pixi.stage.addChild(sprite);
+      this._stageDrawable(c.entityId, sprite);
     });
     c.stagedSprites = name;
   }

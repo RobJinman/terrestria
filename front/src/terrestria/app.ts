@@ -124,7 +124,7 @@ export class App {
     this._insertElement();
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    await renderSys.init();
+    await renderSys.initialise();
 
     this._onWindowResize();
   }
@@ -213,8 +213,6 @@ export class App {
       throw new GameError("Not connected");
     }
 
-    this._userInputManager.initialise();
-
     const pinataId = pinataCredentials ?
                      pinataCredentials.pinataId : this._pinataId;
 
@@ -296,7 +294,9 @@ export class App {
     const h = window.innerHeight;
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    renderSys.onWindowResized(w, h);
+    if (renderSys.ready) {
+      renderSys.onWindowResized(w, h);
+    }
 
     if (this._gameState != GameState.GAME_INACTIVE) {
       const event: EWindowResized = {
@@ -396,7 +396,14 @@ export class App {
 
   private _initialiseGame(mapData: ClientMapData) {
     this._mapData = mapData;
+
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    renderSys.setWorldSize(mapData.width * BLOCK_SZ, mapData.height * BLOCK_SZ);
+
+    this._userInputManager.initialise();
+
     this._onWindowResize();
+
     constructInitialEntitiesFromMapData(this._em, mapData);
   }
 

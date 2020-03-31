@@ -11,6 +11,7 @@ import { EntityType } from "./common/game_objects";
 import { CSpatial } from "./spatial_component";
 import { PLAYER_BUCKET_VALUE_Z_INDEX } from "./constants";
 import { BLOCK_SZ } from "./common/constants";
+import { SpatialSystem } from "./spatial_system";
 
 interface Bucket {
   name: string;
@@ -125,6 +126,8 @@ export class InventorySystem implements ClientSystem {
 
     const id = getNextEntityId();
 
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+
     const spatialComp = new CSpatial(id, this._em);
     const renderComp = new CShape(id,
                                   new Rectangle(w, h),
@@ -135,7 +138,7 @@ export class InventorySystem implements ClientSystem {
 
     const x = (w + margin) * idx;
     const y = -h - margin;
-    spatialComp.setStaticPos(x, y);
+    spatialSys.setStaticPos(id, x, y);
 
     this._em.addChildToEntity(agent.entityId, id);
 

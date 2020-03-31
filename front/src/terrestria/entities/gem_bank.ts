@@ -6,6 +6,8 @@ import { CSpatial } from "../spatial_component";
 import { EntityType } from "../common/game_objects";
 import { BLOCK_SZ } from "../common/constants";
 import { Vec2 } from "../common/geometry";
+import { ComponentType } from "../common/component_types";
+import { SpatialSystem } from "../spatial_system";
 
 const ENTRANCE_OFFSET: Vec2 = { x: 1 * BLOCK_SZ, y: 1 * BLOCK_SZ };
 const EXIT_OFFSET: Vec2 = { x: 3 * BLOCK_SZ, y: 1 * BLOCK_SZ };
@@ -49,11 +51,12 @@ function constructEntrance(em: EntityManager) {
                                  "gem_bank_entrance.png",
                                  { zIndex: PLAYER_Z_INDEX - 1 });
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
   const spatialComp = new CSpatial(id, em);
 
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 
-  spatialComp.setStaticPos(ENTRANCE_OFFSET.x, ENTRANCE_OFFSET.y);
+  spatialSys.setStaticPos(id, ENTRANCE_OFFSET.x, ENTRANCE_OFFSET.y);
 
   return id;
 }
@@ -73,11 +76,12 @@ function constructExit(em: EntityManager) {
                                  "gem_bank_exit.png",
                                  { zIndex: PLAYER_Z_INDEX - 1 });
 
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
   const spatialComp = new CSpatial(id, em);
 
   em.addEntity(id, EntityType.OTHER, [ spatialComp, renderComp ]);
 
-  spatialComp.setStaticPos(EXIT_OFFSET.x, EXIT_OFFSET.y);
+  spatialSys.setStaticPos(id, EXIT_OFFSET.x, EXIT_OFFSET.y);
 
   return id;
 }

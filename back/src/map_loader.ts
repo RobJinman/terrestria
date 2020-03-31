@@ -71,8 +71,8 @@ export class MapLoader {
 
   // TODO: This will come from JSON. For now, generate the data here
   private _loadMapData(): MapData {
-    const WORLD_W = 40;
-    const WORLD_H = 25;
+    const WORLD_W = 50;
+    const WORLD_H = 60;
 
     const gravRegion: Span2dDesc = [
       [{ a: 0, b: WORLD_W - 1 }],
@@ -96,8 +96,8 @@ export class MapLoader {
     const entities: EntityDesc[] = [];
 
     const gr = this._constructGravRegion(gravRegion);
-    const numRocks = 20;
-    const numGems = 10;
+    const numRocks = 100;
+    const numGems = 50;
 
     entities.push({
       type: EntityType.GEM_BANK,

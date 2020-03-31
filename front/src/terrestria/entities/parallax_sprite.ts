@@ -3,6 +3,8 @@ import { EntityData } from "../common/entity_manager";
 import { StaticImage, CParallax } from "../render_system";
 import { CSpatial } from "../spatial_component";
 import { EntityType } from "../common/game_objects";
+import { SpatialSystem } from "../spatial_system";
+import { ComponentType } from "../common/component_types";
 
 export function constructParallaxSprite(em: EntityManager, entity: EntityData) {
   const staticImages: StaticImage[] = [
@@ -27,5 +29,6 @@ export function constructParallaxSprite(em: EntityManager, entity: EntityData) {
   const x = entity.desc.centre.x - 0.5 * entity.desc.width;
   const y = entity.desc.centre.y - 0.5 * entity.desc.height;
 
-  spatialComp.setStaticPos(x, y);
+  const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  spatialSys.setStaticPos(entity.id, x, y);
 }
