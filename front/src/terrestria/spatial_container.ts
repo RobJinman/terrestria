@@ -1,13 +1,12 @@
-import { EntityId } from "./common/system";
 import { GameError } from "./common/error";
 import { clamp, inRange } from "./common/utils";
 
 const CELL_SZ = 128;
 
-export class SpatialContainer {
+export class SpatialContainer<T> {
   private _gridW = 0;
   private _gridH = 0;
-  private _grid: Set<EntityId>[][];
+  private _grid: Set<T>[][];
 
   constructor(worldW: number, worldH: number) {
     this._gridW = Math.ceil(worldW / CELL_SZ);
@@ -15,16 +14,16 @@ export class SpatialContainer {
 
     this._grid = [];
     for (let i = 0; i < this._gridW; ++i) {
-      const col: Set<EntityId>[] = [];
+      const col: Set<T>[] = [];
       for (let j = 0; j < this._gridH; ++j) {
-        col.push(new Set<EntityId>());
+        col.push(new Set<T>());
       }
       this._grid.push(col);
     }
   }
 
-  entitiesInRegion(x: number, y: number, w: number, h: number): Set<EntityId> {
-    const entities = new Set<EntityId>();
+  itemsInRegion(x: number, y: number, w: number, h: number): Set<T> {
+    const items = new Set<T>();
 
     if (!this._grid) {
       throw new GameError("Spatial system not initialised");
@@ -43,14 +42,14 @@ export class SpatialContainer {
     for (let i = x0; i <= x1; ++i) {
       for (let j = y0; j <= y1; ++j) {
         const inCell = this._grid[i][j];
-        inCell.forEach(entity => entities.add(entity));
+        inCell.forEach(item => items.add(item));
       }
     }
 
-    return entities;
+    return items;
   }
 
-  removeEntity(id: EntityId) {
+  removeItem(id: T) {
     // TODO
     for (let i = 0; i < this._gridW; ++i) {
       for (let j = 0; j < this._gridH; ++j) {
@@ -59,7 +58,7 @@ export class SpatialContainer {
     }
   }
 
-  addEntity(id: EntityId, x: number, y: number) {
+  addItem(id: T, x: number, y: number) {
     const gridX = Math.floor(x / CELL_SZ);
     const gridY = Math.floor(y / CELL_SZ);
 

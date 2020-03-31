@@ -225,8 +225,8 @@ export class RenderSystem implements ClientSystem {
   private _windowW = 0;
   private _windowH = 0;
   private _camera: Vec2 = { x: 0, y: 0 };
-  private _spatialContainer?: SpatialContainer;
-  private _prevVisible = new Set<EntityId>();
+  private _spatialContainer?: SpatialContainer<PIXI.DisplayObject>;
+  private _visible = new Set<PIXI.DisplayObject>();
 
   constructor(entityManager: EntityManager,
               scheduler: Scheduler,
@@ -438,9 +438,6 @@ export class RenderSystem implements ClientSystem {
     else if (c instanceof CShape) {
       this._removeShapeComponent(c);
     }
-    if (this._spatialContainer) {
-      this._spatialContainer.removeEntity(id);
-    }
   }
 
   handleEvent(event: GameEvent) {
@@ -491,8 +488,6 @@ export class RenderSystem implements ClientSystem {
 
     this._pixi.stage.scale.x = scale;
     this._pixi.stage.scale.y = scale;
-
-    this._doCull();
   }
 
   private _doCull() {
@@ -500,74 +495,37 @@ export class RenderSystem implements ClientSystem {
       throw new GameError("Render system not initialised");
     }
 
-    const visible = this._spatialContainer.entitiesInRegion(this._viewX,
+    const newVisible = this._spatialContainer.itemsInRegion(this._viewX,
                                                             this._viewY,
                                                             this._viewW,
                                                             this._viewH);
 
-    this._prevVisible.forEach(id => {
-      if (!visible.has(id)) {
-        const c = this._components.get(id);
-        if (c) {
-          this._hide(c);
-        }
+    this._visible.forEach(item => {
+      if (!newVisible.has(item)) {
+        this._pixi.stage.removeChild(item);
       }
     });
 
-    visible.forEach(id => {
-      if (!this._prevVisible.has(id)) {
-        const c = this._components.get(id);
-        if (c) {
-          this._show(c);
-        }
+    newVisible.forEach(item => {
+      if (!this._visible.has(item)) {
+        this._pixi.stage.addChild(item);
       }
     });
 
-    this._prevVisible = new Set<EntityId>(visible);
+    this._visible = new Set<PIXI.DisplayObject>(newVisible);
   }
 
-  private _hide(c: CRender) {
-    if (c instanceof CSprite) {
-      if (c.stagedSprite) {
-        this._pixi.stage.removeChild(c.stagedSprite);
-      }
-    }
-    else if (c instanceof CShape) {
-      this._pixi.stage.removeChild(c.graphics);
-    }
-    else if (c instanceof CTiledRegion) {
-      if (c.stagedSprites) {
-        const sprites = c.sprites.get(c.stagedSprites) || [];
-        sprites.forEach(sprite => this._pixi.stage.removeChild(sprite));
-      }
+  private _stageDrawable(item: PIXI.DisplayObject) {
+    if (this._visible.has(item)) {
+      this._pixi.stage.addChild(item);
     }
   }
 
-  private _show(c: CRender) {
-    if (c instanceof CSprite) {
-      if (c.stagedSprite) {
-        this._pixi.stage.addChild(c.stagedSprite);
-      }
+  private _unstageDrawable(item: PIXI.DisplayObject) {
+    if (this._spatialContainer) {
+      this._spatialContainer.removeItem(item);
     }
-    else if (c instanceof CShape) {
-      this._pixi.stage.addChild(c.graphics);
-    }
-    else if (c instanceof CTiledRegion) {
-      if (c.stagedSprites) {
-        const sprites = c.sprites.get(c.stagedSprites) || [];
-        sprites.forEach(sprite => this._pixi.stage.addChild(sprite));
-      }
-    }
-  }
-
-  private _stageDrawable(entityId: EntityId, drawable: PIXI.DisplayObject) {
-    if (this._prevVisible.has(entityId)) {
-      this._pixi.stage.addChild(drawable);
-    }
-  }
-
-  private _unstageDrawable(drawable: PIXI.DisplayObject) {
-    this._pixi.stage.removeChild(drawable);
+    this._pixi.stage.removeChild(item);
   }
 
   private _updateScreenSpaceComponentPositions() {
@@ -607,7 +565,6 @@ export class RenderSystem implements ClientSystem {
         const newCentreX = this._camera.x - m * dx;
         const newCentreY = this._camera.y - m * dy;
         this._setDrawablePosition(
-          c.entityId,
           c.stagedSprite,
           newCentreX - 0.5 * w + c.stagedSprite.pivot.x,
           newCentreY - 0.5 * h + c.stagedSprite.pivot.y);
@@ -616,8 +573,7 @@ export class RenderSystem implements ClientSystem {
     });
   }
 
-  private _setDrawablePosition(entityId: EntityId,
-                               drawable: PIXI.DisplayObject,
+  private _setDrawablePosition(drawable: PIXI.DisplayObject,
                                x: number,
                                y: number,
                                rotation?: number) {
@@ -625,28 +581,12 @@ export class RenderSystem implements ClientSystem {
       throw new GameError("Render system not initialised");
     }
 
-    this._spatialContainer.removeEntity(entityId);
+    this._spatialContainer.removeItem(drawable);
     drawable.position.set(x, y);
     if (rotation !== undefined) {
       drawable.rotation = rotation;
     }
-    this._spatialContainer.addEntity(entityId, x, y);
-  }
-
-  private _setDrawablePositions(entityId: EntityId,
-                                drawables: DrawablePosition[]) {
-    if (!this._spatialContainer) {
-      throw new GameError("Render system not initialised");
-    }
-
-    this._spatialContainer.removeEntity(entityId);
-    for (const { x, y, rotation, drawable } of drawables) {
-      drawable.position.set(x, y);
-      if (rotation !== undefined) {
-        drawable.rotation = rotation;
-      }
-      this._spatialContainer.addEntity(entityId, x, y);
-    }
+    this._spatialContainer.addItem(drawable, x, y);
   }
 
   private _addShapeComponent(c: CShape) {
@@ -674,7 +614,7 @@ export class RenderSystem implements ClientSystem {
     c.graphics.endFill();
 
     //this._pixi.stage.addChild(c.graphics);
-    this._stageDrawable(c.entityId, c.graphics);
+    this._stageDrawable(c.graphics);
 
     this._updateSpritePosition(c);
 
@@ -698,6 +638,8 @@ export class RenderSystem implements ClientSystem {
     this._unstageDrawable(c.graphics);
     this._components.delete(c.entityId);
     this._screenSpaceComponents.delete(c.entityId);
+
+    // TODO: Remove items from spatial container
   }
 
   private _addInteractionCallbacks(c: CRender,
@@ -774,6 +716,8 @@ export class RenderSystem implements ClientSystem {
     }
     this._components.delete(c.entityId);
     this._screenSpaceComponents.delete(c.entityId);
+
+    // TODO: Remove items from spatial container
   }
 
   private _removeTiledRegionComponent(c: CTiledRegion) {
@@ -788,13 +732,14 @@ export class RenderSystem implements ClientSystem {
     }
 
     this._components.delete(c.entityId);
+
+    // TODO: Remove items from spatial container
   }
 
   private _addTiledRegionComponent(c: CTiledRegion) {
     c.staticImages.forEach(imgDesc => {
       const texture = this._findTexture(imgDesc.name);
       const sprites: PIXI.TilingSprite[] = [];
-      const drawablePositions: DrawablePosition[] = [];
 
       for (const [j, spans] of c.region.spans) {
         for (const span of spans) {
@@ -805,18 +750,11 @@ export class RenderSystem implements ClientSystem {
           const sprite = new PIXI.TilingSprite(texture, n * BLOCK_SZ, BLOCK_SZ);
           this._addInteractionCallbacks(c, sprite);
           sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
-          sprite.position.set(x, y);
           sprites.push(sprite);
 
-          drawablePositions.push({
-            x,
-            y,
-            drawable: sprite
-          });
+          this._setDrawablePosition(sprite, x, y);
         }
       }
-
-      this._setDrawablePositions(c.entityId, drawablePositions);
 
       c.sprites.set(imgDesc.name, sprites);
     });
@@ -851,8 +789,7 @@ export class RenderSystem implements ClientSystem {
         // TODO: Shouldn't always assume pivot point
         c.stagedSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
         // The pivot needs to be added here to keep the position the same
-        this._setDrawablePosition(c.entityId,
-                                  c.stagedSprite,
+        this._setDrawablePosition(c.stagedSprite,
                                   spatialComp.x_abs + c.stagedSprite.pivot.x,
                                   spatialComp.y_abs + c.stagedSprite.pivot.y,
                                   spatialComp.angle_abs);
@@ -860,8 +797,7 @@ export class RenderSystem implements ClientSystem {
     }
     else if (c instanceof CShape) {
       c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-      this._setDrawablePosition(c.entityId,
-                                c.graphics,
+      this._setDrawablePosition(c.graphics,
                                 spatialComp.x_abs + c.graphics.pivot.x,
                                 spatialComp.y_abs + c.graphics.pivot.y,
                                 spatialComp.angle_abs);
@@ -874,16 +810,14 @@ export class RenderSystem implements ClientSystem {
 
     if (c instanceof CSprite) {
       if (c.stagedSprite && c.screenPosition) {
-        this._setDrawablePosition(c.entityId,
-                                  c.stagedSprite,
+        this._setDrawablePosition(c.stagedSprite,
                                   viewX + c.screenPosition.x,
                                   viewY + c.screenPosition.y);
       }
     }
     else if (c instanceof CShape) {
       if (c.screenPosition) {
-        this._setDrawablePosition(c.entityId,
-                                  c.graphics,
+        this._setDrawablePosition(c.graphics,
                                   viewX + c.screenPosition.x,
                                   viewY + c.screenPosition.y);
       }
@@ -908,7 +842,7 @@ export class RenderSystem implements ClientSystem {
         throw new GameError("Component has no sprite with name " + name);
       }
       //this._pixi.stage.addChild(anim.sprite);
-      this._stageDrawable(c.entityId, anim.sprite);
+      this._stageDrawable(anim.sprite);
       c.stagedSprite = anim.sprite;
       c.activeAnimation = anim;
     }
@@ -918,7 +852,7 @@ export class RenderSystem implements ClientSystem {
         throw new GameError("Component has no sprite with name " + name);
       }
       //this._pixi.stage.addChild(sprite);
-      this._stageDrawable(c.entityId, sprite);
+      this._stageDrawable(sprite);
       c.stagedSprite = sprite;
     }
 
@@ -942,7 +876,7 @@ export class RenderSystem implements ClientSystem {
     }
     sprites.forEach(sprite => {
       //this._pixi.stage.addChild(sprite);
-      this._stageDrawable(c.entityId, sprite);
+      this._stageDrawable(sprite);
     });
     c.stagedSprites = name;
   }
