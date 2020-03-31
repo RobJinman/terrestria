@@ -6,8 +6,8 @@ import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
          RMapData } from "./common/response";
-import { BLOCK_SZ, SERVER_FRAME_DURATION_MS,
-         SYNC_INTERVAL_MS } from "./common/constants";
+import { BLOCK_SZ, SERVER_FRAME_DURATION_MS, SYNC_INTERVAL_MS, 
+         SERVER_FRAME_RATE } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
@@ -88,7 +88,7 @@ export class Game {
     this._doSyncFn = debounce(this, this._doSync, SYNC_INTERVAL_MS);
   }
 
-  async addPlayer(socket: WebSocket, pinataId?: string, pinataToken?: string) {
+  addPlayer(socket: WebSocket, pinataId?: string, pinataToken?: string) {
     const entities = this._em.getEntities();
   
     const id = this._factory.constructEntity({
@@ -119,7 +119,7 @@ export class Game {
     const stateUpdateResp: RGameState = {
       type: GameResponseType.GAME_STATE,
       packets: this._em.getState()
-    }
+    };
 
     const newPlayerResp: RNewEntities = {
       type: GameResponseType.NEW_ENTITIES,
@@ -130,10 +130,10 @@ export class Game {
       }]
     };
 
-    await this._pipe.send(id, mapDataResp);
-    await this._pipe.send(id, newEntitiesResp);
-    await this._pipe.sendToAll(newPlayerResp);
-    await this._pipe.send(id, stateUpdateResp);
+    this._pipe.send(id, mapDataResp);
+    this._pipe.sendToAll(newPlayerResp);
+    this._pipe.send(id, newEntitiesResp);
+    this._pipe.send(id, stateUpdateResp);
 
     return id;
   }
@@ -232,9 +232,24 @@ export class Game {
     this._em.transmitEvents();
   }
 
+  private _frame = 0;
+  private _start = (new Date()).getTime();
+
   private _tick() {
     this._em.update();
     this._scheduler.update();
     this._doSyncFn();
+
+    if (this._frame % SERVER_FRAME_RATE === 0) {
+      const now = (new Date()).getTime();
+      const elapsed = now - this._start;
+      const frameRate = 1000 * SERVER_FRAME_RATE / elapsed;
+
+      console.log(`Frame rate: ${frameRate}/${SERVER_FRAME_RATE}`);
+
+      this._start = now;
+    }
+
+    this._frame++;
   }
 }

@@ -170,7 +170,7 @@ export class App {
     }
   }
 
-  private async _chooseAvailableGame(): Promise<Game> {
+  private _chooseAvailableGame(): Game {
     const games: Game[] = Array.from(this._games);
 
     this._logger.info("Number of games: " + games.length);
@@ -247,13 +247,13 @@ export class App {
     }
   }
 
-  private async _handleJoinGame(sock: ExtWebSocket, data: JoinGameAction) {
+  private _handleJoinGame(sock: ExtWebSocket, data: JoinGameAction) {
     this._logger.info("Handling join game");
 
     let { pinataId, pinataToken } = data;
 
-    const game = await this._chooseAvailableGame();
-    const entityId = await game.addPlayer(sock, pinataId, pinataToken);
+    const game = this._chooseAvailableGame();
+    const entityId = game.addPlayer(sock, pinataId, pinataToken);
 
     sock.userId = entityId;
 
@@ -314,7 +314,7 @@ export class App {
     }
     else if (action.type == ActionType.JOIN_GAME) {
       const data = <JoinGameAction>action;
-      await this._handleJoinGame(sock, data);
+      this._handleJoinGame(sock, data);
     }
     else {
       if (!sock.userId) {

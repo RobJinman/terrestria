@@ -5,7 +5,7 @@ import { CSpatial } from "./spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
 import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
-import { SYNC_INTERVAL_MS } from "./common/constants";
+import { SYNC_INTERVAL_MS, BLOCK_SZ } from "./common/constants";
 import { EntityManager } from "./entity_manager";
 
 export class SpatialSystem implements ClientSystem {
@@ -60,7 +60,17 @@ export class SpatialSystem implements ClientSystem {
 
     if (packet.mode == SpatialMode.GRID_MODE) {
       if (packet.speed > 0) {
-        this._setDestination(c, packet.x, packet.y, packet.speed);
+        const dx = packet.x - c.x;
+        const dy = packet.y - c.y;
+        const s = Math.sqrt(dx * dx + dy * dy);
+        let multiplier = 1;
+        if (s > BLOCK_SZ) {
+          // Hack to speed up lacking entities. Assumes that the speed given
+          // by the back-end was meant for a distance of BLOCK_SZ.
+          multiplier = 1 + (s - BLOCK_SZ) / BLOCK_SZ;
+        }
+
+        this._setDestination(c, packet.x, packet.y, packet.speed * multiplier);
       }
       else {
         this._setStaticPos(c, packet.x, packet.y);

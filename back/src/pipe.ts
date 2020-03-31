@@ -35,9 +35,13 @@ export class Pipe {
 
   async sendToAll(data: any) {
     const json = JSON.stringify(data);
+
+    const promises: Promise<void>[] = [];
     for (const [id, socket] of this._sockets) {
-      await this._sendThroughSocket(socket, json);
+      promises.push(this._sendThroughSocket(socket, json));
     }
+
+    await Promise.all(promises);
   }
 
   async send(playerId: EntityId, data: any) {

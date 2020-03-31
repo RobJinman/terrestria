@@ -33,6 +33,7 @@ export class EntityManager extends IEntityManager {
         type: GameResponseType.EVENT,
         event: e
       };
+
       this._pipe.sendToAll(response);
     });
     this._eventsPendingTransmission = [];
