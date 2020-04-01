@@ -421,20 +421,10 @@ export class RenderSystem implements ClientSystem {
   }
 
   removeComponent(id: EntityId) {
-    const c = this._components.get(id);
-    if (c instanceof CSprite) {
-      this._removeSpriteComponent(c);
+    this._components.delete(id);
+    this._screenSpaceComponents.delete(id);
+    this._parallaxComponents.delete(id);
 
-      if (c instanceof CParallax) {
-        this._parallaxComponents.delete(id);
-      }
-    }
-    else if (c instanceof CTiledRegion) {
-      this._removeTiledRegionComponent(c);
-    }
-    else if (c instanceof CShape) {
-      this._removeShapeComponent(c);
-    }
     if (this._spatialContainer) {
       this._spatialContainer.removeAllItemsForEntity(id);
     }
@@ -490,6 +480,10 @@ export class RenderSystem implements ClientSystem {
     this._pixi.stage.scale.y = scale;
 
     this._doCull();
+  }
+
+  private _removeTiledRegionComponent(c: CTiledRegion) {
+    this._components.delete(c.entityId);
   }
 
   private _doCull() {
@@ -634,11 +628,6 @@ export class RenderSystem implements ClientSystem {
     });
   }
 
-  private _removeShapeComponent(c: CShape) {
-    this._components.delete(c.entityId);
-    this._screenSpaceComponents.delete(c.entityId);
-  }
-
   private _addInteractionCallbacks(c: CRender,
                                    sprite: PIXI.DisplayObject) {
     if (c.onPress) {
@@ -705,19 +694,6 @@ export class RenderSystem implements ClientSystem {
     }
 
     return texture;
-  }
-
-  private _removeSpriteComponent(c: CSprite) {
-    this._components.delete(c.entityId);
-    this._screenSpaceComponents.delete(c.entityId);
-  }
-
-  private _removeTiledRegionComponent(c: CTiledRegion) {
-    if (c.currentSprites !== null) {
-      const sprites = c.sprites.get(c.currentSprites);
-    }
-
-    this._components.delete(c.entityId);
   }
 
   private _addTiledRegionComponent(c: CTiledRegion) {
