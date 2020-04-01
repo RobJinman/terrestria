@@ -482,10 +482,6 @@ export class RenderSystem implements ClientSystem {
     this._doCull();
   }
 
-  private _removeTiledRegionComponent(c: CTiledRegion) {
-    this._components.delete(c.entityId);
-  }
-
   private _doCull() {
     if (!this._spatialContainer) {
       throw new GameError("Render system not initialised");
