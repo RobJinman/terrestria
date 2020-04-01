@@ -137,18 +137,27 @@ export function constructPlayer(em: EntityManager, entity: EntityData) {
     const dirChar = directionToLetter(event.direction);
 
     switch (event.actionType) {
-      case AgentActionType.DIG:
+      case AgentActionType.DIG: {
         renderSys.playAnimation(id, "man_dig_" + dirChar);
         break;
-      case AgentActionType.RUN:
+      }
+      case AgentActionType.RUN: {
         renderSys.playAnimation(id, "man_run_" + dirChar);
         break;
-      case AgentActionType.JUMP:
+      }
+      case AgentActionType.JUMP: {
         renderSys.playAnimation(id, "man_jump");
         break;
-      case AgentActionType.PUSH:
+      }
+      case AgentActionType.PUSH: {
         renderSys.playAnimation(id, "man_push_" + dirChar);
         break;
+      }
+      case AgentActionType.COLLECT: {
+        // TODO: Collect animation
+        renderSys.playAnimation(id, "man_dig_" + dirChar);
+        break;
+      }
     }
   });
 

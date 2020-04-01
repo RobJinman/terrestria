@@ -78,7 +78,8 @@ export enum AgentActionType {
   PUSH = "PUSH",
   RUN = "RUN",
   DIG = "DIG",
-  JUMP = "JUMP"
+  JUMP = "JUMP",
+  COLLECT = "COLLECT"
 }
 
 export interface EAgentAction extends GameEvent {

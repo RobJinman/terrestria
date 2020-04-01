@@ -1,12 +1,13 @@
 import { EntityManager } from "../../entity_manager";
 import { EntityId } from "../../common/system";
-import { EAgentBlocked, EEntityCollision, GameEventType,
-         GameEvent } from "../../common/event";
+import { EAgentBlocked, EEntityCollision, GameEventType, GameEvent,
+         EAgentAction, AgentActionType } from "../../common/event";
 import { InventorySystem } from "../../inventory_system";
 import { ComponentType } from "../../common/component_types";
 import { BehaviourSystem } from "../../common/behaviour_system";
 import { CSpatial } from "../../spatial_component";
 import { PLAYER_SPEED } from "../../common/constants";
+import { AgentSystem } from "../../agent_system";
 
 function onAgentBlocked(em: EntityManager,
                         collectableId: EntityId,
@@ -25,6 +26,15 @@ function onAgentBlocked(em: EntityManager,
                                     collectableSpatial.y,
                                     1.0 / PLAYER_SPEED);
 
+    const collect: EAgentAction = {
+      type: GameEventType.AGENT_ACTION,
+      entities: [ event.entityId, collectableId ],
+      agentId: event.entityId,
+      actionType: AgentActionType.COLLECT,
+      direction: event.direction
+    };
+
+    em.submitEvent(collect);
     em.removeEntity_onClients(collectableId);
   }
 }
@@ -32,13 +42,24 @@ function onAgentBlocked(em: EntityManager,
 function onEntityCollision(em: EntityManager,
                            collectableId: EntityId,
                            event: EEntityCollision) {
-  const agentSys = <InventorySystem>em.getSystem(ComponentType.AGENT);
-  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
-
   const other = event.entityA == collectableId ? event.entityB : event.entityA;
 
+  const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
+
   if (agentSys.hasComponent(other)) {
+    const agent = agentSys.getComponent(other);
+
+    const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
     if (inventorySys.collectItem(other, collectableId)) {
+      const collect: EAgentAction = {
+        type: GameEventType.AGENT_ACTION,
+        entities: [ other, collectableId ],
+        agentId: other,
+        actionType: AgentActionType.COLLECT,
+        direction: agent.lastDirectionMoved
+      };
+
+      em.submitEvent(collect);
       em.removeEntity_onClients(collectableId);
     }
   }

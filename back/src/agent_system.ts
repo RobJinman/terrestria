@@ -30,7 +30,9 @@ export class CAgent extends Component {
   dirty: boolean = true;
   private _pinataId?: string;
   private _pinataToken?: string;
+
   _input: Input; // Non-private so AgentSystem has access
+  _lastDirectionMoved: Direction = Direction.DOWN;
 
   constructor(entityId: EntityId, pinataId?: string, pinataToken?: string) {
     super(entityId, ComponentType.AGENT);
@@ -55,6 +57,10 @@ export class CAgent extends Component {
 
   get pinataToken() {
     return this._pinataToken;
+  }
+
+  get lastDirectionMoved() {
+    return this._lastDirectionMoved;
   }
 }
 
@@ -201,18 +207,23 @@ export class AgentSystem implements ServerSystem {
 
       if (c._input.lockedUntil <= now) {
         c._input.lockedUntil = 0;
+        let direction: Direction|undefined;
 
         if (c._input.states[UserInput.UP] == InputState.PRESSED) {
-          spatialSys.moveAgent(c.entityId, Direction.UP);
+          direction = Direction.UP;
         }
         if (c._input.states[UserInput.RIGHT] == InputState.PRESSED) {
-          spatialSys.moveAgent(c.entityId, Direction.RIGHT);
+          direction = Direction.RIGHT;
         }
         if (c._input.states[UserInput.DOWN] == InputState.PRESSED) {
-          spatialSys.moveAgent(c.entityId, Direction.DOWN);
+          direction = Direction.DOWN;
         }
         if (c._input.states[UserInput.LEFT] == InputState.PRESSED) {
-          spatialSys.moveAgent(c.entityId, Direction.LEFT);
+          direction = Direction.LEFT;
+        }
+
+        if (direction && spatialSys.moveAgent(c.entityId, direction)) {
+          c._lastDirectionMoved = direction;
         }
 
         if (spatialComp.currentMode == SpatialMode.FREE_MODE &&
@@ -229,8 +240,10 @@ export class AgentSystem implements ServerSystem {
     switch (action.type) {
       case ActionType.USER_INPUT: {
         const userInput = <UserInputAction>action;
-        const c = this.getComponent(action.playerId);
-        c._input.states[userInput.input] = userInput.state;
+        const c = this._components.get(action.playerId);
+        if (c) {
+          c._input.states[userInput.input] = userInput.state;
+        }
         break;
       }
     }
