@@ -71,8 +71,8 @@ export class MapLoader {
 
   // TODO: This will come from JSON. For now, generate the data here
   private _loadMapData(): MapData {
-    const WORLD_W = 100;
-    const WORLD_H = 60;
+    const WORLD_W = 50;
+    const WORLD_H = 50;
 
     const gravRegion: Span2dDesc = [
       [{ a: 0, b: WORLD_W - 1 }],
@@ -96,7 +96,8 @@ export class MapLoader {
     const entities: EntityDesc[] = [];
 
     const gr = this._constructGravRegion(gravRegion);
-    const numRocks = 200;
+    const numRoundRocks = 100;
+    const numSquareRocks = 100;
     const numGems = 100;
 
     entities.push({
@@ -135,15 +136,27 @@ export class MapLoader {
     coords = _.shuffle(coords);
 
     let idx = 0;
-    const rockCoords = coords.slice(0, numRocks);
-    idx += numRocks;
+    const roundRockCoords = coords.slice(0, numRoundRocks);
+    idx += numRoundRocks;
+    const squareRockCoords = coords.slice(idx, idx + numSquareRocks);
+    idx += numSquareRocks;
     const gemCoords = coords.slice(idx, idx + numGems);
     idx += numGems;
     const soilCoords = coords.slice(idx);
 
-    rockCoords.forEach(([c, r]) => {
+    roundRockCoords.forEach(([c, r]) => {
       entities.push({
-        type: EntityType.ROCK,
+        type: EntityType.ROUND_ROCK,
+        data: {
+          y: r,
+          x: c
+        }
+      });
+    });
+
+    squareRockCoords.forEach(([c, r]) => {
+      entities.push({
+        type: EntityType.SQUARE_ROCK,
         data: {
           y: r,
           x: c

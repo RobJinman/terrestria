@@ -9,18 +9,29 @@ import { GameEventType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
-export function constructRock(em: EntityManager, entity: EntityData) {
+export function constructRoundRock(em: EntityManager, entity: EntityData) {
+  return constructRock(em, entity, false);
+}
+
+export function constructSquareRock(em: EntityManager, entity: EntityData) {
+  return constructRock(em, entity, true);
+}
+
+function constructRock(em: EntityManager,
+                       entity: EntityData,
+                       square: boolean) {
   const id = entity.id;
+  const typeString = square ? "square" : "round";
 
   const staticImages: StaticImage[] = [
     {
-      name: "rock.png"
+      name: `${typeString}_rock.png`
     }
   ];
 
   const animations: AnimationDesc[] = [
     {
-      name: "rock_burn",
+      name: `${typeString}_rock_burn`,
       duration: 1.0 / PLAYER_SPEED
     }
   ];
@@ -28,7 +39,7 @@ export function constructRock(em: EntityManager, entity: EntityData) {
   const renderComp = new CSprite(id,
                                  staticImages,
                                  animations,
-                                 "rock.png");
+                                 `${typeString}_rock.png`);
 
   const spatialComp = new CSpatial(id, em);
 
@@ -36,14 +47,15 @@ export function constructRock(em: EntityManager, entity: EntityData) {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
-    renderSys.playAnimation(id, "rock_burn", () => {
+    renderSys.playAnimation(id, `${typeString}_rock_burn`, () => {
       em.removeEntity(id);
     });
   });
 
   const behaviourComp = new CBehaviour(id, targetedEvents);
 
-  em.addEntity(id, EntityType.ROCK, [ spatialComp,
-                                      renderComp,
-                                      behaviourComp ]);
+  const type = square ? EntityType.ROUND_ROCK : EntityType.SQUARE_ROCK;
+  em.addEntity(id, type, [ spatialComp,
+                           renderComp,
+                           behaviourComp ]);
 }

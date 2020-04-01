@@ -5,7 +5,7 @@ import { EntityDesc } from "./common/map_data";
 import { GameError } from "./common/error";
 import { constructPlayer } from "./entities/player";
 import { constructGem } from "./entities/gem";
-import { constructRock } from "./entities/rock";
+import { constructRoundRock, constructSquareRock } from "./entities/rock";
 import { constructSoil } from "./entities/soil";
 import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
@@ -53,8 +53,11 @@ export class EntityFactory {
       case EntityType.GEM_BUNDLE: {
         return constructGemBundle(this._em, desc.data);
       }
-      case EntityType.ROCK: {
-        return constructRock(this._em, desc.data);
+      case EntityType.ROUND_ROCK: {
+        return constructRoundRock(this._em, desc.data);
+      }
+      case EntityType.SQUARE_ROCK: {
+        return constructSquareRock(this._em, desc.data);
       }
       case EntityType.SOIL: {
         return constructSoil(this._em, desc.data);

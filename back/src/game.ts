@@ -245,7 +245,7 @@ export class Game {
       const elapsed = now - this._start;
       const frameRate = 1000 * SERVER_FRAME_RATE / elapsed;
 
-      console.log(`Frame rate: ${frameRate}/${SERVER_FRAME_RATE}`);
+      //console.log(`Frame rate: ${frameRate}/${SERVER_FRAME_RATE}`);
 
       this._start = now;
     }

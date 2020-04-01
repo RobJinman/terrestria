@@ -373,16 +373,21 @@
             <key type="filename">man_run_u1.png</key>
             <key type="filename">man_run_u2.png</key>
             <key type="filename">man_run_u3.png</key>
-            <key type="filename">rock.png</key>
-            <key type="filename">rock_burn0.png</key>
-            <key type="filename">rock_burn1.png</key>
-            <key type="filename">rock_burn2.png</key>
-            <key type="filename">rock_burn3.png</key>
+            <key type="filename">round_rock.png</key>
+            <key type="filename">round_rock_burn0.png</key>
+            <key type="filename">round_rock_burn1.png</key>
+            <key type="filename">round_rock_burn2.png</key>
+            <key type="filename">round_rock_burn3.png</key>
             <key type="filename">soil.png</key>
             <key type="filename">soil_puff0.png</key>
             <key type="filename">soil_puff1.png</key>
             <key type="filename">soil_puff2.png</key>
             <key type="filename">soil_puff3.png</key>
+            <key type="filename">square_rock.png</key>
+            <key type="filename">square_rock_burn0.png</key>
+            <key type="filename">square_rock_burn1.png</key>
+            <key type="filename">square_rock_burn2.png</key>
+            <key type="filename">square_rock_burn3.png</key>
             <key type="filename">trophy.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -478,11 +483,6 @@
             <filename>man_run_u1.png</filename>
             <filename>man_run_u2.png</filename>
             <filename>man_run_u3.png</filename>
-            <filename>rock.png</filename>
-            <filename>rock_burn0.png</filename>
-            <filename>rock_burn1.png</filename>
-            <filename>rock_burn2.png</filename>
-            <filename>rock_burn3.png</filename>
             <filename>soil.png</filename>
             <filename>soil_puff0.png</filename>
             <filename>soil_puff1.png</filename>
@@ -534,6 +534,16 @@
             <filename>gem_bundle_5_burn1.png</filename>
             <filename>gem_bundle_5_burn2.png</filename>
             <filename>gem_bundle_5_burn3.png</filename>
+            <filename>round_rock.png</filename>
+            <filename>round_rock_burn0.png</filename>
+            <filename>round_rock_burn1.png</filename>
+            <filename>round_rock_burn2.png</filename>
+            <filename>round_rock_burn3.png</filename>
+            <filename>square_rock.png</filename>
+            <filename>square_rock_burn0.png</filename>
+            <filename>square_rock_burn1.png</filename>
+            <filename>square_rock_burn2.png</filename>
+            <filename>square_rock_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

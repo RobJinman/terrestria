@@ -5,7 +5,7 @@ import { EntityManager } from "./entity_manager";
 import { InventorySystem } from "./inventory_system";
 import { constructPlayer } from "./entities/player";
 import { constructGem } from "./entities/gem";
-import { constructRock } from "./entities/rock";
+import { constructRoundRock, constructSquareRock } from "./entities/rock";
 import { constructSoil } from "./entities/soil";
 import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
@@ -33,8 +33,12 @@ export function constructEntities(entityManager: EntityManager,
         constructGemBundle(entityManager, entity);
         break;
       }
-      case EntityType.ROCK: {
-        constructRock(entityManager, entity);
+      case EntityType.ROUND_ROCK: {
+        constructRoundRock(entityManager, entity);
+        break;
+      }
+      case EntityType.SQUARE_ROCK: {
+        constructSquareRock(entityManager, entity);
         break;
       }
       case EntityType.SOIL: {
