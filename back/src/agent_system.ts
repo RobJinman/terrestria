@@ -207,23 +207,25 @@ export class AgentSystem implements ServerSystem {
 
       if (c._input.lockedUntil <= now) {
         c._input.lockedUntil = 0;
-        let direction: Direction|undefined;
-
         if (c._input.states[UserInput.UP] == InputState.PRESSED) {
-          direction = Direction.UP;
+          if (spatialSys.moveAgent(c.entityId, Direction.UP)) {
+            c._lastDirectionMoved = Direction.UP;
+          }
         }
         if (c._input.states[UserInput.RIGHT] == InputState.PRESSED) {
-          direction = Direction.RIGHT;
+          if (spatialSys.moveAgent(c.entityId, Direction.RIGHT)) {
+            c._lastDirectionMoved = Direction.RIGHT;
+          }
         }
         if (c._input.states[UserInput.DOWN] == InputState.PRESSED) {
-          direction = Direction.DOWN;
+          if (spatialSys.moveAgent(c.entityId, Direction.DOWN)) {
+            c._lastDirectionMoved = Direction.DOWN;
+          }
         }
         if (c._input.states[UserInput.LEFT] == InputState.PRESSED) {
-          direction = Direction.LEFT;
-        }
-
-        if (direction && spatialSys.moveAgent(c.entityId, direction)) {
-          c._lastDirectionMoved = direction;
+          if (spatialSys.moveAgent(c.entityId, Direction.LEFT)) {
+            c._lastDirectionMoved = Direction.LEFT;
+          }
         }
 
         if (spatialComp.currentMode == SpatialMode.FREE_MODE &&
