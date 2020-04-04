@@ -26,15 +26,14 @@ function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
 export class UserInputManager {
   private _em: EntityManager;
   private _scheduler: Scheduler;
-  private _entityId?: EntityId;
+  private _entityId: EntityId;
   private _onDirectionPressHandler: DirectionInputHandlerFn;
   private _onDirectionReleaseHandler: DirectionInputHandlerFn;
   private _onEnterHandler: VoidInputHandlerFn;
   private _onSettingsHandler: VoidInputHandlerFn;
-  private _arrowButtons = new Map<UserInput, EntityId>();
-  private _fullscreenButton?: EntityId;
-  //private _soundButton?: EntityId;
-  private _settingsButton?: EntityId;
+  private _arrowButtons: Record<UserInput, EntityId>;
+  private _fullscreenButton: EntityId;
+  private _settingsButton: EntityId;
   private _mobileControlsVisible: boolean = true;
 
   private _onKeyDownFn = this._onKeyDown.bind(this);
@@ -49,38 +48,15 @@ export class UserInputManager {
     this._em = em;
     this._scheduler = scheduler;
 
+    window.addEventListener("keydown", this._onKeyDownFn, false);
+    window.addEventListener("keyup", this._onKeyUpFn, false);
+
     this._onDirectionPressHandler = onDirectionPressHandler;
     this._onDirectionReleaseHandler = onDirectionReleaseHandler;
     this._onEnterHandler = onEnterHandler;
     this._onSettingsHandler = onSettingsHandler;
-  }
 
-  destroy() {
-    if (this._entityId) {
-      this._em.removeEntity(this._entityId);
-      this._entityId = undefined;
-    }
-    if (this._fullscreenButton) {
-      this._em.removeEntity(this._fullscreenButton);
-      this._fullscreenButton = undefined;
-    }
-    if (this._settingsButton) {
-      this._em.removeEntity(this._settingsButton);
-      this._settingsButton = undefined;
-    }
-
-    this._arrowButtons.forEach(id => this._em.removeEntity(id));
-    this._arrowButtons.clear();
-
-    window.removeEventListener("keydown", this._onKeyDownFn);
-    window.removeEventListener("keyup", this._onKeyUpFn);
-  }
-
-  initialise() {
     this._entityId = getNextEntityId();
-
-    window.addEventListener("keydown", this._onKeyDownFn, false);
-    window.addEventListener("keyup", this._onKeyUpFn, false);
 
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -111,37 +87,30 @@ export class UserInputManager {
                             () => this._onArrowPressed(UserInput.LEFT),
                             () => this._onArrowReleased(UserInput.LEFT));
 
-    this._arrowButtons.set(UserInput.UP, btnUp);
-    this._arrowButtons.set(UserInput.RIGHT, btnRight);
-    this._arrowButtons.set(UserInput.DOWN, btnDown);
-    this._arrowButtons.set(UserInput.LEFT, btnLeft);
+    this._arrowButtons = {
+      UP: btnUp,
+      RIGHT: btnRight,
+      DOWN: btnDown,
+      LEFT: btnLeft
+    };
 
     this._settingsButton =
       this._constructButton("button_settings",
                             () => this._onSettingsButtonPress(),
                             () => this._onSettingsButtonRelease());
-/*
-    this._soundButton =
-      this._constructButton("sound_button",
-                            () => this._onSoundButtonPress,
-                            () => this._onSoundButtonRelease());
-*/
-    if (!this._fullscreen()) {
-      this._constructFullscreenButton();
-    }
-    this._positionButtons();
 
-    this.setMobileControlsVisible(this._mobileControlsVisible);
+
+    this._fullscreenButton =
+      this._constructButton("button_fullscreen",
+                            () => this._onFullscreenButtonPress(),
+                            () => this._onFullscreenButtonRelease());
+
+    this._updateComponentsVisibility();
   }
 
   setMobileControlsVisible(visible: boolean) {
-    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-
-    this._arrowButtons.forEach(btn => {
-      renderSys.setVisible(btn, visible);
-    });
-
     this._mobileControlsVisible = visible;
+    this._updateComponentsVisibility();
   }
 
   get mobileControlsVisible() {
@@ -152,6 +121,26 @@ export class UserInputManager {
     return document.fullscreenEnabled;
   }
 
+  private _updateComponentsVisibility() {
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+
+    const arrowsVisible = this._mobileControlsVisible;
+    const fullscreenVisible = this._fullscreenSupported() &&
+                              !this._fullscreen();
+    const settingsVisible = true;
+
+    renderSys.setVisible(this._arrowButtons.UP, arrowsVisible);
+    renderSys.setVisible(this._arrowButtons.RIGHT, arrowsVisible);
+    renderSys.setVisible(this._arrowButtons.DOWN, arrowsVisible);
+    renderSys.setVisible(this._arrowButtons.LEFT, arrowsVisible);
+
+    renderSys.setVisible(this._fullscreenButton, fullscreenVisible);
+
+    renderSys.setVisible(this._settingsButton, settingsVisible);
+
+    this._positionButtons();
+  }
+
   private _fullscreen(): boolean {
     const windowArea = window.innerWidth * window.innerHeight;
     const screenArea = screen.width * screen.height;
@@ -160,73 +149,63 @@ export class UserInputManager {
     return hasFullscreenElement || windowArea == screenArea;
   }
 
-  private _constructFullscreenButton() {
-    if (!this._fullscreenButton && this._fullscreenSupported()) {
-      this._fullscreenButton =
-        this._constructButton("button_fullscreen",
-                              () => this._onFullscreenButtonPress(),
-                              () => this._onFullscreenButtonRelease());
-    }
-  }
-
   private _onWindowResized() {
-    if (!this._fullscreen()) {
-      this._constructFullscreenButton();
-    }
-    else {
-      this._removeFullscreenButton();
-    }
-
-    this._positionButtons();
+    this._updateComponentsVisibility();
   }
 
   private _positionButtons() {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
-    const upArrow = this._arrowButtons.get(UserInput.UP);
-    const rightArrow = this._arrowButtons.get(UserInput.RIGHT);
-    const downArrow = this._arrowButtons.get(UserInput.DOWN);
-    const leftArrow = this._arrowButtons.get(UserInput.LEFT);
+    this._positionArrowButtons(renderSys);
+    this._positionSettingsButton(renderSys);
+    this._positionFullscreenButton(renderSys);
+  }
 
-    if (upArrow && rightArrow && downArrow && leftArrow) {
-      const sz = 0.15; // As percentage of view height
+  private _positionArrowButtons(renderSys: RenderSystem) {
+    const upArrow = this._arrowButtons[UserInput.UP];
+    const rightArrow = this._arrowButtons[UserInput.RIGHT];
+    const downArrow = this._arrowButtons[UserInput.DOWN];
+    const leftArrow = this._arrowButtons[UserInput.LEFT];
 
-      const margin = renderSys.viewH * 0.02;
-      const w = renderSys.viewH * sz;
-      const h = renderSys.viewH * sz;
-      const x1 = 0 * w + margin;
-      const x2 = 1 * w + margin;
-      const x3 = 2 * w + margin;
-      const y1 = renderSys.viewH - 3 * h - margin;
-      const y2 = renderSys.viewH - 2 * h - margin;
-      const y3 = renderSys.viewH - 1 * h - margin;
+    const sz = 0.15; // As percentage of view height
 
-      renderSys.setSpriteSize(upArrow, w, h);
-      renderSys.setSpriteSize(rightArrow, w, h);
-      renderSys.setSpriteSize(downArrow, w, h);
-      renderSys.setSpriteSize(leftArrow, w, h);
+    const margin = renderSys.viewH * 0.02;
+    const w = renderSys.viewH * sz;
+    const h = renderSys.viewH * sz;
+    const x1 = 0 * w + margin;
+    const x2 = 1 * w + margin;
+    const x3 = 2 * w + margin;
+    const y1 = renderSys.viewH - 3 * h - margin;
+    const y2 = renderSys.viewH - 2 * h - margin;
+    const y3 = renderSys.viewH - 1 * h - margin;
 
-      renderSys.setScreenPosition(upArrow, x2, y1);
-      renderSys.setScreenPosition(rightArrow, x3, y2);
-      renderSys.setScreenPosition(downArrow, x2, y3);
-      renderSys.setScreenPosition(leftArrow, x1, y2);
-    }
-    if (this._fullscreenButton) {
-      const w = 0.25 * renderSys.viewH;
-      const h = 0.09 * renderSys.viewH;
-      const margin = 0.02 * renderSys.viewH;
-      renderSys.setSpriteSize(this._fullscreenButton, w, h);
-      renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
-    }
-    if (this._settingsButton) {
-      const w = 0.13 * renderSys.viewH;
-      const h = 0.13 * renderSys.viewH;
-      const margin = 0.02 * renderSys.viewH;
-      const x = renderSys.viewW - margin - w;
-      const y = margin;
-      renderSys.setSpriteSize(this._settingsButton, w, h);
-      renderSys.setScreenPosition(this._settingsButton, x, y);
-    }
+    renderSys.setSpriteSize(upArrow, w, h);
+    renderSys.setSpriteSize(rightArrow, w, h);
+    renderSys.setSpriteSize(downArrow, w, h);
+    renderSys.setSpriteSize(leftArrow, w, h);
+
+    renderSys.setScreenPosition(upArrow, x2, y1);
+    renderSys.setScreenPosition(rightArrow, x3, y2);
+    renderSys.setScreenPosition(downArrow, x2, y3);
+    renderSys.setScreenPosition(leftArrow, x1, y2);
+  }
+
+  private _positionFullscreenButton(renderSys: RenderSystem) {
+    const w = 0.25 * renderSys.viewH;
+    const h = 0.09 * renderSys.viewH;
+    const margin = 0.02 * renderSys.viewH;
+    renderSys.setSpriteSize(this._fullscreenButton, w, h);
+    renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
+  }
+
+  private _positionSettingsButton(renderSys: RenderSystem) {
+    const w = 0.13 * renderSys.viewH;
+    const h = 0.13 * renderSys.viewH;
+    const margin = 0.02 * renderSys.viewH;
+    const x = renderSys.viewW - margin - w;
+    const y = margin;
+    renderSys.setSpriteSize(this._settingsButton, w, h);
+    renderSys.setScreenPosition(this._settingsButton, x, y);
   }
 
   private _onKeyDown(event: KeyboardEvent) {
@@ -252,25 +231,18 @@ export class UserInputManager {
     document.documentElement.requestFullscreen();
   }
 
-  private _removeFullscreenButton() {
-    if (this._fullscreenButton) {
-      this._em.removeEntity(this._fullscreenButton);
-      this._fullscreenButton = undefined;
-    }
-  }
-
   private _onArrowPressed(input: UserInput) {
     this._onDirectionPressHandler(input);
-    const id = this._arrowButtons.get(input);
+    const id = this._arrowButtons[input];
     const inputName = this._inputName(input);
-    id && this._setButtonActive(id, inputName);
+    this._setButtonActive(id, inputName);
   }
 
   private _onArrowReleased(input: UserInput) {
     this._onDirectionReleaseHandler(input);
-    const id = this._arrowButtons.get(input);
+    const id = this._arrowButtons[input];
     const inputName = this._inputName(input);
-    id && this._setButtonInactive(id, inputName);
+    this._setButtonInactive(id, inputName);
   }
 
   private _onFullscreenButtonPress() {

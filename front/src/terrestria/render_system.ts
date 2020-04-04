@@ -288,19 +288,12 @@ export class RenderSystem implements ClientSystem {
   }
 
   setCameraPosition(x: number, y: number) {
-    this._camera = { x, y };
+    if (Math.abs(x - this._camera.x) < 0.1 &&
+        Math.abs(y - this._camera.y) < 0.1) {
+      return;
+    }
 
-    // Screen origin in world space
-    this._viewX = this._camera.x - 0.5 * this._viewW;
-    this._viewY = this._camera.y - 0.5 * this._viewH;
-
-    const scale = this._windowH / this._viewH;
-
-    this._pixi.stage.x = -this._viewX * scale;
-    this._pixi.stage.y = -this._viewY * scale;
-
-    this._updateScreenSpaceComponentPositions();
-    this._computeParallaxOffsets();
+    this._setCameraPosition(x, y);
   }
 
   async addImage(name: string, url: string) {
@@ -488,7 +481,24 @@ export class RenderSystem implements ClientSystem {
     this._pixi.stage.scale.x = scale;
     this._pixi.stage.scale.y = scale;
 
+    this._setCameraPosition(this._camera.x, this._camera.y);
     this._doCull();
+  }
+
+  private _setCameraPosition(x: number, y: number) {
+    this._camera = { x, y };
+
+    // Screen origin in world space
+    this._viewX = this._camera.x - 0.5 * this._viewW;
+    this._viewY = this._camera.y - 0.5 * this._viewH;
+
+    const scale = this._windowH / this._viewH;
+
+    this._pixi.stage.x = -this._viewX * scale;
+    this._pixi.stage.y = -this._viewY * scale;
+
+    this._updateScreenSpaceComponentPositions();
+    this._computeParallaxOffsets();
   }
 
   private _doCull() {

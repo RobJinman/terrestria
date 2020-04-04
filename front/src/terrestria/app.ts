@@ -58,7 +58,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
-  private _userInputManager: UserInputManager;
+  private _userInputManager?: UserInputManager;
   private _audioManager: AudioManager;
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
@@ -87,14 +87,6 @@ export class App {
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.AD, adSystem);
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
-
-    this._userInputManager
-      = new UserInputManager(this._em,
-                             this._scheduler,
-                             this._onDirectionKeyDown.bind(this),
-                             this._onDirectionKeyUp.bind(this),
-                             this._onEnterKeyPress.bind(this),
-                             this._onSettingsOpen.bind(this));
 
     this._audioManager = new AudioManager();
   }
@@ -209,8 +201,6 @@ export class App {
 
     this.disconnect();
 
-    this._userInputManager.destroy();
-
     this._em.removeAll();
     this._setGameState(GameState.MAIN_MENU);
 
@@ -249,10 +239,16 @@ export class App {
   }
 
   setMobileControlsVisible(visible: boolean) {
+    if (!this._userInputManager) {
+      return;
+    }
     this._userInputManager.setMobileControlsVisible(visible);
   }
 
   get mobileControlsVisible() {
+    if (!this._userInputManager) {
+      return false;
+    }
     return this._userInputManager.mobileControlsVisible;
   }
 
@@ -454,14 +450,20 @@ export class App {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     renderSys.setWorldSize(mapData.width * BLOCK_SZ, mapData.height * BLOCK_SZ);
 
-    this._userInputManager.initialise();
-
     this._onWindowResize();
 
     constructInitialEntitiesFromMapData(this._em,
                                         this._audioManager,
                                         this._scheduler,
                                         mapData);
+
+    this._userInputManager
+      = new UserInputManager(this._em,
+                             this._scheduler,
+                             this._onDirectionKeyDown.bind(this),
+                             this._onDirectionKeyUp.bind(this),
+                             this._onEnterKeyPress.bind(this),
+                             this._onSettingsOpen.bind(this));
   }
 
   private _setGameState(state: GameState) {
