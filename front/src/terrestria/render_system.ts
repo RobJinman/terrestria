@@ -288,11 +288,6 @@ export class RenderSystem implements ClientSystem {
   }
 
   setCameraPosition(x: number, y: number) {
-    if (Math.abs(x - this._camera.x) < 0.1 &&
-        Math.abs(y - this._camera.y) < 0.1) {
-      return;
-    }
-
     this._camera = { x, y };
 
     // Screen origin in world space

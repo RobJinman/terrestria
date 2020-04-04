@@ -176,6 +176,7 @@ export class UserInputManager {
     else {
       this._removeFullscreenButton();
     }
+
     this._positionButtons();
   }
 
