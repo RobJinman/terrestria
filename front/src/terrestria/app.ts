@@ -24,6 +24,7 @@ import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType } from "./common/event";
 import { GameState } from "./definitions";
 import { InventorySystem } from "./inventory_system";
+import { AudioManager } from "./audio_manager";
 
 declare var __WEBSOCKET_URL__: string;
 
@@ -58,6 +59,7 @@ export class App {
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
   private _userInputManager: UserInputManager;
+  private _audioManager: AudioManager;
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
   private _pinataToken?: string;
@@ -93,6 +95,8 @@ export class App {
                              this._onDirectionKeyUp.bind(this),
                              this._onEnterKeyPress.bind(this),
                              this._onSettingsOpen.bind(this));
+
+    this._audioManager = new AudioManager();
   }
 
   async connect() {
@@ -117,6 +121,11 @@ export class App {
     if (this._ws) {
       this._ws.close();
       this._ws = undefined;
+    }
+
+    if (this._gameState != GameState.MAIN_MENU) {
+      this._audioManager.stopMusic();
+      this._setGameState(GameState.MAIN_MENU);
     }
   }
 
@@ -204,6 +213,8 @@ export class App {
 
     this._em.removeAll();
     this._setGameState(GameState.MAIN_MENU);
+
+    this._audioManager.stopMusic();
   }
 
   start(pinataCredentials?: PinataCredentials) {
@@ -229,6 +240,8 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
+
+    this._audioManager.playMusic();
   }
 
   returnFromSettingsMenu() {
@@ -244,11 +257,16 @@ export class App {
   }
 
   setMusicEnabled(enabled: boolean) {
-    // TODO
+    if (enabled) {
+      this._audioManager.playMusic();
+    }
+    else {
+      this._audioManager.stopMusic();
+    }
   }
 
-  get musicEmabled() {
-    return true; // TODO
+  get musicEnabled() {
+    return this._audioManager.isMusicPlaying;
   }
 
   setSfxEnabled(enabled: boolean) {

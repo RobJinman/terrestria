@@ -32,7 +32,7 @@ export class CSettingsMenu extends React.Component<CSettingsMenuProps> {
   componentDidMount() {
     this.setState({
       mobileControls: this._terrestria.mobileControlsVisible,
-      music: this._terrestria.musicEmabled,
+      music: this._terrestria.musicEnabled,
       sfx: this._terrestria.sfxEnabled
     });
   }
@@ -65,7 +65,8 @@ export class CSettingsMenu extends React.Component<CSettingsMenuProps> {
         </div>
         <div className="links">
           <p className="close">
-            <a href="#" onClick={noDefault(closeSettings)}>Return to game</a></p>
+            <a href="#" onClick={noDefault(closeSettings)}>Return to game</a>
+          </p>
           <p className="quit">
             <a href="#" onClick={noDefault(logOut)}>Quit game</a></p>
         </div>
