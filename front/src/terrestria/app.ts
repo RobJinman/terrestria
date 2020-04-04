@@ -270,11 +270,16 @@ export class App {
   }
 
   setSfxEnabled(enabled: boolean) {
-    // TODO
+    if (enabled) {
+      this._audioManager.unmuteSfx();
+    }
+    else {
+      this._audioManager.muteSfx();
+    }
   }
 
   get sfxEnabled() {
-    return true; // TODO
+    return !this._audioManager.sfxMuted;
   }
 
   private _onSettingsOpen() {
@@ -440,6 +445,7 @@ export class App {
   private _onPlayerKilled() {
     console.log("You died!");
     this._playerId = PLAYER_ID_DEAD;
+    this._audioManager.playSound("bang");
   }
 
   private _initialiseGame(mapData: ClientMapData) {
