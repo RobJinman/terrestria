@@ -1,5 +1,3 @@
-const MUSIC_AUDIO_ELEMENT_ID = "terrestria-music-audio";
-const SFX_AUDIO_ELEMENT_ID = "terrestria-sfx-audio";
 const NUM_MUSIC_FILES = 4;
 const NUM_CONCURRENT_SFX = 10;
 const MUSIC_VOLUME = 0.2;
@@ -22,7 +20,6 @@ export class AudioManager {
     this._currentMusicFile = Math.floor(Math.random() * NUM_MUSIC_FILES);
 
     this._musicAudioElement = document.createElement("audio");
-    this._musicAudioElement.id = MUSIC_AUDIO_ELEMENT_ID;
     this._musicSourceElement = document.createElement("source");
     this._musicSourceElement.type = "audio/mpeg";
     this._musicSourceElement.src = `assets/music${this._currentMusicFile}.mp3`;
@@ -31,7 +28,6 @@ export class AudioManager {
 
     for (let i = 0; i < NUM_CONCURRENT_SFX; ++i) {
       const audioElement = document.createElement("audio");
-      audioElement.id = SFX_AUDIO_ELEMENT_ID;
       const sourceElement = document.createElement("source");
       sourceElement.type = "audio/mpeg";
       audioElement.appendChild(sourceElement);

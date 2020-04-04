@@ -7,16 +7,20 @@ import { EntityType } from "../common/game_objects";
 import { ComponentType } from "../common/component_types";
 import { RenderSystem } from "../render_system";
 import { CSpatial } from "../spatial_component";
-import { BLOCK_SZ } from "../common/constants";
+import { BLOCK_SZ, FALL_SPEED } from "../common/constants";
+import { Scheduler } from "../common/scheduler";
 
-export function constructSfx(em: EntityManager, am: AudioManager) {
+export function constructSfx(em: EntityManager,
+                             am: AudioManager,
+                             scheduler: Scheduler) {
   const id = getNextEntityId();
 
   const targetedHandlers: EventHandlerMap = new Map();
   const broadcastHandlers: EventHandlerMap = new Map([
     [ GameEventType.AWARD_GRANTED, () => am.playSound("award", 0) ],
     [ GameEventType.AGENT_ACTION, (e: GameEvent) => onAgentAction(em, am, e) ],
-    [ GameEventType.ENTITY_HIT, (e: GameEvent) => onEntityHit(em, am, e) ]
+    [ GameEventType.ENTITY_HIT, (e: GameEvent) =>
+                                  onEntityHit(em, am, scheduler, e) ]
   ]);
 
   const behaviourComp = new CBehaviour(id, targetedHandlers, broadcastHandlers);
@@ -38,6 +42,10 @@ function onAgentAction(em: EntityManager, am: AudioManager, e: GameEvent) {
       am.playSound("push", distance);
       break;
     }
+    case AgentActionType.DIG: {
+      am.playSound("dig", distance);
+      break;
+    }
     case AgentActionType.COLLECT: {
       event.agentId
       am.playSound("collect", distance);
@@ -47,14 +55,18 @@ function onAgentAction(em: EntityManager, am: AudioManager, e: GameEvent) {
   }
 }
 
-function onEntityHit(em: EntityManager, am: AudioManager, e: GameEvent) {
+function onEntityHit(em: EntityManager,
+                     am: AudioManager,
+                     scheduler: Scheduler,
+                     e: GameEvent) {
   const event = <EEntityHit>e;
 
   const distance = getDistanceFromViewport(em,
                                            event.gridX * BLOCK_SZ,
                                            event.gridY * BLOCK_SZ);
 
-  am.playSound("thud", distance);
+  scheduler.addFunction(() => am.playSound("thud", distance),
+                        1000 / FALL_SPEED);
 }
 
 function getDistanceFromViewport(em: EntityManager, x: number, y: number) {

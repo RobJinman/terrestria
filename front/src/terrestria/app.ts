@@ -458,7 +458,10 @@ export class App {
 
     this._onWindowResize();
 
-    constructInitialEntitiesFromMapData(this._em, this._audioManager, mapData);
+    constructInitialEntitiesFromMapData(this._em,
+                                        this._audioManager,
+                                        this._scheduler,
+                                        mapData);
   }
 
   private _setGameState(state: GameState) {
