@@ -15,6 +15,8 @@ import { constructGemBank } from "./entities/gem_bank";
 import { constructEarth, constructSky } from "./entities/scenery";
 import { constructAwardNotification } from "./entities/awards";
 import { constructGemBundle } from "./entities/gem_bundle";
+import { constructSfx } from "./entities/sfx";
+import { AudioManager } from "./audio_manager";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -71,6 +73,7 @@ export function constructEntities(entityManager: EntityManager,
 
 // Construct any client-side only entities from map data
 export function constructInitialEntitiesFromMapData(em: EntityManager,
+                                                    audioManager: AudioManager,
                                                     mapData: ClientMapData) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   inventorySys.setDisplayedBucket("gems");
@@ -78,4 +81,5 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
   constructEarth(em, mapData);
   constructSky(em, mapData);
   constructAwardNotification(em);
+  constructSfx(em, audioManager);
 }

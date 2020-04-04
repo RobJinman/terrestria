@@ -193,6 +193,10 @@ export class Grid {
     return this.itemsWithPropAtPos(x, y, "movable");
   }
 
+  fallingItemsAtPos(x: number, y: number) {
+    return this.itemsWithPropAtPos(x, y, "falling");
+  }
+
   spaceFreeAtPos(x: number, y: number): boolean {
     return !this.outOfRange(x, y) && this.solidItemsAtPos(x, y).size === 0;
   }

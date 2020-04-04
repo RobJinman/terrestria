@@ -1,12 +1,18 @@
 const MUSIC_AUDIO_ELEMENT_ID = "terrestria-music-audio";
 const SFX_AUDIO_ELEMENT_ID = "terrestria-sfx-audio";
 const NUM_MUSIC_FILES = 4;
+const NUM_CONCURRENT_SFX = 10;
+
+interface HtmlAudio {
+  audio: HTMLAudioElement;
+  source: HTMLSourceElement;
+  playing: boolean;
+}
 
 export class AudioManager {
   _musicAudioElement: HTMLAudioElement;
   _musicSourceElement: HTMLSourceElement;
-  _sfxAudioElement: HTMLAudioElement;
-  _sfxSourceElement: HTMLSourceElement;
+  _sfxElements: HtmlAudio[] = [];
   _currentMusicFile: number;
 
   constructor() {
@@ -20,11 +26,24 @@ export class AudioManager {
     this._musicAudioElement.appendChild(this._musicSourceElement);
     this._musicAudioElement.onended = () => this._nextMusicTrack();
 
-    this._sfxAudioElement = document.createElement("audio");
-    this._sfxAudioElement.id = SFX_AUDIO_ELEMENT_ID;
-    this._sfxSourceElement = document.createElement("source");
-    this._sfxSourceElement.type = "audio/mpeg";
-    this._sfxAudioElement.appendChild(this._sfxSourceElement);
+    for (let i = 0; i < NUM_CONCURRENT_SFX; ++i) {
+      const audioElement = document.createElement("audio");
+      audioElement.id = SFX_AUDIO_ELEMENT_ID;
+      const sourceElement = document.createElement("source");
+      sourceElement.type = "audio/mpeg";
+      audioElement.appendChild(sourceElement);
+
+      const sfx = {
+        audio: audioElement,
+        source: sourceElement,
+        playing: false
+      };
+
+      audioElement.onended = () => sfx.playing = false;
+      audioElement.onerror = () => sfx.playing = false;
+
+      this._sfxElements.push(sfx);
+    }
   }
 
   playMusic() {
@@ -37,18 +56,28 @@ export class AudioManager {
   }
 
   playSound(soundName: string) {
-    this._sfxSourceElement.src = `assets/${soundName}.mp3`;
-    this._sfxAudioElement.load();
-    this._sfxAudioElement.volume = 0.9;
-    this._sfxAudioElement.play();
+    for (const sfx of this._sfxElements) {
+      if (!sfx.playing) {
+        sfx.source.src = `assets/${soundName}.mp3`;
+        sfx.audio.load();
+        sfx.audio.volume = 0.9;
+        sfx.audio.play();
+        sfx.playing = true;
+        break;
+      }
+    }
   }
 
   muteSfx() {
-    this._sfxAudioElement.muted = true;
+    for (const sfx of this._sfxElements) {
+      sfx.audio.muted = true;
+    }
   }
 
   unmuteSfx() {
-    this._sfxAudioElement.muted = false;
+    for (const sfx of this._sfxElements) {
+      sfx.audio.muted = false;
+    }
   }
 
   get isMusicPlaying() {
@@ -56,7 +85,7 @@ export class AudioManager {
   }
 
   get sfxMuted() {
-    return this._sfxAudioElement.muted;
+    return this._sfxElements[0].audio.muted;
   }
 
   private _nextMusicTrack() {

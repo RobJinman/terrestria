@@ -144,21 +144,31 @@ export class GridModeImpl implements SpatialModeImpl {
       return false;
     }
 
-    const solid = this._grid.solidItemsAtPos(x, y);
+    const solidItems = this._grid.solidItemsAtPos(x, y);
+    const fallingItems = this._grid.fallingItemsAtPos(x, y);
 
     if (!falling) {
-      return solid.size === 0;
-    }
-
-    const squashable = this._grid.squashableItemsAtPos(x, y);
-
-    for (const item of solid) {
-      if (!squashable.has(item)) {
-        return false;
+      // If none of the solid items is falling, return false
+      for (const item of solidItems) {
+        if (!fallingItems.has(item)) {
+          return false;
+        }
       }
-    }
 
-    return true;
+      return true;
+    }
+    else {
+      const squashableItems = this._grid.squashableItemsAtPos(x, y);
+
+      // If none of the solid items is squashable or falling, return false
+      for (const item of solidItems) {
+        if (!(squashableItems.has(item) || fallingItems.has(item))) {
+          return false;
+        }
+      }
+  
+      return true;
+    }
   }
 
   private _gravity() {
@@ -187,6 +197,7 @@ export class GridModeImpl implements SpatialModeImpl {
       }
 
       if (this.grid.outOfRange(x, yDown)) {
+        c.falling = false;
         return;
       }
 
@@ -206,7 +217,7 @@ export class GridModeImpl implements SpatialModeImpl {
             gridY: this.grid.toGridY(yDown)
           };
 
-          this._em.postEvent(event);
+          this._em.submitEvent(event);
         }
 
         c.falling = false;
