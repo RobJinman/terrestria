@@ -2,6 +2,9 @@ const MUSIC_AUDIO_ELEMENT_ID = "terrestria-music-audio";
 const SFX_AUDIO_ELEMENT_ID = "terrestria-sfx-audio";
 const NUM_MUSIC_FILES = 4;
 const NUM_CONCURRENT_SFX = 10;
+const MUSIC_VOLUME = 0.2;
+const SFX_VOLUME = 0.7;
+const MAX_AUDIBLE_DISTANCE = 640;
 
 interface HtmlAudio {
   audio: HTMLAudioElement;
@@ -47,7 +50,7 @@ export class AudioManager {
   }
 
   playMusic() {
-    this._musicAudioElement.volume = 0.2;
+    this._musicAudioElement.volume = MUSIC_VOLUME;
     this._musicAudioElement.play();
   }
 
@@ -55,15 +58,20 @@ export class AudioManager {
     this._musicAudioElement.pause();
   }
 
-  playSound(soundName: string) {
-    for (const sfx of this._sfxElements) {
-      if (!sfx.playing) {
-        sfx.source.src = `assets/${soundName}.mp3`;
-        sfx.audio.load();
-        sfx.audio.volume = 0.9;
-        sfx.audio.play();
-        sfx.playing = true;
-        break;
+  playSound(soundName: string, distance: number) {
+    const attentuation = 1 - Math.min(1, distance / MAX_AUDIBLE_DISTANCE);
+    const volume = SFX_VOLUME * attentuation;
+
+    if (volume > 0) {
+      for (const sfx of this._sfxElements) {
+        if (!sfx.playing) {
+          sfx.source.src = `assets/${soundName}.mp3`;
+          sfx.audio.load();
+          sfx.audio.volume = volume;
+          sfx.audio.play();
+          sfx.playing = true;
+          break;
+        }
       }
     }
   }

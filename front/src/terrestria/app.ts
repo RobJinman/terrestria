@@ -445,7 +445,7 @@ export class App {
   private _onPlayerKilled() {
     console.log("You died!");
     this._playerId = PLAYER_ID_DEAD;
-    this._audioManager.playSound("bang");
+    this._audioManager.playSound("bang", 0);
   }
 
   private _initialiseGame(mapData: ClientMapData) {
