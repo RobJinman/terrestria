@@ -324,6 +324,20 @@ export class RenderSystem implements ClientSystem {
     return this._components.size;
   }
 
+  setVisible(id: EntityId, visible: boolean) {
+    const c = this.getComponent(id);
+    if (c instanceof CSprite) {
+      c.staticSprites.forEach(sprite => sprite.visible = visible);
+      c.animatedSprites.forEach(anim => anim.sprite.visible = visible);
+    }
+    else if (c instanceof CShape) {
+      c.graphics.visible = visible;
+    }
+    else {
+      throw new GameError("Can't set visibility on component of that type");
+    }
+  }
+
   getSpriteComponent(id: EntityId): CSprite {
     const c = this.getComponent(id);
     if (!(c instanceof CSprite)) {

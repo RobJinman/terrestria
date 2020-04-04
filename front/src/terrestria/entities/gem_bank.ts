@@ -9,8 +9,8 @@ import { Vec2 } from "../common/geometry";
 import { ComponentType } from "../common/component_types";
 import { SpatialSystem } from "../spatial_system";
 
-const ENTRANCE_OFFSET: Vec2 = { x: 1 * BLOCK_SZ, y: 1 * BLOCK_SZ };
-const EXIT_OFFSET: Vec2 = { x: 3 * BLOCK_SZ, y: 1 * BLOCK_SZ };
+const ENTRANCE_OFFSET: Vec2 = { x: 0 * BLOCK_SZ, y: 1 * BLOCK_SZ };
+const EXIT_OFFSET: Vec2 = { x: 2 * BLOCK_SZ, y: 1 * BLOCK_SZ };
 
 export function constructGemBank(em: EntityManager, entity: EntityData) {
   const staticImages: StaticImage[] = [

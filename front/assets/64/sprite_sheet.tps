@@ -207,6 +207,22 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">button_action.png</key>
+            <key type="filename">button_action_active.png</key>
+            <key type="filename">button_settings.png</key>
+            <key type="filename">button_settings_active.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9Paddings</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">button_down.png</key>
             <key type="filename">button_down_active.png</key>
             <key type="filename">button_left.png</key>
@@ -238,20 +254,6 @@
                 <rect>100,30,199,61</rect>
                 <key>scale9Paddings</key>
                 <rect>100,30,199,61</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">button_quit.png</key>
-            <key type="filename">button_quit_active.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>45,51,90,102</rect>
-                <key>scale9Paddings</key>
-                <rect>45,51,90,102</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -500,8 +502,6 @@
             <filename>button_right_active.png</filename>
             <filename>button_up_active.png</filename>
             <filename>trophy.png</filename>
-            <filename>button_quit.png</filename>
-            <filename>button_quit_active.png</filename>
             <filename>button_sound_off.png</filename>
             <filename>button_sound_off_active.png</filename>
             <filename>button_sound_on.png</filename>
@@ -544,6 +544,10 @@
             <filename>square_rock_burn1.png</filename>
             <filename>square_rock_burn2.png</filename>
             <filename>square_rock_burn3.png</filename>
+            <filename>button_action.png</filename>
+            <filename>button_action_active.png</filename>
+            <filename>button_settings.png</filename>
+            <filename>button_settings_active.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

@@ -62,7 +62,7 @@ export class App {
   private _pinataId?: string;
   private _pinataToken?: string;
   private _username?: string;
-  private _gameState: GameState = GameState.GAME_INACTIVE;
+  private _gameState: GameState = GameState.MAIN_MENU;
   private _serverResponseHandlers: ServerResponseHandler<any>[] = [];
 
   constructor(onStateChange: (state: GameState) => void) {
@@ -92,7 +92,7 @@ export class App {
                              this._onDirectionKeyDown.bind(this),
                              this._onDirectionKeyUp.bind(this),
                              this._onEnterKeyPress.bind(this),
-                             this.logOut.bind(this));
+                             this._onSettingsOpen.bind(this));
   }
 
   async connect() {
@@ -203,9 +203,7 @@ export class App {
     this._userInputManager.destroy();
 
     this._em.removeAll();
-    this._gameState = GameState.GAME_INACTIVE;
-
-    this._onStateChange(this._gameState);
+    this._setGameState(GameState.MAIN_MENU);
   }
 
   start(pinataCredentials?: PinataCredentials) {
@@ -231,6 +229,38 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
+  }
+
+  returnFromSettingsMenu() {
+    this._setGameState(GameState.GAME_ACTIVE);
+  }
+
+  setMobileControlsVisible(visible: boolean) {
+    this._userInputManager.setMobileControlsVisible(visible);
+  }
+
+  get mobileControlsVisible() {
+    return this._userInputManager.mobileControlsVisible;
+  }
+
+  setMusicEnabled(enabled: boolean) {
+    // TODO
+  }
+
+  get musicEmabled() {
+    return true; // TODO
+  }
+
+  setSfxEnabled(enabled: boolean) {
+    // TODO
+  }
+
+  get sfxEnabled() {
+    return true; // TODO
+  }
+
+  private _onSettingsOpen() {
+    this._onStateChange(GameState.SETTINGS_MENU);
   }
 
   private _getPromiseForServerResponse<T>(handler: ServerResponseHandlerFn<T>):
@@ -298,7 +328,7 @@ export class App {
       renderSys.onWindowResized(w, h);
     }
 
-    if (this._gameState != GameState.GAME_INACTIVE) {
+    if (this._gameState != GameState.MAIN_MENU) {
       const event: EWindowResized = {
         type: GameEventType.WINDOW_RESIZED,
         entities: [],

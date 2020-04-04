@@ -14,10 +14,10 @@ import { BLOCK_SZ, PLAYER_SPEED } from "../common/constants";
 import { CCollector } from "../inventory_system";
 import { Scheduler } from "../common/scheduler";
 
-const GEM_BANK_OFFSET = [ 1, 0 ];
+const GEM_BANK_OFFSET = [ 0, 0 ];
 const GEM_BANK_SIZE = [ 3, 3 ];   // Assumes rectangular
-const ENTRANCE_POS = [ 1, 1 ];
-const EXIT_POS = [ 3, 1 ];
+const ENTRANCE_POS = [ 0, 1 ];
+const EXIT_POS = [ 2, 1 ];
 const GEM_DEPOSIT_DURATION = 0.5;
 
 export function constructGemBank(em: EntityManager,

@@ -103,7 +103,7 @@ export class MapLoader {
     entities.push({
       type: EntityType.GEM_BANK,
       data: {
-        x: BLOCK_SZ * 22,
+        x: BLOCK_SZ * 23,
         y: BLOCK_SZ * 10
       }
     });

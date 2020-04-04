@@ -2,6 +2,7 @@ import * as React from "react";
 import { App, PinataCredentials } from "../terrestria/app";
 import { CMainMenu } from "./main_menu";
 import { GameState } from "../terrestria/definitions";
+import { CSettingsMenu } from "./settings_menu";
 
 interface CMainState {
   gameState: GameState;
@@ -24,7 +25,7 @@ export class CMain extends React.Component<{}> {
     this._terrestria = new App(updateStateFn);
 
     this.state = {
-      gameState: GameState.GAME_INACTIVE
+      gameState: GameState.MAIN_MENU
     };
   }
 
@@ -39,13 +40,18 @@ export class CMain extends React.Component<{}> {
     return (
       <div>
         <div id="terrestria"></div>
-        { gameState != GameState.GAME_ACTIVE &&
-        <div id="ui-overlay">
+        { gameState == GameState.MAIN_MENU &&
+        <div id="ui-overlay" className="game-disconnected">
           <CMainMenu terrestria={this._terrestria}
             onUpdatePinataCreds={onUpdatePinataCreds}
             username={this.state.username}
             pinataId={this.state.pinataId}
             pinataToken={this.state.pinataToken}/>
+        </div>
+        }
+        { gameState == GameState.SETTINGS_MENU &&
+        <div id="ui-overlay">
+          <CSettingsMenu terrestria={this._terrestria}/>
         </div>
         }
       </div>

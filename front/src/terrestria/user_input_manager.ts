@@ -30,29 +30,29 @@ export class UserInputManager {
   private _onDirectionPressHandler: DirectionInputHandlerFn;
   private _onDirectionReleaseHandler: DirectionInputHandlerFn;
   private _onEnterHandler: VoidInputHandlerFn;
-  private _onQuitHandler: VoidInputHandlerFn;
+  private _onSettingsHandler: VoidInputHandlerFn;
   private _arrowButtons = new Map<UserInput, EntityId>();
   private _fullscreenButton?: EntityId;
   //private _soundButton?: EntityId;
-  private _quitButton?: EntityId;
+  private _settingsButton?: EntityId;
+  private _mobileControlsVisible: boolean = true;
 
   private _onKeyDownFn = this._onKeyDown.bind(this);
   private _onKeyUpFn = this._onKeyUp.bind(this);
-  private _onFullscreenChangeFn = this._onFullscreenChange.bind(this);
 
   constructor(em: EntityManager,
               scheduler: Scheduler,
               onDirectionPressHandler: DirectionInputHandlerFn,
               onDirectionReleaseHandler: DirectionInputHandlerFn,
               onEnterHandler: VoidInputHandlerFn,
-              onQuitHandler: VoidInputHandlerFn) {
+              onSettingsHandler: VoidInputHandlerFn) {
     this._em = em;
     this._scheduler = scheduler;
 
     this._onDirectionPressHandler = onDirectionPressHandler;
     this._onDirectionReleaseHandler = onDirectionReleaseHandler;
     this._onEnterHandler = onEnterHandler;
-    this._onQuitHandler = onQuitHandler;
+    this._onSettingsHandler = onSettingsHandler;
   }
 
   destroy() {
@@ -64,9 +64,9 @@ export class UserInputManager {
       this._em.removeEntity(this._fullscreenButton);
       this._fullscreenButton = undefined;
     }
-    if (this._quitButton) {
-      this._em.removeEntity(this._quitButton);
-      this._quitButton = undefined;
+    if (this._settingsButton) {
+      this._em.removeEntity(this._settingsButton);
+      this._settingsButton = undefined;
     }
 
     this._arrowButtons.forEach(id => this._em.removeEntity(id));
@@ -74,8 +74,6 @@ export class UserInputManager {
 
     window.removeEventListener("keydown", this._onKeyDownFn);
     window.removeEventListener("keyup", this._onKeyUpFn);
-    document.removeEventListener("fullscreenchange",
-                                 this._onFullscreenChangeFn);
   }
 
   initialise() {
@@ -83,9 +81,6 @@ export class UserInputManager {
 
     window.addEventListener("keydown", this._onKeyDownFn, false);
     window.addEventListener("keyup", this._onKeyUpFn, false);
-    document.addEventListener("fullscreenchange",
-                              this._onFullscreenChangeFn,
-                              false);
 
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
@@ -121,41 +116,66 @@ export class UserInputManager {
     this._arrowButtons.set(UserInput.DOWN, btnDown);
     this._arrowButtons.set(UserInput.LEFT, btnLeft);
 
-    this._quitButton =
-      this._constructButton("button_quit",
-                            () => this._onQuitButtonPress(),
-                            () => this._onQuitButtonRelease());
+    this._settingsButton =
+      this._constructButton("button_settings",
+                            () => this._onSettingsButtonPress(),
+                            () => this._onSettingsButtonRelease());
 /*
     this._soundButton =
       this._constructButton("sound_button",
                             () => this._onSoundButtonPress,
                             () => this._onSoundButtonRelease());
 */
-    if (!document.fullscreenElement) {
+    if (!this._fullscreen()) {
       this._constructFullscreenButton();
     }
     this._positionButtons();
+
+    this.setMobileControlsVisible(this._mobileControlsVisible);
   }
 
-  private _onFullscreenChange() {
-    if (!document.fullscreen) {
-      this._scheduler.addFunction(this._onExitFullscreen.bind(this), 0);
-    }
+  setMobileControlsVisible(visible: boolean) {
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+
+    this._arrowButtons.forEach(btn => {
+      renderSys.setVisible(btn, visible);
+    });
+
+    this._mobileControlsVisible = visible;
   }
 
-  private _onExitFullscreen() {
-    this._constructFullscreenButton();
-    this._positionButtons();
+  get mobileControlsVisible() {
+    return this._mobileControlsVisible;
+  }
+
+  private _fullscreenSupported(): boolean {
+    return document.fullscreenEnabled;
+  }
+
+  private _fullscreen(): boolean {
+    const windowArea = window.innerWidth * window.innerHeight;
+    const screenArea = screen.width * screen.height;
+    const hasFullscreenElement = document.fullscreenElement ? true : false;
+
+    return hasFullscreenElement || windowArea == screenArea;
   }
 
   private _constructFullscreenButton() {
-    this._fullscreenButton =
-      this._constructButton("button_fullscreen",
-                            () => this._onFullscreenButtonPress(),
-                            () => this._onFullscreenButtonRelease());
+    if (!this._fullscreenButton && this._fullscreenSupported()) {
+      this._fullscreenButton =
+        this._constructButton("button_fullscreen",
+                              () => this._onFullscreenButtonPress(),
+                              () => this._onFullscreenButtonRelease());
+    }
   }
 
   private _onWindowResized() {
+    if (!this._fullscreen()) {
+      this._constructFullscreenButton();
+    }
+    else {
+      this._removeFullscreenButton();
+    }
     this._positionButtons();
   }
 
@@ -197,14 +217,14 @@ export class UserInputManager {
       renderSys.setSpriteSize(this._fullscreenButton, w, h);
       renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
     }
-    if (this._quitButton) {
+    if (this._settingsButton) {
       const w = 0.13 * renderSys.viewH;
       const h = 0.13 * renderSys.viewH;
       const margin = 0.02 * renderSys.viewH;
       const x = renderSys.viewW - margin - w;
-      const y = renderSys.viewH - margin - h;
-      renderSys.setSpriteSize(this._quitButton, w, h);
-      renderSys.setScreenPosition(this._quitButton, x, y);
+      const y = margin;
+      renderSys.setSpriteSize(this._settingsButton, w, h);
+      renderSys.setScreenPosition(this._settingsButton, x, y);
     }
   }
 
@@ -229,6 +249,9 @@ export class UserInputManager {
 
   private _enterFullscreen() {
     document.documentElement.requestFullscreen();
+  }
+
+  private _removeFullscreenButton() {
     if (this._fullscreenButton) {
       this._em.removeEntity(this._fullscreenButton);
       this._fullscreenButton = undefined;
@@ -262,17 +285,17 @@ export class UserInputManager {
     this._enterFullscreen();
   }
 
-  private _onQuitButtonPress() {
-    if (this._quitButton) {
-      this._setButtonActive(this._quitButton, "button_quit");
+  private _onSettingsButtonPress() {
+    if (this._settingsButton) {
+      this._setButtonActive(this._settingsButton, "button_settings");
     }
   }
 
-  private _onQuitButtonRelease() {
-    if (this._quitButton) {
-      this._setButtonInactive(this._quitButton, "button_quit");
+  private _onSettingsButtonRelease() {
+    if (this._settingsButton) {
+      this._setButtonInactive(this._settingsButton, "button_settings");
     }
-    this._onQuitHandler();
+    this._onSettingsHandler();
   }
 
   private _inputName(input: UserInput): string {

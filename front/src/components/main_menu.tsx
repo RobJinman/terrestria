@@ -86,7 +86,7 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
     const errorMsg = this.state.errorMsg;
 
     return (
-      <div className="main-menu">
+      <div className="main-menu menu">
         {this.state.loading &&
         <div className="loading">Loading...</div>}
         {!this.state.loading &&
