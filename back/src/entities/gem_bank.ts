@@ -9,7 +9,7 @@ import { DEFAULT_GRID_MODE_PROPS,
          GridModeProperties } from "../grid_mode_properties";
 import { EntityType } from "../common/game_objects";
 import { CBehaviour, EventHandlerFn } from "../common/behaviour_system";
-import { GameEventType, EAgentEnterCell } from "../common/event";
+import { GameEventType, EAgentEnterCell, EGemsBanked } from "../common/event";
 import { BLOCK_SZ, PLAYER_SPEED } from "../common/constants";
 import { CCollector } from "../inventory_system";
 import { Scheduler } from "../common/scheduler";
@@ -174,8 +174,16 @@ function onAgentEnter(em: EntityManager,
       agentSpatial.gridMode.moveToPos(exitSpatial.x,
                                       exitSpatial.y,
                                       GEM_DEPOSIT_DURATION);
+      
+      const bankEvent: EGemsBanked = {
+        type: GameEventType.GEMS_BANKED,
+        playerId: event.entityId,
+        entities: [ event.entityId ],
+        numGems: collected
+      };
 
-      console.log(`${collected} gems banked!`);
+      em.submitEvent(bankEvent);
+
     }, 1000.0 / PLAYER_SPEED);
   }
 }

@@ -14,7 +14,8 @@ export enum GameEventType {
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
   WINDOW_RESIZED = "WINDOW_RESIZED",
-  AWARD_GRANTED = "AWARD_GRANTED"
+  AWARD_GRANTED = "AWARD_GRANTED",
+  GEMS_BANKED = "GEMS_BANKED"
 }
 
 export interface GameEvent {
@@ -86,6 +87,11 @@ export interface EAgentAction extends GameEvent {
   agentId: EntityId;
   actionType: AgentActionType;
   direction: Direction;
+}
+
+export interface EGemsBanked extends GameEvent {
+  playerId: EntityId;
+  numGems: number;
 }
 
 export interface EPlayerKilled extends GameEvent {

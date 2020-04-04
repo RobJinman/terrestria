@@ -1,8 +1,8 @@
 import { AudioManager } from "../audio_manager";
 import { CBehaviour, EventHandlerMap } from "../common/behaviour_system";
 import { getNextEntityId, EntityManager } from "../entity_manager";
-import { GameEventType, GameEvent, EAgentAction, AgentActionType, 
-         EEntityHit } from "../common/event";
+import { GameEventType, GameEvent, EAgentAction, AgentActionType, EEntityHit,
+         EGemsBanked } from "../common/event";
 import { EntityType } from "../common/game_objects";
 import { ComponentType } from "../common/component_types";
 import { RenderSystem } from "../render_system";
@@ -20,7 +20,8 @@ export function constructSfx(em: EntityManager,
     [ GameEventType.AWARD_GRANTED, () => am.playSound("award", 0) ],
     [ GameEventType.AGENT_ACTION, (e: GameEvent) => onAgentAction(em, am, e) ],
     [ GameEventType.ENTITY_HIT, (e: GameEvent) =>
-                                  onEntityHit(em, am, scheduler, e) ]
+                                  onEntityHit(em, am, scheduler, e) ],
+    [ GameEventType.GEMS_BANKED, (e: GameEvent) => onGemsBanked(em, am, e) ]
   ]);
 
   const behaviourComp = new CBehaviour(id, targetedHandlers, broadcastHandlers);
@@ -67,6 +68,18 @@ function onEntityHit(em: EntityManager,
 
   scheduler.addFunction(() => am.playSound("thud", distance),
                         1000 / FALL_SPEED);
+}
+
+function onGemsBanked(em: EntityManager, am: AudioManager, e: GameEvent) {
+  const event = <EGemsBanked>e;
+  const agentSpatial = <CSpatial>em.getComponent(ComponentType.SPATIAL,
+                                                 event.playerId);
+  const x = agentSpatial.x_abs;
+  const y = agentSpatial.y_abs;
+
+  const distance = getDistanceFromViewport(em, x, y);
+
+  am.playSound("bank", distance);
 }
 
 function getDistanceFromViewport(em: EntityManager, x: number, y: number) {
