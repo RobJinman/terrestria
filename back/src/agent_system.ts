@@ -2,7 +2,8 @@ import { Component, EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
-import { GameEvent, EPlayerKilled, GameEventType } from "./common/event";
+import { GameEvent, EPlayerKilled, GameEventType,
+         EEntityBurned } from "./common/event";
 import { EntityManager } from "./entity_manager";
 import { Pinata, CreateAwardResponse } from "./pinata";
 import { PlayerAction, UserInput, InputState, ActionType,
@@ -130,6 +131,14 @@ export class AgentSystem implements ServerSystem {
 
   handleEvent(event: GameEvent) {
     switch (event.type) {
+      case GameEventType.ENTITY_SQUASHED: {
+        for (const entity of event.entities) {
+          if (this.hasComponent(entity)) {
+            this._onAgentSquashed(entity);
+          }
+        }
+        break;
+      }
       case GameEventType.PLAYER_KILLED: {
         this._onPlayerKilled(event);
         break;
@@ -249,5 +258,34 @@ export class AgentSystem implements ServerSystem {
         break;
       }
     }
+  }
+
+  private _onAgentSquashed(id: EntityId) {
+    const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
+    const spatialComp = spatialSys.getComponent(id);
+  
+    const gridX = spatialComp.gridMode.gridX;
+    const gridY = spatialComp.gridMode.gridY;
+  
+    const entities = spatialSys.grid.idsInCells(gridX - 1,
+                                                gridX + 1,
+                                                gridY - 1,
+                                                gridY + 1);
+  
+    entities.splice(entities.indexOf(id), 1);
+  
+    const burned: EEntityBurned = {
+      type: GameEventType.ENTITY_BURNED,
+      entities
+    };
+  
+    const killed: EPlayerKilled = {
+      type: GameEventType.PLAYER_KILLED,
+      entities: [id],
+      playerId: id
+    };
+  
+    this._em.submitEvent(burned);
+    this._em.submitEvent(killed);
   }
 }
