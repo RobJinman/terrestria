@@ -1,9 +1,7 @@
 import { UserInput } from "./common/action";
 import { EntityType } from "./common/game_objects";
-import { CSprite, StaticImage, RenderOptions,
-         RenderSystem, 
-         CShape,
-         Colour} from "./render_system";
+import { CSprite, StaticImage, RenderOptions, RenderSystem, CShape, Colour,
+         CText } from "./render_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
@@ -37,7 +35,8 @@ export class UserInputManager {
   private _arrowButtons: Record<UserInput, EntityId>;
   private _fullscreenButton: EntityId;
   private _settingsButton: EntityId;
-  private _respawnPrompt: EntityId;
+  private _respawnPromptBg: EntityId;
+  private _respawnPromptText: EntityId;
   private _respawnPromptVisible: boolean = false;
   private _mobileControlsVisible: boolean = true;
 
@@ -110,7 +109,10 @@ export class UserInputManager {
                             () => this._onFullscreenButtonPress(),
                             () => this._onFullscreenButtonRelease());
 
-    this._respawnPrompt = this._constructRespawnPrompt(() => this._onRespawn());
+    this._respawnPromptBg =
+      this._constructRespawnPromptBg(() => this._onRespawn());
+    this._respawnPromptText =
+      this._constructRespawnPromptText(() => this._onRespawn());
 
     this._updateComponentsVisibility();
   }
@@ -138,19 +140,44 @@ export class UserInputManager {
     return document.fullscreenEnabled;
   }
 
-  private _constructRespawnPrompt(onPress: () => void) {
+  private _constructRespawnPromptText(onPress: () => void) {
     const id = getNextEntityId();
 
     const renderOpts: RenderOptions = {
       zIndex: UI_Z_INDEX + 1,
+      screenPosition: { x: 1, y: 1 },
+      onPress
+    };
+
+    const colour = new Colour(1, 1, 1, 1);
+
+    const renderComp = new CText(id,
+                                "Tap here to respawn (or press enter)",
+                                28,
+                                colour,
+                                renderOpts);
+
+    this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
+
+    return id;
+  }
+
+  private _constructRespawnPromptBg(onPress: () => void) {
+    const id = getNextEntityId();
+
+    const renderOpts: RenderOptions = {
+      zIndex: UI_Z_INDEX,
       screenPosition: { x: 0, y: 0 },
       onPress
     };
 
     const shape = new Rectangle(1, 1); // Will get resized
-    const colour = new Colour(0, 0, 0, 0.2);
+    const colour = new Colour(0, 0, 0, 0.5);
 
-    const renderComp = new CShape(id, shape, colour, renderOpts);
+    const renderComp = new CShape(id,
+                                  shape,
+                                  colour,
+                                  renderOpts);
 
     this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
@@ -179,7 +206,8 @@ export class UserInputManager {
 
     renderSys.setVisible(this._settingsButton, settingsVisible);
 
-    renderSys.setVisible(this._respawnPrompt, respawnPromptVisible);
+    renderSys.setVisible(this._respawnPromptBg, respawnPromptVisible);
+    renderSys.setVisible(this._respawnPromptText, respawnPromptVisible);
 
     this._positionComponents();
   }
@@ -206,15 +234,25 @@ export class UserInputManager {
   }
 
   private _positionRespawnPrompt(renderSys: RenderSystem) {
-    const w = 0.5 * renderSys.viewH;
-    const h = 0.5 * renderSys.viewH;
-    const x = (renderSys.viewW - w) * 0.5;
-    const y = (renderSys.viewH - h) * 0.5;
+    const bgW = 500;
+    const bgH = 70;
+    const bgX = (renderSys.viewW - bgW) * 0.5;
+    const bgY = (renderSys.viewH - bgH) * 0.5;
 
-    const shape = new Rectangle(w, h);
+    const shape = new Rectangle(bgW, bgH);
 
-    renderSys.assignNewShape(this._respawnPrompt, shape);
-    renderSys.setScreenPosition(this._respawnPrompt, x, y);
+    renderSys.assignNewShape(this._respawnPromptBg, shape);
+    renderSys.setScreenPosition(this._respawnPromptBg, bgX, bgY);
+
+    const textComp = renderSys.getTextComponent(this._respawnPromptText);
+
+    const textW = textComp.width;
+    const textH = textComp.height;
+
+    const textX = (renderSys.viewW - textW) * 0.5;
+    const textY = (renderSys.viewH - textH) * 0.5;
+
+    renderSys.setScreenPosition(this._respawnPromptText, textX, textY);
   }
 
   private _positionArrowButtons(renderSys: RenderSystem) {

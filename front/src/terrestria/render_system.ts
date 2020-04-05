@@ -14,7 +14,7 @@ import { EntityManager } from './entity_manager';
 import { SpatialContainer } from './spatial_container';
 
 const VERTICAL_RESOLUTION = 10 * BLOCK_SZ;
-const DEFAULT_Z_INDEX = 1000;
+const Z_INDEXES_START = 1000;
 export const MAX_PARALLAX_DEPTH = 10;
 
 export type OnInteractionFn = () => void;
@@ -99,7 +99,7 @@ interface Animation {
 }
 
 export class CRender extends Component {
-  readonly zIndex: number = 0;
+  readonly zIndex: number = Z_INDEXES_START;
   screenPosition: Vec2|null = null;
   readonly onPress: OnInteractionFn|null = null;
   readonly onRelease: OnInteractionFn|null = null;
@@ -108,7 +108,7 @@ export class CRender extends Component {
     super(entityId, ComponentType.RENDER);
 
     if (options.zIndex) {
-      this.zIndex = options.zIndex;
+      this.zIndex = Z_INDEXES_START + options.zIndex;
     }
     if (options.screenPosition) {
       this.screenPosition = options.screenPosition;
@@ -133,11 +133,9 @@ export class CShape extends CRender {
               options: RenderOptions = {}) {
     super(entityId, options);
 
-    const zIndex = options.zIndex ? options.zIndex : 0;
-
     this._shape = shape;
     this.colour = colour;
-    this.graphics.zIndex = DEFAULT_Z_INDEX + zIndex;
+    this.graphics.zIndex = this.zIndex;
   }
 
   get shape() {
@@ -203,6 +201,40 @@ export class CTiledRegion extends CRender {
 
     this.region = region;
     this.sprites = new Map<string, PIXI.Sprite[]>();
+  }
+}
+
+export class CText extends CRender {
+  readonly text: string;
+  readonly fontSize: number;
+  readonly colour: Colour;
+  readonly pixiText: PIXI.Text;
+
+  constructor(entityId: EntityId,
+              text: string,
+              fontSize: number,
+              colour: Colour,
+              options: RenderOptions = {}) {
+    super(entityId, options);
+
+    this.text = text;
+    this.fontSize = fontSize;
+    this.colour = colour;
+
+    this.pixiText = new PIXI.Text(text, {
+      fontSize,
+      fill: colour.value
+    });
+
+    this.pixiText.zIndex = this.zIndex;
+  }
+
+  get width() {
+    return this.pixiText.width;
+  }
+
+  get height() {
+    return this.pixiText.height;
   }
 }
 
@@ -325,6 +357,9 @@ export class RenderSystem implements ClientSystem {
     else if (c instanceof CShape) {
       c.graphics.visible = visible;
     }
+    else if (c instanceof CText) {
+      c.pixiText.visible = visible;
+    }
     else {
       throw new GameError("Can't set visibility on component of that type");
     }
@@ -344,6 +379,14 @@ export class RenderSystem implements ClientSystem {
       throw new GameError(`Render component (id=${id}) is not of type SHAPE`);
     }
     return <CShape>c;
+  }
+
+  getTextComponent(id: EntityId): CText {
+    const c = this.getComponent(id);
+    if (!(c instanceof CText)) {
+      throw new GameError(`Render component (id=${id}) is not of type TEXT`);
+    }
+    return <CText>c;
   }
 
   playAnimation(entityId: EntityId,
@@ -420,6 +463,9 @@ export class RenderSystem implements ClientSystem {
     else if (component instanceof CShape) {
       this._addShapeComponent(component);
     }
+    else if (component instanceof CText) {
+      this._addTextComponent(component);
+    }
   }
 
   hasComponent(id: EntityId) {
@@ -483,6 +529,7 @@ export class RenderSystem implements ClientSystem {
     const c = this.getShapeComponent(entityId);
     c._shape = shape;
 
+    c.graphics.clear();
     c.graphics.beginFill(c.colour.value, c.colour.a);
 
     switch (c.shape.type) {
@@ -576,7 +623,7 @@ export class RenderSystem implements ClientSystem {
                                    zIndex: number) {
     const texture = this._findTexture(image.name);
     const sprite = new PIXI.Sprite(texture);
-    sprite.zIndex = DEFAULT_Z_INDEX + zIndex;
+    sprite.zIndex = zIndex;
     if (image.width) {
       sprite.width = image.width;
     }
@@ -610,7 +657,8 @@ export class RenderSystem implements ClientSystem {
           newCentreY - 0.5 * h + c.currentSprite.pivot.y,
           w,
           h);
-        c.currentSprite.zIndex = DEFAULT_Z_INDEX - 100 * c.depth + c.zIndex;
+        const zIndex = c.zIndex - Z_INDEXES_START;
+        c.currentSprite.zIndex = Z_INDEXES_START - 100 * c.depth + zIndex;
       }
     });
   }
@@ -651,6 +699,16 @@ export class RenderSystem implements ClientSystem {
     }
   }
 
+  private _addTextComponent(c: CText) {
+    this._addInteractionCallbacks(c, c.pixiText);
+
+    if (c.screenPosition) {
+      this._screenSpaceComponents.set(c.entityId, c);
+    }
+
+    this._updateComponentPosition(c);
+  }
+
   private _loadResource(name: string,
                         url: string,
                         type?: PIXI.LoaderResource.LOAD_TYPE):
@@ -684,7 +742,7 @@ export class RenderSystem implements ClientSystem {
 
       const textures = this._spriteSheet.animations[anim.name];
       const sprite = new PIXI.AnimatedSprite(textures);
-      sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
+      sprite.zIndex = c.zIndex;
       this._addInteractionCallbacks(c, sprite);
 
       const defaultDuration = sprite.textures.length / 60;
@@ -750,7 +808,7 @@ export class RenderSystem implements ClientSystem {
                               y,
                               span.size() * BLOCK_SZ,
                               BLOCK_SZ);
-          sprite.zIndex = DEFAULT_Z_INDEX + c.zIndex;
+          sprite.zIndex = c.zIndex;
           sprites.push(sprite);
         }
       }
@@ -809,6 +867,17 @@ export class RenderSystem implements ClientSystem {
                           c.graphics.height,
                           spatialComp.angle_abs);
     }
+    else if (c instanceof CText) {
+      c.pixiText.pivot.set(0, 0);
+      this._stageDrawable(c.entityId,
+                          c.pixiText,
+                          true,
+                          spatialComp.x_abs + c.pixiText.pivot.x,
+                          spatialComp.y_abs + c.pixiText.pivot.y,
+                          c.pixiText.width,
+                          c.pixiText.height,
+                          spatialComp.angle_abs);
+    }
   }
 
   private _setScreenPosition(c: CRender) {
@@ -816,7 +885,11 @@ export class RenderSystem implements ClientSystem {
     const viewY = this._camera.y - 0.5 * this._viewH;
 
     if (c instanceof CSprite) {
-      if (c.currentSprite && c.screenPosition) {
+      if (c.currentSprite) {
+        if (!c.screenPosition) {
+          throw new GameError("Component has no screen position defined");
+        }
+
         this._stageDrawable(c.entityId,
                             c.currentSprite,
                             true,
@@ -827,15 +900,30 @@ export class RenderSystem implements ClientSystem {
       }
     }
     else if (c instanceof CShape) {
-      if (c.screenPosition) {
-        this._stageDrawable(c.entityId,
-                            c.graphics,
-                            true,
-                            viewX + c.screenPosition.x,
-                            viewY + c.screenPosition.y,
-                            c.graphics.width,
-                            c.graphics.height);
+      if (!c.screenPosition) {
+        throw new GameError("Component has no screen position defined");
       }
+
+      this._stageDrawable(c.entityId,
+                          c.graphics,
+                          true,
+                          viewX + c.screenPosition.x,
+                          viewY + c.screenPosition.y,
+                          c.graphics.width,
+                          c.graphics.height);
+    }
+    else if (c instanceof CText) {
+      if (!c.screenPosition) {
+        throw new GameError("Component has no screen position defined");
+      }
+
+      this._stageDrawable(c.entityId,
+                          c.pixiText,
+                          true,
+                          viewX + c.screenPosition.x,
+                          viewY + c.screenPosition.y,
+                          c.pixiText.width,
+                          c.pixiText.height);
     }
   }
 
