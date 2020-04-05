@@ -262,15 +262,15 @@ export class App {
 
   setMusicEnabled(enabled: boolean) {
     if (enabled) {
-      this._audioManager.playMusic();
+      this._audioManager.unmuteMusic();
     }
     else {
-      this._audioManager.stopMusic();
+      this._audioManager.muteMusic();
     }
   }
 
   get musicEnabled() {
-    return this._audioManager.isMusicPlaying;
+    return !this._audioManager.musicMuted;
   }
 
   setSfxEnabled(enabled: boolean) {
@@ -452,7 +452,7 @@ export class App {
   private _onPlayerKilled() {
     console.log("You died!");
     this._playerId = PLAYER_ID_DEAD;
-    this._audioManager.playSound("bang", 0);
+
     if (this._userInputManager) {
       this._userInputManager.showRespawnPrompt();
     }

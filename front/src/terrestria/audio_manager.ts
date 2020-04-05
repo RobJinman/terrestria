@@ -1,20 +1,17 @@
+import sound from 'pixi-sound';
+import { GameError } from './common/error';
+
 const NUM_MUSIC_FILES = 4;
-const NUM_CONCURRENT_SFX = 10;
-const MUSIC_VOLUME = 0.2;
+const MUSIC_VOLUME = 0.15;
 const SFX_VOLUME = 0.7;
 const MAX_AUDIBLE_DISTANCE = 640;
-
-interface HtmlAudio {
-  audio: HTMLAudioElement;
-  source: HTMLSourceElement;
-  playing: boolean;
-}
 
 export class AudioManager {
   _musicAudioElement: HTMLAudioElement;
   _musicSourceElement: HTMLSourceElement;
-  _sfxElements: HtmlAudio[] = [];
   _currentMusicFile: number;
+  _sounds = new Map<string, sound.Sound>();
+  _sfxMuted = false;
 
   constructor() {
     this._currentMusicFile = Math.floor(Math.random() * NUM_MUSIC_FILES);
@@ -25,24 +22,44 @@ export class AudioManager {
     this._musicSourceElement.src = `assets/music${this._currentMusicFile}.mp3`;
     this._musicAudioElement.appendChild(this._musicSourceElement);
     this._musicAudioElement.onended = () => this._nextMusicTrack();
+  }
 
-    for (let i = 0; i < NUM_CONCURRENT_SFX; ++i) {
-      const audioElement = document.createElement("audio");
-      const sourceElement = document.createElement("source");
-      sourceElement.type = "audio/mpeg";
-      audioElement.appendChild(sourceElement);
+  addSound(soundName: string) {
+    const s = sound.Sound.from(`assets/${soundName}.mp3`);
+    this._sounds.set(soundName, s);
+  }
 
-      const sfx = {
-        audio: audioElement,
-        source: sourceElement,
-        playing: false
-      };
-
-      audioElement.onended = () => sfx.playing = false;
-      audioElement.onerror = () => sfx.playing = false;
-
-      this._sfxElements.push(sfx);
+  playSound(soundName: string, distance: number) {
+    const sound = this._sounds.get(soundName);
+    if (!sound) {
+      throw new GameError(`No sound with name ${soundName}`);
     }
+
+    const attentuation = 1 - Math.min(1, distance / MAX_AUDIBLE_DISTANCE);
+    const volume = SFX_VOLUME * attentuation;
+
+    if (volume > 0) {
+      sound.volume = volume;
+      sound.play();
+    }
+  }
+
+  muteSfx() {
+    sound.muteAll();
+    this._sfxMuted = true;
+  }
+
+  unmuteSfx() {
+    sound.unmuteAll();
+    this._sfxMuted = false;
+  }
+
+  get musicMuted() {
+    return this._musicAudioElement.muted;
+  }
+
+  get sfxMuted() {
+    return this._sfxMuted;
   }
 
   playMusic() {
@@ -54,42 +71,12 @@ export class AudioManager {
     this._musicAudioElement.pause();
   }
 
-  playSound(soundName: string, distance: number) {
-    const attentuation = 1 - Math.min(1, distance / MAX_AUDIBLE_DISTANCE);
-    const volume = SFX_VOLUME * attentuation;
-
-    if (volume > 0) {
-      for (const sfx of this._sfxElements) {
-        if (!sfx.playing) {
-          sfx.source.src = `assets/${soundName}.mp3`;
-          sfx.audio.load();
-          sfx.audio.volume = volume;
-          sfx.audio.play();
-          sfx.playing = true;
-          break;
-        }
-      }
-    }
+  muteMusic() {
+    this._musicAudioElement.muted = true;
   }
 
-  muteSfx() {
-    for (const sfx of this._sfxElements) {
-      sfx.audio.muted = true;
-    }
-  }
-
-  unmuteSfx() {
-    for (const sfx of this._sfxElements) {
-      sfx.audio.muted = false;
-    }
-  }
-
-  get isMusicPlaying() {
-    return !this._musicAudioElement.paused;
-  }
-
-  get sfxMuted() {
-    return this._sfxElements[0].audio.muted;
+  unmuteMusic() {
+    return this._musicAudioElement.muted = false; 
   }
 
   private _nextMusicTrack() {

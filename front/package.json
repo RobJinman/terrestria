@@ -4,6 +4,7 @@
   "description": "A browser-based game",
   "main": "index.js",
   "dependencies": {
+    "pixi-sound": "^3.0.4",
     "pixi.js": "^5.1.6",
     "react": "^16.13.0",
     "react-dom": "^16.13.0"
