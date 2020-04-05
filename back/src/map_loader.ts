@@ -71,8 +71,8 @@ export class MapLoader {
 
   // TODO: This will come from JSON. For now, generate the data here
   private _loadMapData(): MapData {
-    const WORLD_W = 50;
-    const WORLD_H = 50;
+    const WORLD_W = 35;
+    const WORLD_H = 55;
 
     const gravRegion: Span2dDesc = [
       [{ a: 0, b: WORLD_W - 1 }],

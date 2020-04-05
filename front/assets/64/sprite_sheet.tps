@@ -391,6 +391,11 @@
             <key type="filename">square_rock_burn2.png</key>
             <key type="filename">square_rock_burn3.png</key>
             <key type="filename">trophy.png</key>
+            <key type="filename">wall.png</key>
+            <key type="filename">wall_burn0.png</key>
+            <key type="filename">wall_burn1.png</key>
+            <key type="filename">wall_burn2.png</key>
+            <key type="filename">wall_burn3.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -548,6 +553,11 @@
             <filename>button_action_active.png</filename>
             <filename>button_settings.png</filename>
             <filename>button_settings_active.png</filename>
+            <filename>wall.png</filename>
+            <filename>wall_burn0.png</filename>
+            <filename>wall_burn1.png</filename>
+            <filename>wall_burn2.png</filename>
+            <filename>wall_burn3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

@@ -2,8 +2,8 @@ import { Component, EntityId } from "./common/system";
 import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
-import { GameEvent, EPlayerKilled, GameEventType,
-         EEntityBurned, EAgentEnterCell } from "./common/event";
+import { GameEvent, EPlayerKilled, GameEventType, EEntityBurned,
+         EAgentEnterCell } from "./common/event";
 import { EntityManager } from "./entity_manager";
 import { Pinata, CreateAwardResponse } from "./pinata";
 import { PlayerAction, UserInput, InputState, ActionType,
@@ -12,7 +12,7 @@ import { EntityFactory } from "./entity_factory";
 import { Pipe } from "./pipe";
 import { Logger } from "./logger";
 import { CSpatial } from "./spatial_component";
-import { CCollector, InventorySystem } from "./inventory_system";
+import { CCollector } from "./inventory_system";
 import { EntityDesc } from "./common/map_data";
 import { EntityType } from "./common/game_objects";
 import { RNewEntities, GameResponseType } from "./common/response";

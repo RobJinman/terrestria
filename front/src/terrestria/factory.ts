@@ -18,6 +18,7 @@ import { constructGemBundle } from "./entities/gem_bundle";
 import { constructSfx } from "./entities/sfx";
 import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
+import { constructWall } from "./entities/wall";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -42,6 +43,10 @@ export function constructEntities(entityManager: EntityManager,
       }
       case EntityType.SQUARE_ROCK: {
         constructSquareRock(entityManager, entity);
+        break;
+      }
+      case EntityType.WALL: {
+        constructWall(entityManager, entity);
         break;
       }
       case EntityType.SOIL: {
