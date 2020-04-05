@@ -296,6 +296,9 @@ export class App {
 
   private _onEnterKeyPress() {
     if (this._playerId == PLAYER_ID_DEAD) {
+      if (this._userInputManager) {
+        this._userInputManager.hideRespawnPrompt();
+      }
       this._requestRespawn();
     }
   }
@@ -442,6 +445,9 @@ export class App {
     console.log("You died!");
     this._playerId = PLAYER_ID_DEAD;
     this._audioManager.playSound("bang", 0);
+    if (this._userInputManager) {
+      this._userInputManager.showRespawnPrompt();
+    }
   }
 
   private _initialiseGame(mapData: ClientMapData) {

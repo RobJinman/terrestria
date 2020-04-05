@@ -123,7 +123,7 @@ export class CRender extends Component {
 }
 
 export class CShape extends CRender {
-  readonly shape: Shape;
+  _shape: Shape;
   readonly colour: Colour;
   readonly graphics = new PIXI.Graphics();
 
@@ -135,9 +135,13 @@ export class CShape extends CRender {
 
     const zIndex = options.zIndex ? options.zIndex : 0;
 
-    this.shape = shape;
+    this._shape = shape;
     this.colour = colour;
     this.graphics.zIndex = DEFAULT_Z_INDEX + zIndex;
+  }
+
+  get shape() {
+    return this._shape;
   }
 }
 
@@ -334,6 +338,14 @@ export class RenderSystem implements ClientSystem {
     return <CSprite>c;
   }
 
+  getShapeComponent(id: EntityId): CShape {
+    const c = this.getComponent(id);
+    if (!(c instanceof CShape)) {
+      throw new GameError(`Render component (id=${id}) is not of type SHAPE`);
+    }
+    return <CShape>c;
+  }
+
   playAnimation(entityId: EntityId,
                 name: string,
                 onFinish?: () => void): boolean {
@@ -465,6 +477,34 @@ export class RenderSystem implements ClientSystem {
       anim.sprite.width = width;
       anim.sprite.height = height;
     });
+  }
+
+  assignNewShape(entityId: EntityId, shape: Shape) {
+    const c = this.getShapeComponent(entityId);
+    c._shape = shape;
+
+    c.graphics.beginFill(c.colour.value, c.colour.a);
+
+    switch (c.shape.type) {
+      case ShapeType.CIRCLE: {
+        const circle = <Circle>c.shape;
+        c.graphics.drawCircle(0, 0, circle.radius);
+        break;
+      }
+      case ShapeType.RECTANGLE: {
+        const rect = <Rectangle>c.shape;
+        c.graphics.drawRect(0, 0, rect.width, rect.height);
+        break;
+      }
+      default: {
+        throw new GameError(`Render system doesn't support shapes of type ` +
+                            `${c.shape.type}`);
+      }
+    }
+
+    c.graphics.endFill();
+
+    this._updateComponentPosition(c);
   }
 
   onWindowResized(w: number, h: number) {
@@ -604,28 +644,7 @@ export class RenderSystem implements ClientSystem {
   private _addShapeComponent(c: CShape) {
     this._addInteractionCallbacks(c, c.graphics);
 
-    c.graphics.beginFill(c.colour.value, Math.floor(c.colour.a * 256));
-
-    switch (c.shape.type) {
-      case ShapeType.CIRCLE: {
-        const circle = <Circle>c.shape;
-        c.graphics.drawCircle(0, 0, circle.radius);
-        break;
-      }
-      case ShapeType.RECTANGLE: {
-        const rect = <Rectangle>c.shape;
-        c.graphics.drawRect(0, 0, rect.width, rect.height);
-        break;
-      }
-      default: {
-        throw new GameError(`Render system doesn't support shapes of type ` +
-                            `${c.shape.type}`);
-      }
-    }
-
-    c.graphics.endFill();
-
-    this._updateSpritePosition(c);
+    this.assignNewShape(c.entityId, c.shape);
 
     if (c.screenPosition) {
       this._screenSpaceComponents.set(c.entityId, c);
@@ -752,7 +771,7 @@ export class RenderSystem implements ClientSystem {
     children.forEach(child => this._onEntityMoved(child));
   }
 
-  private _updateSpritePosition(c: CRender) {
+  private _updateComponentPosition(c: CRender) {
     if (c.screenPosition) {
       this._setScreenPosition(c);
     }
@@ -844,7 +863,7 @@ export class RenderSystem implements ClientSystem {
       c.currentSprite = sprite;
     }
 
-    this._updateSpritePosition(c);
+    this._updateComponentPosition(c);
   }
 
   private _tiledRegionCompSetActiveSprite(c: CTiledRegion,

@@ -1,7 +1,9 @@
 import { UserInput } from "./common/action";
 import { EntityType } from "./common/game_objects";
 import { CSprite, StaticImage, RenderOptions,
-         RenderSystem } from "./render_system";
+         RenderSystem, 
+         CShape,
+         Colour} from "./render_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
@@ -9,6 +11,7 @@ import { GameEventType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Scheduler } from "./common/scheduler";
 import { UI_Z_INDEX } from "./constants";
+import { Rectangle } from "./common/geometry";
 
 export type DirectionInputHandlerFn = (input: UserInput) => void;
 export type VoidInputHandlerFn = () => void;
@@ -34,6 +37,8 @@ export class UserInputManager {
   private _arrowButtons: Record<UserInput, EntityId>;
   private _fullscreenButton: EntityId;
   private _settingsButton: EntityId;
+  private _respawnPrompt: EntityId;
+  private _respawnPromptVisible: boolean = false;
   private _mobileControlsVisible: boolean = true;
 
   private _onKeyDownFn = this._onKeyDown.bind(this);
@@ -105,6 +110,8 @@ export class UserInputManager {
                             () => this._onFullscreenButtonPress(),
                             () => this._onFullscreenButtonRelease());
 
+    this._respawnPrompt = this._constructRespawnPrompt(() => this._onRespawn());
+
     this._updateComponentsVisibility();
   }
 
@@ -117,8 +124,41 @@ export class UserInputManager {
     return this._mobileControlsVisible;
   }
 
+  showRespawnPrompt() {
+    this._respawnPromptVisible = true;
+    this._updateComponentsVisibility();
+  }
+
+  hideRespawnPrompt() {
+    this._respawnPromptVisible = false;
+    this._updateComponentsVisibility();
+  }
+
   private _fullscreenSupported(): boolean {
     return document.fullscreenEnabled;
+  }
+
+  private _constructRespawnPrompt(onPress: () => void) {
+    const id = getNextEntityId();
+
+    const renderOpts: RenderOptions = {
+      zIndex: UI_Z_INDEX + 1,
+      screenPosition: { x: 0, y: 0 },
+      onPress
+    };
+
+    const shape = new Rectangle(1, 1); // Will get resized
+    const colour = new Colour(0, 0, 0, 0.2);
+
+    const renderComp = new CShape(id, shape, colour, renderOpts);
+
+    this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
+
+    return id;
+  }
+
+  private _onRespawn() {
+    this._onEnterHandler();
   }
 
   private _updateComponentsVisibility() {
@@ -128,6 +168,7 @@ export class UserInputManager {
     const fullscreenVisible = this._fullscreenSupported() &&
                               !this._fullscreen();
     const settingsVisible = true;
+    const respawnPromptVisible = this._respawnPromptVisible;
 
     renderSys.setVisible(this._arrowButtons.UP, arrowsVisible);
     renderSys.setVisible(this._arrowButtons.RIGHT, arrowsVisible);
@@ -138,7 +179,9 @@ export class UserInputManager {
 
     renderSys.setVisible(this._settingsButton, settingsVisible);
 
-    this._positionButtons();
+    renderSys.setVisible(this._respawnPrompt, respawnPromptVisible);
+
+    this._positionComponents();
   }
 
   private _fullscreen(): boolean {
@@ -153,12 +196,25 @@ export class UserInputManager {
     this._updateComponentsVisibility();
   }
 
-  private _positionButtons() {
+  private _positionComponents() {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
     this._positionArrowButtons(renderSys);
     this._positionSettingsButton(renderSys);
     this._positionFullscreenButton(renderSys);
+    this._positionRespawnPrompt(renderSys);
+  }
+
+  private _positionRespawnPrompt(renderSys: RenderSystem) {
+    const w = 0.5 * renderSys.viewH;
+    const h = 0.5 * renderSys.viewH;
+    const x = (renderSys.viewW - w) * 0.5;
+    const y = (renderSys.viewH - h) * 0.5;
+
+    const shape = new Rectangle(w, h);
+
+    renderSys.assignNewShape(this._respawnPrompt, shape);
+    renderSys.setScreenPosition(this._respawnPrompt, x, y);
   }
 
   private _positionArrowButtons(renderSys: RenderSystem) {
