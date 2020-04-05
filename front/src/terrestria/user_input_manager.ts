@@ -10,6 +10,7 @@ import { ComponentType } from "./common/component_types";
 import { Scheduler } from "./common/scheduler";
 import { UI_Z_INDEX } from "./constants";
 import { Rectangle } from "./common/geometry";
+import { GameError } from "./common/error";
 
 export type DirectionInputHandlerFn = (input: UserInput) => void;
 export type VoidInputHandlerFn = () => void;
@@ -27,21 +28,20 @@ function keyEventToUserInput(event: KeyboardEvent): UserInput|null {
 export class UserInputManager {
   private _em: EntityManager;
   private _scheduler: Scheduler;
-  private _entityId: EntityId;
   private _onDirectionPressHandler: DirectionInputHandlerFn;
   private _onDirectionReleaseHandler: DirectionInputHandlerFn;
   private _onEnterHandler: VoidInputHandlerFn;
   private _onSettingsHandler: VoidInputHandlerFn;
-  private _arrowButtons: Record<UserInput, EntityId>;
-  private _fullscreenButton: EntityId;
-  private _settingsButton: EntityId;
-  private _respawnPromptBg: EntityId;
-  private _respawnPromptText: EntityId;
+  private _ids?: {
+    main: EntityId;
+    arrowButtons: Record<UserInput, EntityId>;
+    fullscreenButton: EntityId;
+    settingsButton: EntityId;
+    respawnPromptBg: EntityId;
+    respawnPromptText: EntityId;
+  };
   private _respawnPromptVisible: boolean = false;
   private _mobileControlsVisible: boolean = true;
-
-  private _onKeyDownFn = this._onKeyDown.bind(this);
-  private _onKeyUpFn = this._onKeyUp.bind(this);
 
   constructor(em: EntityManager,
               scheduler: Scheduler,
@@ -52,24 +52,26 @@ export class UserInputManager {
     this._em = em;
     this._scheduler = scheduler;
 
-    window.addEventListener("keydown", this._onKeyDownFn, false);
-    window.addEventListener("keyup", this._onKeyUpFn, false);
-
     this._onDirectionPressHandler = onDirectionPressHandler;
     this._onDirectionReleaseHandler = onDirectionReleaseHandler;
     this._onEnterHandler = onEnterHandler;
     this._onSettingsHandler = onSettingsHandler;
 
-    this._entityId = getNextEntityId();
+    window.onkeydown = this._onKeyDown.bind(this);
+    window.onkeyup = this._onKeyUp.bind(this);
+  }
+
+  initialise() {
+    const mainId = getNextEntityId();
 
     const targetedHandlers = new Map<GameEventType, EventHandlerFn>();
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
     broadcastHandlers.set(GameEventType.WINDOW_RESIZED,
                           this._onWindowResized.bind(this));
-    const behaviourComp = new CBehaviour(this._entityId,
+    const behaviourComp = new CBehaviour(mainId,
                                          targetedHandlers,
                                          broadcastHandlers);
-    this._em.addEntity(this._entityId, EntityType.OTHER, [ behaviourComp ]);
+    this._em.addEntity(mainId, EntityType.OTHER, [ behaviourComp ]);
 
     const btnUp =
       this._constructButton("button_up",
@@ -91,28 +93,37 @@ export class UserInputManager {
                             () => this._onArrowPressed(UserInput.LEFT),
                             () => this._onArrowReleased(UserInput.LEFT));
 
-    this._arrowButtons = {
+    const arrowButtons = {
       UP: btnUp,
       RIGHT: btnRight,
       DOWN: btnDown,
       LEFT: btnLeft
     };
 
-    this._settingsButton =
+    const settingsButton =
       this._constructButton("button_settings",
                             () => this._onSettingsButtonPress(),
                             () => this._onSettingsButtonRelease());
 
 
-    this._fullscreenButton =
+    const fullscreenButton =
       this._constructButton("button_fullscreen",
                             () => this._onFullscreenButtonPress(),
                             () => this._onFullscreenButtonRelease());
 
-    this._respawnPromptBg =
+    const respawnPromptBg =
       this._constructRespawnPromptBg(() => this._onRespawn());
-    this._respawnPromptText =
+    const respawnPromptText =
       this._constructRespawnPromptText(() => this._onRespawn());
+
+    this._ids = {
+      main: mainId,
+      arrowButtons,
+      settingsButton,
+      fullscreenButton,
+      respawnPromptBg,
+      respawnPromptText
+    };
 
     this._updateComponentsVisibility();
   }
@@ -134,6 +145,25 @@ export class UserInputManager {
   hideRespawnPrompt() {
     this._respawnPromptVisible = false;
     this._updateComponentsVisibility();
+  }
+
+  private _onKeyDown(event: KeyboardEvent) {
+    const input = keyEventToUserInput(event);
+
+    if (input !== null) {
+      this._onDirectionPressHandler(input);
+    }
+    else if (event.key == "Enter") {
+      this._onEnterHandler();
+    }
+  }
+
+  private _onKeyUp(event: KeyboardEvent) {
+    const input = keyEventToUserInput(event);
+
+    if (input !== null) {
+      this._onDirectionReleaseHandler(input);
+    }
   }
 
   private _fullscreenSupported(): boolean {
@@ -189,6 +219,10 @@ export class UserInputManager {
   }
 
   private _updateComponentsVisibility() {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
     const arrowsVisible = this._mobileControlsVisible;
@@ -197,17 +231,17 @@ export class UserInputManager {
     const settingsVisible = true;
     const respawnPromptVisible = this._respawnPromptVisible;
 
-    renderSys.setVisible(this._arrowButtons.UP, arrowsVisible);
-    renderSys.setVisible(this._arrowButtons.RIGHT, arrowsVisible);
-    renderSys.setVisible(this._arrowButtons.DOWN, arrowsVisible);
-    renderSys.setVisible(this._arrowButtons.LEFT, arrowsVisible);
+    renderSys.setVisible(this._ids.arrowButtons.UP, arrowsVisible);
+    renderSys.setVisible(this._ids.arrowButtons.RIGHT, arrowsVisible);
+    renderSys.setVisible(this._ids.arrowButtons.DOWN, arrowsVisible);
+    renderSys.setVisible(this._ids.arrowButtons.LEFT, arrowsVisible);
 
-    renderSys.setVisible(this._fullscreenButton, fullscreenVisible);
+    renderSys.setVisible(this._ids.fullscreenButton, fullscreenVisible);
 
-    renderSys.setVisible(this._settingsButton, settingsVisible);
+    renderSys.setVisible(this._ids.settingsButton, settingsVisible);
 
-    renderSys.setVisible(this._respawnPromptBg, respawnPromptVisible);
-    renderSys.setVisible(this._respawnPromptText, respawnPromptVisible);
+    renderSys.setVisible(this._ids.respawnPromptBg, respawnPromptVisible);
+    renderSys.setVisible(this._ids.respawnPromptText, respawnPromptVisible);
 
     this._positionComponents();
   }
@@ -234,6 +268,10 @@ export class UserInputManager {
   }
 
   private _positionRespawnPrompt(renderSys: RenderSystem) {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     const bgW = 500;
     const bgH = 70;
     const bgX = (renderSys.viewW - bgW) * 0.5;
@@ -241,10 +279,10 @@ export class UserInputManager {
 
     const shape = new Rectangle(bgW, bgH);
 
-    renderSys.assignNewShape(this._respawnPromptBg, shape);
-    renderSys.setScreenPosition(this._respawnPromptBg, bgX, bgY);
+    renderSys.assignNewShape(this._ids.respawnPromptBg, shape);
+    renderSys.setScreenPosition(this._ids.respawnPromptBg, bgX, bgY);
 
-    const textComp = renderSys.getTextComponent(this._respawnPromptText);
+    const textComp = renderSys.getTextComponent(this._ids.respawnPromptText);
 
     const textW = textComp.width;
     const textH = textComp.height;
@@ -252,14 +290,18 @@ export class UserInputManager {
     const textX = (renderSys.viewW - textW) * 0.5;
     const textY = (renderSys.viewH - textH) * 0.5;
 
-    renderSys.setScreenPosition(this._respawnPromptText, textX, textY);
+    renderSys.setScreenPosition(this._ids.respawnPromptText, textX, textY);
   }
 
   private _positionArrowButtons(renderSys: RenderSystem) {
-    const upArrow = this._arrowButtons[UserInput.UP];
-    const rightArrow = this._arrowButtons[UserInput.RIGHT];
-    const downArrow = this._arrowButtons[UserInput.DOWN];
-    const leftArrow = this._arrowButtons[UserInput.LEFT];
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
+    const upArrow = this._ids.arrowButtons[UserInput.UP];
+    const rightArrow = this._ids.arrowButtons[UserInput.RIGHT];
+    const downArrow = this._ids.arrowButtons[UserInput.DOWN];
+    const leftArrow = this._ids.arrowButtons[UserInput.LEFT];
 
     const sz = 0.15; // As percentage of view height
 
@@ -285,40 +327,29 @@ export class UserInputManager {
   }
 
   private _positionFullscreenButton(renderSys: RenderSystem) {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     const w = 0.25 * renderSys.viewH;
     const h = 0.09 * renderSys.viewH;
     const margin = 0.02 * renderSys.viewH;
-    renderSys.setSpriteSize(this._fullscreenButton, w, h);
-    renderSys.setScreenPosition(this._fullscreenButton, margin, margin);
+    renderSys.setSpriteSize(this._ids.fullscreenButton, w, h);
+    renderSys.setScreenPosition(this._ids.fullscreenButton, margin, margin);
   }
 
   private _positionSettingsButton(renderSys: RenderSystem) {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     const w = 0.13 * renderSys.viewH;
     const h = 0.13 * renderSys.viewH;
     const margin = 0.02 * renderSys.viewH;
     const x = renderSys.viewW - margin - w;
     const y = margin;
-    renderSys.setSpriteSize(this._settingsButton, w, h);
-    renderSys.setScreenPosition(this._settingsButton, x, y);
-  }
-
-  private _onKeyDown(event: KeyboardEvent) {
-    const input = keyEventToUserInput(event);
-
-    if (input !== null) {
-      this._onDirectionPressHandler(input);
-    }
-    else if (event.key == "Enter") {
-      this._onEnterHandler();
-    }
-  }
-
-  private _onKeyUp(event: KeyboardEvent) {
-    const input = keyEventToUserInput(event);
-
-    if (input !== null) {
-      this._onDirectionReleaseHandler(input);
-    }
+    renderSys.setSpriteSize(this._ids.settingsButton, w, h);
+    renderSys.setScreenPosition(this._ids.settingsButton, x, y);
   }
 
   private _enterFullscreen() {
@@ -326,41 +357,65 @@ export class UserInputManager {
   }
 
   private _onArrowPressed(input: UserInput) {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     this._onDirectionPressHandler(input);
-    const id = this._arrowButtons[input];
+    const id = this._ids.arrowButtons[input];
     const inputName = this._inputName(input);
     this._setButtonActive(id, inputName);
   }
 
   private _onArrowReleased(input: UserInput) {
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
     this._onDirectionReleaseHandler(input);
-    const id = this._arrowButtons[input];
+    const id = this._ids.arrowButtons[input];
     const inputName = this._inputName(input);
     this._setButtonInactive(id, inputName);
   }
 
   private _onFullscreenButtonPress() {
-    if (this._fullscreenButton) {
-      this._setButtonActive(this._fullscreenButton, "button_fullscreen");
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
+    if (this._ids.fullscreenButton) {
+      this._setButtonActive(this._ids.fullscreenButton, "button_fullscreen");
     }
   }
 
   private _onFullscreenButtonRelease() {
-    if (this._fullscreenButton) {
-      this._setButtonInactive(this._fullscreenButton, "button_fullscreen");
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
+    if (this._ids.fullscreenButton) {
+      this._setButtonInactive(this._ids.fullscreenButton, "button_fullscreen");
     }
     this._enterFullscreen();
   }
 
   private _onSettingsButtonPress() {
-    if (this._settingsButton) {
-      this._setButtonActive(this._settingsButton, "button_settings");
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
+    if (this._ids.settingsButton) {
+      this._setButtonActive(this._ids.settingsButton, "button_settings");
     }
   }
 
   private _onSettingsButtonRelease() {
-    if (this._settingsButton) {
-      this._setButtonInactive(this._settingsButton, "button_settings");
+    if (!this._ids) {
+      throw new GameError("UserInputManager not initialised");
+    }
+
+    if (this._ids.settingsButton) {
+      this._setButtonInactive(this._ids.settingsButton, "button_settings");
     }
     this._onSettingsHandler();
   }

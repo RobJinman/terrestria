@@ -58,7 +58,7 @@ export class App {
   private _scheduler: Scheduler;
   private _playerId: EntityId = PLAYER_ID_UNSET;
   private _mapData?: ClientMapData;
-  private _userInputManager?: UserInputManager;
+  private _userInputManager: UserInputManager;
   private _audioManager: AudioManager;
   private _onStateChange: (state: GameState) => void;
   private _pinataId?: string;
@@ -89,6 +89,14 @@ export class App {
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
 
     this._audioManager = new AudioManager();
+
+    this._userInputManager
+      = new UserInputManager(this._em,
+                             this._scheduler,
+                             this._onDirectionKeyDown.bind(this),
+                             this._onDirectionKeyUp.bind(this),
+                             this._onRespawn.bind(this),
+                             this._onSettingsOpen.bind(this));
   }
 
   async connect() {
@@ -294,7 +302,7 @@ export class App {
     });
   }
 
-  private _onEnterKeyPress() {
+  private _onRespawn() {
     if (this._playerId == PLAYER_ID_DEAD) {
       if (this._userInputManager) {
         this._userInputManager.hideRespawnPrompt();
@@ -456,20 +464,14 @@ export class App {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     renderSys.setWorldSize(mapData.width * BLOCK_SZ, mapData.height * BLOCK_SZ);
 
+    this._userInputManager.initialise();
+
     this._onWindowResize();
 
     constructInitialEntitiesFromMapData(this._em,
                                         this._audioManager,
                                         this._scheduler,
                                         mapData);
-
-    this._userInputManager
-      = new UserInputManager(this._em,
-                             this._scheduler,
-                             this._onDirectionKeyDown.bind(this),
-                             this._onDirectionKeyUp.bind(this),
-                             this._onEnterKeyPress.bind(this),
-                             this._onSettingsOpen.bind(this));
   }
 
   private _setGameState(state: GameState) {
