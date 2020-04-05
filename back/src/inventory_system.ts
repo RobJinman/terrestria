@@ -29,9 +29,13 @@ export class Bucket {
   }
 
   addItem(item: CCollectable): boolean {
+    return this.addValue(item.value);
+  }
+
+  addValue(value: number): boolean {
     const prevValue = this._value;
 
-    this._value += item.value;
+    this._value += value;
     if (this._max >= 0 && this._value > this._max) {
       this._value = this._max;
     }
@@ -119,6 +123,11 @@ export class CCollector extends CInventory {
   bucketValue(bucketName: string): number {
     const bucket = this._getBucket(bucketName);
     return bucket.value;
+  }
+
+  addToBucket(bucketName: string, value: number) {
+    const bucket = this._getBucket(bucketName);
+    return bucket.addValue(value);
   }
 
   private _getBucket(bucketName: string): Bucket {
@@ -217,6 +226,11 @@ export class InventorySystem implements ServerSystem {
   clearBucket(collectorId: EntityId, bucketName: string): boolean {
     const collector = this._getCollector(collectorId);
     return collector.clearBucket(bucketName);
+  }
+
+  addToBucket(collectorId: EntityId, bucketName: string, value: number) {
+    const collector = this._getCollector(collectorId);
+    collector.addToBucket(bucketName, value);
   }
 
   private _getCollector(id: EntityId): CCollector {

@@ -136,6 +136,10 @@ export class IEntityManager {
     this._pendingDeletion.clear();
   }
 
+  isPendingDeletion(entityId: EntityId) {
+    return this._pendingDeletion.has(entityId);
+  }
+
   private _deleteEntity(id: EntityId) {
     const entity = this.entities.get(id);
     if (entity) {
