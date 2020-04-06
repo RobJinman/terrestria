@@ -179,7 +179,7 @@ export class SpatialSystem implements ClientSystem {
   }
 
   private _setStaticPos(c: CSpatial, x: number, y: number) {
-    c._setStaticPos(x, y);
+    c.setStaticPos(x, y);
 
     const event: EEntityMoved = {
       type: GameEventType.ENTITY_MOVED,

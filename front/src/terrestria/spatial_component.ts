@@ -42,7 +42,7 @@ export class CSpatial extends Component {
     this._posY = y;
   }
 
-  _setStaticPos(x: number, y: number) {
+  setStaticPos(x: number, y: number) {
     this.speed = 0;
     this._destX = x;
     this._destY = y;

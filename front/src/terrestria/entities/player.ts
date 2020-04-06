@@ -117,6 +117,10 @@ export function constructPlayer(em: EntityManager, entity: EntityData) {
                                  { zIndex: PLAYER_Z_INDEX });
 
   const spatialComp = new CSpatial(id, em);
+  const { x, y } = entity.desc;
+  if (x !== undefined && y !== undefined) {
+    spatialComp.setStaticPos(x, y);
+  }
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 

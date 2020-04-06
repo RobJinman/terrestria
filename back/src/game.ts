@@ -6,7 +6,7 @@ import { ComponentType } from "./common/component_types";
 import { Pipe } from "./pipe";
 import { GameResponseType, RGameState, RNewEntities, RPlayerKilled,
          RMapData } from "./common/response";
-import { BLOCK_SZ, SERVER_FRAME_DURATION_MS, SYNC_INTERVAL_MS, 
+import { SERVER_FRAME_DURATION_MS, SYNC_INTERVAL_MS, 
          SERVER_FRAME_RATE } from "./common/constants";
 import { EntityType } from "./common/game_objects";
 import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
@@ -23,7 +23,7 @@ import { Pinata } from "./pinata";
 import { Logger } from "./logger";
 import { Scheduler } from "./common/scheduler";
 import { AgentSystem } from "./agent_system";
-import { SpatialMode } from "./common/spatial_packet";
+import { Vec2 } from "./common/geometry";
 
 function noThrow(logger: Logger, fn: () => any) {
   try {
@@ -100,7 +100,7 @@ export class Game {
       }
     });
 
-    this._respawn(id);
+    const pos = this._respawn(id);
 
     this._logger.info(`Adding player ${id} with pinata id ${pinataId}`);
   
@@ -126,7 +126,7 @@ export class Game {
       entities: [{
         id,
         type: EntityType.PLAYER,
-        desc: {}
+        desc: pos
       }]
     };
 
@@ -156,7 +156,7 @@ export class Game {
       }
     });
 
-    this._respawn(id);
+    const pos = this._respawn(id);
 
     const socket = this._pipe.getConnection(oldId);
     this._pipe.removeConnection(oldId);
@@ -169,7 +169,7 @@ export class Game {
       entities: [{
         id,
         type: EntityType.PLAYER,
-        desc: {}
+        desc: pos
       }]
     };
 
@@ -206,13 +206,15 @@ export class Game {
     clearInterval(this._loopTimeout);
   }
 
-  private _respawn(entityId: EntityId) {
+  private _respawn(entityId: EntityId): Vec2 {
     const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                     entityId);
     const i = randomInt(0, this._mapData.spawnPoints.length - 1);
     const x = this._mapData.spawnPoints[i].x;
     const y = this._mapData.spawnPoints[i].y;
     spatial.setStaticPos(x, y);
+
+    return { x, y };
   }
 
   private _onPlayerKilled(e: GameEvent) {
