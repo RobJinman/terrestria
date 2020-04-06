@@ -11,8 +11,8 @@ Span::Span(size_t a, size_t b)
 
 pJsonObject_t Span::toJsonObject() const {
   pJsonObject_t json = std::make_unique<JsonObject>();
-  json->add("a", std::make_unique<JsonNumericalValue>(a));
-  json->add("b", std::make_unique<JsonNumericalValue>(b));
+  json->add("a", std::make_unique<JsonNumber>(a));
+  json->add("b", std::make_unique<JsonNumber>(b));
   return json;
 }
 

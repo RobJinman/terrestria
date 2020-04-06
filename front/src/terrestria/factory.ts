@@ -86,7 +86,7 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
   inventorySys.setDisplayedBucket("gems");
 
   constructEarth(em, mapData);
-  constructSky(em, mapData);
+  // constructSky(em, mapData);
   constructAwardNotification(em);
   constructSfx(em, audioManager, scheduler);
 }

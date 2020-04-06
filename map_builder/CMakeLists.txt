@@ -11,5 +11,5 @@ file(GLOB CPP_SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 add_executable(map_builder ${CPP_SOURCES})
 
-target_compile_options(map_builder PRIVATE -Wall -Wextra -O0 -g)
+target_compile_options(map_builder PRIVATE -Wall -Wextra -O3)
 target_link_libraries(map_builder Boost::program_options)

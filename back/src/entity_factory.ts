@@ -42,8 +42,6 @@ export class EntityFactory {
   }
 
   constructEntity(desc: EntityDesc): EntityId {
-    console.log(desc);
-
     switch (desc.type) {
       case EntityType.PLAYER: {
         return constructPlayer(this._em, desc.data);

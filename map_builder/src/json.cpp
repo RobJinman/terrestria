@@ -36,10 +36,10 @@ void JsonObject::add(const std::string& key, pJsonEntity_t entity) {
   m_contents.insert(std::make_pair(key, std::move(entity)));
 }
 
-void JsonStringValue::dump(std::ostream& out) const {
+void JsonString::dump(std::ostream& out) const {
   out << "\"" << m_value << "\"";
 }
 
-void JsonNumericalValue::dump(std::ostream& out) const {
+void JsonNumber::dump(std::ostream& out) const {
   out << m_value;
 }

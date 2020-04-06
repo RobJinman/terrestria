@@ -53,9 +53,9 @@ class JsonObject : public JsonEntity {
 
 typedef std::unique_ptr<JsonObject> pJsonObject_t;
 
-class JsonStringValue : public JsonEntity {
+class JsonString : public JsonEntity {
   public:
-    JsonStringValue(const std::string& value)
+    JsonString(const std::string& value)
       : JsonEntity(JsonEntityType::STRING_VALUE),
         m_value(value) {}
 
@@ -65,11 +65,11 @@ class JsonStringValue : public JsonEntity {
     std::string m_value;
 };
 
-typedef std::unique_ptr<JsonStringValue> pJsonStringValue_t;
+typedef std::unique_ptr<JsonString> pJsonString_t;
 
-class JsonNumericalValue : public JsonEntity {
+class JsonNumber : public JsonEntity {
   public:
-    JsonNumericalValue(double value)
+    JsonNumber(double value)
       : JsonEntity(JsonEntityType::NUMERICAL_VALUE),
         m_value(value) {}
 
@@ -79,6 +79,6 @@ class JsonNumericalValue : public JsonEntity {
     double m_value;
 };
 
-typedef std::unique_ptr<JsonNumericalValue> pJsonNumericalValue_t;
+typedef std::unique_ptr<JsonNumber> pJsonNumber_t;
 
 #endif
