@@ -21,7 +21,7 @@ import { BehaviourSystem } from './common/behaviour_system';
 import { AdvertSystem } from './advert_system';
 import { CSpatial } from './spatial_component';
 import { UserInputManager } from "./user_input_manager";
-import { EWindowResized, GameEventType } from "./common/event";
+import { EWindowResized, GameEventType, EPlayerRespawned } from "./common/event";
 import { GameState } from "./definitions";
 import { InventorySystem } from "./inventory_system";
 import { AudioManager } from "./audio_manager";
@@ -431,6 +431,13 @@ export class App {
 
   private _startGame(playerId: EntityId) {
     this._playerId = playerId;
+
+    const event: EPlayerRespawned = {
+      type: GameEventType.PLAYER_RESPAWNED,
+      entities: [ playerId ]
+    };
+
+    this._em.postEvent(event);
   }
 
   private _updateGameState(response: RGameState) {
@@ -450,7 +457,6 @@ export class App {
   }
 
   private _onPlayerKilled() {
-    console.log("You died!");
     this._playerId = PLAYER_ID_DEAD;
 
     if (this._userInputManager) {

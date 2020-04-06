@@ -6,7 +6,8 @@ import { PLAYER_SPEED } from "../common/constants";
 import { PLAYER_Z_INDEX } from "../constants";
 import { CSpatial } from "../spatial_component";
 import { ComponentType } from "../common/component_types";
-import { GameEventType, EAgentAction, AgentActionType } from "../common/event";
+import { GameEventType, EAgentAction, AgentActionType, EClientScoreChanged,
+         EAgentScoreChanged } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { CInventory } from "../inventory_system";
 import { EntityType } from "../common/game_objects";
@@ -157,6 +158,17 @@ export function constructPlayer(em: EntityManager, entity: EntityData) {
         break;
       }
     }
+  });
+  targetedEvents.set(GameEventType.AGENT_SCORE_CHANGED, e => {
+    const event = <EAgentScoreChanged>e;
+
+    const scoreChanged: EClientScoreChanged = {
+      type: GameEventType.CLIENT_SCORE_CHANGED,
+      entities: [ id ],
+      score: event.score
+    };
+
+    em.postEvent(scoreChanged);
   });
 
   const behaviourComp = new CBehaviour(id, targetedEvents);

@@ -13,9 +13,14 @@ export enum GameEventType {
   AGENT_BLOCKED = "AGENT_BLOCKED",
   AGENT_ACTION = "AGENT_ACTION",
   PLAYER_KILLED = "PLAYER_KILLED",
-  WINDOW_RESIZED = "WINDOW_RESIZED",
   AWARD_GRANTED = "AWARD_GRANTED",
-  GEMS_BANKED = "GEMS_BANKED"
+  GEMS_BANKED = "GEMS_BANKED",
+  AGENT_SCORE_CHANGED = "AGENT_SCORE_CHANGED",
+
+  // Client-side only
+  CLIENT_SCORE_CHANGED = "CLIENT_SCORE_CHANGED",
+  PLAYER_RESPAWNED = "PLAYER_RESPAWNED",
+  WINDOW_RESIZED = "WINDOW_RESIZED"
 }
 
 export interface GameEvent {
@@ -94,16 +99,29 @@ export interface EGemsBanked extends GameEvent {
   numGems: number;
 }
 
-export interface EPlayerKilled extends GameEvent {
-  playerId: EntityId;
+export interface EAgentScoreChanged extends GameEvent {
+  score: number;
 }
 
-export interface EWindowResized extends GameEvent {
-  w: number;
-  h: number;
+export interface EPlayerKilled extends GameEvent {
+  playerId: EntityId;
 }
 
 export interface EAwardGranted extends GameEvent {
   name: string;
   fetti: number;
 }
+
+// Client-side only
+//
+
+export interface EWindowResized extends GameEvent {
+  w: number;
+  h: number;
+}
+
+export interface EClientScoreChanged extends GameEvent {
+  score: number;
+}
+
+export interface EPlayerRespawned extends GameEvent {}

@@ -19,6 +19,7 @@ import { constructSfx } from "./entities/sfx";
 import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
+import { constructHud } from "./entities/hud";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -93,4 +94,5 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
   // constructSky(em, mapData);
   constructAwardNotification(em);
   constructSfx(em, audioManager, scheduler);
+  constructHud(em);
 }

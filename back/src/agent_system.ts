@@ -3,7 +3,8 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent, EPlayerKilled, GameEventType, EEntityBurned,
-         EAgentEnterCell, EEntityCollision } from "./common/event";
+         EAgentEnterCell, EEntityCollision, EGemsBanked,
+         EAgentScoreChanged } from "./common/event";
 import { EntityManager } from "./entity_manager";
 import { Pinata, CreateAwardResponse } from "./pinata";
 import { PlayerAction, UserInput, InputState, ActionType,
@@ -35,6 +36,7 @@ export class CAgent extends Component {
 
   _input: Input; // Non-private so AgentSystem has access
   _lastDirectionMoved: Direction = Direction.DOWN;
+  _score = 0;
 
   constructor(entityId: EntityId, pinataId?: string, pinataToken?: string) {
     super(entityId, ComponentType.AGENT);
@@ -63,6 +65,10 @@ export class CAgent extends Component {
 
   get lastDirectionMoved() {
     return this._lastDirectionMoved;
+  }
+
+  get score() {
+    return this._score;
   }
 }
 
@@ -160,6 +166,10 @@ export class AgentSystem implements ServerSystem {
         this._onEntityCollision(event);
         break;
       }
+      case GameEventType.GEMS_BANKED: {
+        this._onGemsBanked(event);
+        break;
+      }
     }
   }
 
@@ -179,6 +189,21 @@ export class AgentSystem implements ServerSystem {
 
   getDirties() {
     return [];
+  }
+
+  private _onGemsBanked(e: GameEvent) {
+    const event = <EGemsBanked>e;
+    const c = this.getComponent(event.playerId);
+
+    c._score += event.numGems;
+
+    const scoreChanged: EAgentScoreChanged = {
+      type: GameEventType.AGENT_SCORE_CHANGED,
+      entities: [ c.entityId ],
+      score: c.score
+    };
+
+    this._em.submitEvent(scoreChanged)
   }
 
   private _onEntityCollision(e: GameEvent) {

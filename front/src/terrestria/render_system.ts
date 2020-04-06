@@ -205,7 +205,6 @@ export class CTiledRegion extends CRender {
 }
 
 export class CText extends CRender {
-  readonly text: string;
   readonly fontSize: number;
   readonly colour: Colour;
   readonly pixiText: PIXI.Text;
@@ -217,7 +216,6 @@ export class CText extends CRender {
               options: RenderOptions = {}) {
     super(entityId, options);
 
-    this.text = text;
     this.fontSize = fontSize;
     this.colour = colour;
 
@@ -235,6 +233,14 @@ export class CText extends CRender {
 
   get height() {
     return this.pixiText.height;
+  }
+
+  get text() {
+    return this.pixiText.text;
+  }
+
+  set text(value: string) {
+    this.pixiText.text = value;
   }
 }
 
