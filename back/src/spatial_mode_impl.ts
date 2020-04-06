@@ -3,7 +3,7 @@ import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { Direction } from "./common/definitions";
 
 export type AttemptModeTransitionFn = (entityId: EntityId,
-                                       direction: Direction) => boolean;
+                                       direction?: Direction) => boolean;
 
 export abstract class SpatialModeImpl {
   abstract getComponent(id: EntityId): SpatialSubcomponent;

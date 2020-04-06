@@ -8,10 +8,13 @@ namespace po = boost::program_options;
 
 static const std::string DESCRIPTION = "Terrestria map builder";
 
+const int BLOCK_SZ = 64;
+
 const int WALL = 0xdbdbdb;
 const int GRAVITY_REGION = 0x920092;
 const int RESPAWN_AREA = 0x009200;
 const int GEM_BANK = 0x0000db;
+const int IGNORE = 0x7b7b7b;
 const int EMPTY = 0x000000;
 
 int toColour(const ContigMultiArray<uint8_t, 1>& pixel) {
@@ -89,9 +92,10 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data, std::ostream& out) {
 
     for (size_t i = 0; i < size[0]; ++i) {
       size_t x = i;
-      size_t y = size[1] - 1 - j;
+      size_t y = j;
 
-      auto pixel = toColour(data[y][x]);
+      // Flip y-axis when reading pixel
+      auto pixel = toColour(data[size[1] - 1 - j][x]);
 
       if (pixel == GRAVITY_REGION) {
         gravRegion.nextX(x);
@@ -99,8 +103,8 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data, std::ostream& out) {
       else {
         digRegion.nextX(x);
 
-        if (pixel != EMPTY) {
-          pJsonEntity_t item = generateItem(pixel, x, y);
+        if (pixel != EMPTY && pixel != IGNORE) {
+          pJsonEntity_t item = generateItem(pixel, x * BLOCK_SZ, y * BLOCK_SZ);
           items->add(std::move(item));
         }
       }

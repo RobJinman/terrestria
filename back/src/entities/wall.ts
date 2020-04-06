@@ -23,8 +23,8 @@ export function constructWall(em: EntityManager, desc: any): EntityId {
   };
 
   const freeModeProps = {
-    heavy: true,
-    fixedAngle: true
+    heavy: false,
+    fixedAngle: false
   };
 
   const shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);

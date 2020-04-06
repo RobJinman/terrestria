@@ -201,7 +201,7 @@ export class SpatialSystem implements ServerSystem {
   private _doModeTransition(c: CSpatial,
                             x: number,
                             y: number,
-                            direction: Direction): boolean {
+                            direction?: Direction): boolean {
     const initMode = c.currentMode;
 
     if (c.currentMode == SpatialMode.GRID_MODE) {
@@ -226,10 +226,10 @@ export class SpatialSystem implements ServerSystem {
   }
 
   private _attemptModeTransition(entityId: EntityId,
-                                 direction: Direction): boolean {
+                                 direction?: Direction): boolean {
     const c = this.getComponent(entityId);
 
-    const v = directionToVector(direction);
+    const v = direction ? directionToVector(direction) : { x: 0, y: 0 };
     const destX = c.x + v.x;
     const destY = c.y + v.y;
 

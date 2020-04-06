@@ -14,6 +14,7 @@ import { constructGemBank } from "./entities/gem_bank";
 import { Scheduler } from "./common/scheduler";
 import { constructGemBundle } from "./entities/gem_bundle";
 import { constructWall } from "./entities/wall";
+import { constructRespawnArea } from "./entities/respawn_area";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -41,6 +42,8 @@ export class EntityFactory {
   }
 
   constructEntity(desc: EntityDesc): EntityId {
+    console.log(desc);
+
     switch (desc.type) {
       case EntityType.PLAYER: {
         return constructPlayer(this._em, desc.data);
@@ -80,6 +83,9 @@ export class EntityFactory {
       }
       case EntityType.GEM_BANK: {
         return constructGemBank(this._em, desc.data, this._scheduler);
+      }
+      case EntityType.RESPAWN_AREA: {
+        return constructRespawnArea(this._em, desc.data);
       }
     }
 

@@ -70,11 +70,14 @@ export class MapLoader {
     return this._mapData;
   }
 
-  // TODO: This will come from JSON. For now, generate the data here
   private _loadMapData(): MapData {
     const digRegion = this._constructSpan2d(map0.digRegion);
     const entities: EntityDesc[] = [];
 
+    for (const item of map0.items) {
+      entities.push(<EntityDesc>item);
+    }
+/*
     for (const { x, y } of digRegion) {
       entities.push({
         type: EntityType.SOIL,
@@ -83,7 +86,7 @@ export class MapLoader {
           y: y * BLOCK_SZ
         }
       });
-    }
+    }*/
 
     return {
       width: map0.width,

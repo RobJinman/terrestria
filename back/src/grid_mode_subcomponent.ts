@@ -4,9 +4,8 @@ import { GridModeProperties } from "./grid_mode_properties";
 import { BLOCK_SZ } from "./common/constants";
 import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { Direction } from "./common/definitions";
-import { GameError } from "./common/error";
 
-function vectorToDirection(x: number, y: number): Direction {
+function vectorToDirection(x: number, y: number): Direction|undefined {
   if (x * y === 0 && x + y !== 0) {
     if (x > 0) {
       return Direction.RIGHT;
@@ -22,7 +21,7 @@ function vectorToDirection(x: number, y: number): Direction {
     }
   }
 
-  throw new GameError(`Vector ${x}, ${y} is not a valid direction`);
+  return undefined;
 }
 
 export class GridModeSubcomponent extends SpatialSubcomponent {
@@ -80,13 +79,15 @@ export class GridModeSubcomponent extends SpatialSubcomponent {
     if (x != this._gridX || y != this._gridY) {     
       const oldX = this._gridX;
       const oldY = this._gridY;
-      
+
       const dx = x - oldX;
       const dy = y - oldY;
-  
+
+      const direction = vectorToDirection(dx, dy);
+
       if (!noModeTransition && this._grid.gravRegion.contains(x, y)) {
         if (this._grid.attemptModeTransitionFn(this._entityId,
-                                               vectorToDirection(dx, dy))) {
+                                               direction)) {
           return false;
         }
       }
