@@ -85,8 +85,13 @@ export class GridModeSubcomponent extends SpatialSubcomponent {
 
       const direction = vectorToDirection(dx, dy);
 
+      const destX = x * BLOCK_SZ;
+      const destY = y * BLOCK_SZ;
+
       if (!noModeTransition && this._grid.gravRegion.contains(x, y)) {
         if (this._grid.attemptModeTransitionFn(this._entityId,
+                                               destX,
+                                               destY,
                                                direction)) {
           return false;
         }

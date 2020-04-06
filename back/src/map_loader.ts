@@ -163,7 +163,7 @@ export class MapLoader {
       width: map0.width,
       height: map0.height,
       gravityRegion: map0.gravRegion,
-      spawnPoint: { x: 0, y: map0.height - 1 },
+      spawnPoints: map0.spawnPoints,
       entities
     };
   }

@@ -213,7 +213,10 @@ export class FreeModeImpl implements SpatialModeImpl {
     const gridY = Math.floor((centreY + probe.y) / BLOCK_SZ);
 
     if (!this._gravRegion.contains(gridX, gridY)) {
-      return this._attemptModeTransitionFn(c.entityId, direction);
+      return this._attemptModeTransitionFn(c.entityId,
+                                           gridX * BLOCK_SZ,
+                                           gridY * BLOCK_SZ,
+                                           direction);
     }
 
     return false;

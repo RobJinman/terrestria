@@ -10,7 +10,6 @@ import { GameEvent } from "./common/event";
 import { Direction } from "./common/definitions";
 import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
 import { EntityManager } from "./entity_manager";
-import { directionToVector } from "./common/geometry";
 import { Logger } from "./logger";
 
 export class SpatialSystem implements ServerSystem {
@@ -226,13 +225,10 @@ export class SpatialSystem implements ServerSystem {
   }
 
   private _attemptModeTransition(entityId: EntityId,
+                                 destX: number,
+                                 destY: number,
                                  direction?: Direction): boolean {
     const c = this.getComponent(entityId);
-
-    const v = direction ? directionToVector(direction) : { x: 0, y: 0 };
-    const destX = c.x + v.x;
-    const destY = c.y + v.y;
-
     return this._doModeTransition(c, destX, destY, direction);
   }
 }

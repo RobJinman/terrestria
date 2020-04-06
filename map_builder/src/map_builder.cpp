@@ -14,7 +14,7 @@ const int BLOCK_SZ = 64;
 
 const int WALL = 0xdbdbdb;
 const int GRAVITY_REGION = 0x920092;
-const int RESPAWN_AREA = 0x009200;
+const int SPAWN_POINT = 0x009200;
 const int GEM_BANK = 0x0000db;
 const int IGNORE = 0x7b7b7b;
 const int EMPTY = 0x000000;
@@ -59,16 +59,11 @@ pJsonEntity_t generateWall(int x, int y) {
   return json;
 }
 
-pJsonEntity_t generateRespawnArea(int x, int y) {
+pJsonEntity_t generateSpawnPoint(int x, int y) {
   pJsonObject_t json = make_unique<JsonObject>();
  
-  pJsonObject_t data = make_unique<JsonObject>();
-  data->add("x", make_unique<JsonNumber>(x * BLOCK_SZ));
-  data->add("y", make_unique<JsonNumber>(y * BLOCK_SZ));
-
-  json->add("type", make_unique<JsonString>("RESPAWN_AREA"));
-  json->add("data", std::move(data));
-  json->add("clearSpace", makeClearSpaceJson(x, y, 4, 4));
+  json->add("x", make_unique<JsonNumber>(x * BLOCK_SZ));
+  json->add("y", make_unique<JsonNumber>(y * BLOCK_SZ));
 
   return json;
 }
@@ -91,7 +86,6 @@ pJsonEntity_t generateGemBank(int x, int y) {
 pJsonEntity_t generateItem(int id, int x, int y) {
   switch (id) {
     case WALL: return generateWall(x, y);
-    case RESPAWN_AREA: return generateRespawnArea(x, y);
     case GEM_BANK: return generateGemBank(x, y);
     default: throw std::runtime_error("Unrecognised item type");
   }
@@ -105,6 +99,7 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data,
 
   pJsonObject_t mapData = make_unique<JsonObject>();
   pJsonArray_t items = make_unique<JsonArray>();
+  pJsonArray_t spawnPoints = make_unique<JsonArray>();
 
   const size_t* size = data.size();
 
@@ -122,15 +117,24 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data,
       // Flip y-axis when reading pixel
       auto pixel = toColour(data[size[1] - 1 - j][x]);
 
-      if (pixel == GRAVITY_REGION) {
-        gravRegion.nextX(x);
-      }
-      else {
-        digRegion.nextX(x);
-
-        if (pixel != EMPTY && pixel != IGNORE) {
-          pJsonEntity_t item = generateItem(pixel, x, y);
-          items->add(std::move(item));
+      switch (pixel) {
+        case SPAWN_POINT: {
+          spawnPoints->add(generateSpawnPoint(x, y));
+          [[fallthrough]];
+        }
+        case GRAVITY_REGION: {
+          gravRegion.nextX(x);
+          break;
+        }
+        case EMPTY:
+        case IGNORE: {
+          digRegion.nextX(x);
+          break;
+        }
+        default: {
+          digRegion.nextX(x);
+          items->add(generateItem(pixel, x, y));
+          break;
         }
       }
     }
@@ -138,12 +142,13 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data,
 
   mapData->add("width", make_unique<JsonNumber>(size[0]));
   mapData->add("height", make_unique<JsonNumber>(size[1]));
-  mapData->add("gravRegion", generateGravityRegion(gravRegion.span2d));
-  mapData->add("digRegion", generateGravityRegion(digRegion.span2d));
-  mapData->add("items", std::move(items));
   mapData->add("numRoundRocks", make_unique<JsonNumber>(numRoundRocks));
   mapData->add("numSquareRocks", make_unique<JsonNumber>(numSquareRocks));
   mapData->add("numGems", make_unique<JsonNumber>(numGems));
+  mapData->add("gravRegion", generateGravityRegion(gravRegion.span2d));
+  mapData->add("digRegion", generateGravityRegion(digRegion.span2d));
+  mapData->add("spawnPoints", std::move(spawnPoints));
+  mapData->add("items", std::move(items));
 
   mapData->dump(out);
 }

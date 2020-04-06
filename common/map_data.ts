@@ -17,6 +17,6 @@ export interface MapData {
   width: number;
   height: number;
   gravityRegion: Span2dDesc;
-  spawnPoint: Vec2;
+  spawnPoints: Vec2[];
   entities: EntityDesc[];
 }
