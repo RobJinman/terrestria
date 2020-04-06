@@ -49,12 +49,12 @@ export class Grid {
     return this._attemptModeTransitionFn;
   }
 
-  toGridX(x: number, w: number = this._blockW) {
-    return Math.floor((x + 0.5 * w) / this._blockW);
+  toGridX(x: number) {
+    return Math.floor(x / this._blockW);
   }
 
-  toGridY(y: number, h: number = this._blockH) {
-    return Math.floor((y + 0.5 * h) / this._blockH);
+  toGridY(y: number) {
+    return Math.floor(y / this._blockH);
   }
 
   outOfRange(x: number, y: number): boolean {

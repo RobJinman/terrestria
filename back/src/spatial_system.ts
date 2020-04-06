@@ -11,6 +11,7 @@ import { Direction } from "./common/definitions";
 import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
 import { EntityManager } from "./entity_manager";
 import { Logger } from "./logger";
+import { union } from "./common/utils";
 
 export class SpatialSystem implements ServerSystem {
   private _components: Map<EntityId, CSpatial>;
@@ -154,6 +155,13 @@ export class SpatialSystem implements ServerSystem {
   moveEntity(id: EntityId, dx: number, dy: number) {
     const c = this.getComponent(id);
     this.positionEntity(id, c.x + dx, c.y + dy);
+  }
+
+  entitiesWithinRadius(x: number, y: number, r: number): Set<EntityId> {
+    const fromGrid = this._gridModeImpl.entitiesWithinRadius(x, y, r);
+    const fromGravRegion = this._freeModeImpl.entitiesWithinRadius(x, y, r);  
+
+    return union(fromGrid, fromGravRegion);
   }
 
   getDirties() {

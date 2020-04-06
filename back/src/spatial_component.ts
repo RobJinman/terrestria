@@ -55,6 +55,18 @@ export class CSpatial extends Component {
       this.freeMode.y();
   }
 
+  get x_abs() {
+    return this.currentMode == SpatialMode.GRID_MODE ?
+      this.gridMode.x_abs() :
+      this.freeMode.x_abs();
+  }
+
+  get y_abs() {
+    return this.currentMode == SpatialMode.GRID_MODE ?
+      this.gridMode.y_abs() :
+      this.freeMode.y_abs();
+  }
+
   setInstantaneousPos(x: number, y: number) {
     if (this.currentMode == SpatialMode.GRID_MODE) {
       this.gridMode.setInstantaneousPos(x, y);

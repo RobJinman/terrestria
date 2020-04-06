@@ -3,7 +3,7 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent, EPlayerKilled, GameEventType, EEntityBurned,
-         EAgentEnterCell } from "./common/event";
+         EAgentEnterCell, EEntityCollision } from "./common/event";
 import { EntityManager } from "./entity_manager";
 import { Pinata, CreateAwardResponse } from "./pinata";
 import { PlayerAction, UserInput, InputState, ActionType,
@@ -19,6 +19,7 @@ import { RNewEntities, GameResponseType } from "./common/response";
 import { SpatialSystem } from "./spatial_system";
 import { Direction } from "./common/definitions";
 import { SpatialMode } from "./common/spatial_packet";
+import { BLOCK_SZ } from "./common/constants";
 
 const LOCK_DURATION_ON_FREE_MODE_TRANSITION = 200;
 
@@ -155,6 +156,10 @@ export class AgentSystem implements ServerSystem {
         }
         break;
       }
+      case GameEventType.ENTITY_COLLISION: {
+        this._onEntityCollision(event);
+        break;
+      }
     }
   }
 
@@ -174,6 +179,13 @@ export class AgentSystem implements ServerSystem {
 
   getDirties() {
     return [];
+  }
+
+  private _onEntityCollision(e: GameEvent) {
+    const event = <EEntityCollision>e;
+    if (this.hasComponent(event.entityA) && this.hasComponent(event.entityB)) {
+      this._killBoth(event.entityA, event.entityB);
+    }
   }
 
   private _onPlayerKilled(e: GameEvent) {
@@ -280,20 +292,16 @@ export class AgentSystem implements ServerSystem {
     const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
     const spatialComp = spatialSys.getComponent(id);
 
-    const gridX = spatialComp.gridMode.gridX;
-    const gridY = spatialComp.gridMode.gridY;
+    const x = spatialComp.x_abs + BLOCK_SZ * 0.5;
+    const y = spatialComp.y_abs + BLOCK_SZ * 0.5;
+    const r = BLOCK_SZ;
 
-    const entities = spatialSys.grid.idsInCells(gridX - 1,
-                                                gridX + 1,
-                                                gridY - 1,
-                                                gridY + 1);
-
-    // TODO: Is this necessary?
-    entities.splice(entities.indexOf(id), 1);
+    const entities = spatialSys.entitiesWithinRadius(x, y, r);
+    entities.delete(id);
 
     const burned: EEntityBurned = {
       type: GameEventType.ENTITY_BURNED,
-      entities
+      entities: Array.from(entities)
     };
 
     const killed: EPlayerKilled = {
@@ -306,6 +314,21 @@ export class AgentSystem implements ServerSystem {
     this._em.submitEvent(burned);
   }
 
+  private _killBoth(agentA: EntityId, agentB: EntityId) {
+    const inventory =
+    <CCollector>this._em.getComponent(ComponentType.INVENTORY, agentA);
+
+    const otherInventory =
+      <CCollector>this._em.getComponent(ComponentType.INVENTORY, agentB);
+
+    const gems = otherInventory.bucketValue("gems");
+
+    inventory.addToBucket("gems", gems);
+    otherInventory.clearBucket("gems");
+
+    this._explodeAgent(agentB);
+  }
+
   private _onAgentEnterCell(e: GameEvent) {
     const event = <EAgentEnterCell>e;
 
@@ -313,19 +336,7 @@ export class AgentSystem implements ServerSystem {
                                            this.hasComponent(id));
 
     if (otherAgent) {
-      const inventory =
-        <CCollector>this._em.getComponent(ComponentType.INVENTORY,
-                                          event.entityId);
-
-      const otherInventory =
-        <CCollector>this._em.getComponent(ComponentType.INVENTORY, otherAgent);
-
-      const gems = otherInventory.bucketValue("gems");
-
-      inventory.addToBucket("gems", gems);
-      otherInventory.clearBucket("gems");
-
-      this._explodeAgent(otherAgent);
+      this._killBoth(event.entityId, otherAgent);
     }
   }
 }

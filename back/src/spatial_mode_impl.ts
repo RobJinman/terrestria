@@ -17,4 +17,5 @@ export abstract class SpatialModeImpl {
                         direction?: Direction): boolean;
   abstract removeComponent(c: SpatialSubcomponent): void;
   abstract moveAgent(id: EntityId, direction: Direction): boolean;
+  abstract entitiesWithinRadius(x: number, y: number, r: number): Set<EntityId>;
 }

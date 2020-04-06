@@ -14,7 +14,7 @@ import { AppConfig, makeAppConfig } from "./config";
 import { Logger } from "./logger";
 
 const SERVER_PORT = 3001;
-const MAX_PLAYERS_PER_GAME = 10;
+const MAX_PLAYERS_PER_GAME = 8;
 const PING_INTERVAL_MS = 5000;
 
 interface ExtWebSocket extends WebSocket {

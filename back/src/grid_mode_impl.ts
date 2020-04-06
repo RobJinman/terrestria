@@ -103,6 +103,24 @@ export class GridModeImpl implements SpatialModeImpl {
     }
   }
 
+  entitiesWithinRadius(x: number, y: number, r: number): Set<EntityId> {
+    const entities = new Set<EntityId>();
+
+    // Assume square area instead of circle, for simplicity
+
+    const x0 = this.grid.toGridX(x - r);
+    const x1 = this.grid.toGridX(x + r);
+    const y0 = this.grid.toGridY(y - r);
+    const y1 = this.grid.toGridY(y + r);
+
+    const components = this.grid.inCells(x0, x1, y0, y1);
+    for (const c of components) {
+      entities.add(c.entityId);
+    }
+
+    return entities;
+  }
+
   private _postAgentMovedEvent(c: GridModeSubcomponent,
                                direction: Direction) {
     const newDestGridX = c.gridX;

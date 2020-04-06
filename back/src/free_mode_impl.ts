@@ -1,4 +1,4 @@
-import { Engine, World, Bodies, Body, Vector, Events } from "matter-js";
+import { Engine, World, Bodies, Body, Vector, Events, Query } from "matter-js";
 import { EntityId } from "./common/system";
 import { Direction } from "./common/definitions";
 import { FreeModeSubcomponent } from "./free_mode_subcomponent";
@@ -187,6 +187,30 @@ export class FreeModeImpl implements SpatialModeImpl {
     c._postMoveEvent(this._em, direction);
 
     return true;
+  }
+
+  entitiesWithinRadius(x: number, y: number, r: number): Set<EntityId> {
+    const entities = new Set<EntityId>();
+
+    const bodies = Query.region(this._engine.world.bodies, {
+      min: {
+        x: x - r,
+        y: y - r
+      },
+      max: {
+        x: x + r,
+        y: y + r
+      }
+    });
+
+    for (const body of bodies) {
+      const c = this._componentsByBodyId.get(body.id);
+      if (c) {
+        entities.add(c.entityId);
+      }
+    }
+
+    return entities;
   }
 
   private _bodyGrounded(entityId: EntityId): boolean {
