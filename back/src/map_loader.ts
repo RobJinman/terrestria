@@ -14,6 +14,7 @@ import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
 import { Pipe } from "./pipe";
+import * as map0 from "./maps/map0.json";
 
 export class MapLoader {
   private _em: EntityManager;
@@ -38,7 +39,7 @@ export class MapLoader {
   loadMap(pinata: Pinata) {
     this._mapData = this._loadMapData();
 
-    const gravRegion = this._constructGravRegion(this._mapData.gravityRegion);
+    const gravRegion = this._constructSpan2d(this._mapData.gravityRegion);
 
     const spatialSystem = new SpatialSystem(this._em,
                                             this._mapData.width,
@@ -71,176 +72,37 @@ export class MapLoader {
 
   // TODO: This will come from JSON. For now, generate the data here
   private _loadMapData(): MapData {
-    const WORLD_W = 35;
-    const WORLD_H = 55;
-
-    const gravRegion: Span2dDesc = [
-      [{ a: 0, b: WORLD_W - 1 }],
-      [{ a: 0, b: WORLD_W - 1 }],
-      [{ a: 0, b: WORLD_W - 1 }],
-      [{ a: 0, b: WORLD_W - 1 }],
-      [{ a: 0, b: WORLD_W - 1 }],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
-      [{ a: 6, b: 18 }],
-      [{ a: 6, b: 18 }],
-      [{ a: 6, b: 18 }],
-      [{ a: 6, b: 18 }],
-      [{ a: 6, b: 18 }],
-    ];
-
+    const digRegion = this._constructSpan2d(map0.digRegion);
     const entities: EntityDesc[] = [];
 
-    const gr = this._constructGravRegion(gravRegion);
-    const numRoundRocks = 100;
-    const numSquareRocks = 100;
-    const numGems = 100;
-
-    entities.push({
-      type: EntityType.GEM_BANK,
-      data: {
-        x: BLOCK_SZ * 23,
-        y: BLOCK_SZ * 10
-      }
-    });
-    const gemBankSpan = new Span2d();
-    gemBankSpan.addHorizontalSpan(10, new Span(23, 25));
-    gemBankSpan.addHorizontalSpan(11, new Span(23, 25));
-    gemBankSpan.addHorizontalSpan(12, new Span(23, 25));
-
-    const trophyCoords = { x: 5, y: 10 };
-
-    let coords: [number, number][] = [];
-    for (let c = 0; c < WORLD_W; ++c) {
-      for (let r = 0; r < WORLD_H; ++r) {
-        if (c === 0 && r === WORLD_H - 1) {
-          continue;
-        }
-        if (c === trophyCoords.x && r === trophyCoords.y) {
-          continue;
-        }
-        if (gr.contains(c, r)) {
-          continue;
-        }
-        if (gemBankSpan.contains(c, r)) {
-          continue;
-        }
-        coords.push([c * BLOCK_SZ, r * BLOCK_SZ]);
-      }
-    }
-
-    coords = _.shuffle(coords);
-
-    let idx = 0;
-    const roundRockCoords = coords.slice(0, numRoundRocks);
-    idx += numRoundRocks;
-    const squareRockCoords = coords.slice(idx, idx + numSquareRocks);
-    idx += numSquareRocks;
-    const gemCoords = coords.slice(idx, idx + numGems);
-    idx += numGems;
-    const soilCoords = coords.slice(idx);
-
-    roundRockCoords.forEach(([c, r]) => {
-      entities.push({
-        type: EntityType.ROUND_ROCK,
-        data: {
-          y: r,
-          x: c
-        }
-      });
-    });
-
-    squareRockCoords.forEach(([c, r]) => {
-      entities.push({
-        type: EntityType.SQUARE_ROCK,
-        data: {
-          y: r,
-          x: c
-        }
-      });
-    });
-
-    gemCoords.forEach(([c, r]) => {
-      entities.push({
-        type: EntityType.GEM,
-        data: {
-          y: r,
-          x: c
-        }
-      });
-    });
-
-    soilCoords.forEach(([c, r]) => {
+    for (const { x, y } of digRegion) {
       entities.push({
         type: EntityType.SOIL,
         data: {
-          y: r,
-          x: c
+          x: x * BLOCK_SZ,
+          y: y * BLOCK_SZ
         }
       });
-    });
-
-    entities.push({
-      type: EntityType.BLIMP,
-      data: {
-        x: 20,
-        y: 20
-      }
-    });
-
-    entities.push({
-      type: EntityType.AD,
-      data: {
-        x: 80,
-        y: 40,
-        adName: "blimp"
-      }
-    });
-
-    entities.push({
-      type: EntityType.PARALLAX_SPRITE,
-      data: {
-        width: 1000,
-        height: 800,
-        centre: {
-          x: BLOCK_SZ * (6 + (19 - 6) / 2),
-          y: BLOCK_SZ * (11 + (16 - 11) / 2)
-        },
-        image: "cave.png",
-        depth: 2
-      }
-    });
-
-    entities.push({
-      type: EntityType.TROPHY,
-      data: {
-        x: trophyCoords.x * BLOCK_SZ,
-        y: trophyCoords.y * BLOCK_SZ
-      }
-    });
+    }
 
     return {
-      width: WORLD_W,
-      height: WORLD_H,
-      gravityRegion: gravRegion,
-      spawnPoint: { x: 0, y: WORLD_H - 1 },
+      width: map0.width,
+      height: map0.height,
+      gravityRegion: map0.gravRegion,
+      spawnPoint: { x: 0, y: map0.height - 1 },
       entities
     };
   }
 
-  private _constructGravRegion(desc: Span2dDesc) {
-    const gravRegion = new Span2d();
+  private _constructSpan2d(desc: Span2dDesc) {
+    const span2d = new Span2d();
 
     for (let row = 0; row < desc.length; ++row) {
       for (const spanDesc of desc[row]) {
-        gravRegion.addHorizontalSpan(row, new Span(spanDesc.a, spanDesc.b));
+        span2d.addHorizontalSpan(row, new Span(spanDesc.a, spanDesc.b));
       }
     }
 
-    return gravRegion;
+    return span2d;
   }
 }
