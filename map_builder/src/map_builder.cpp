@@ -13,9 +13,11 @@ static const std::string DESCRIPTION = "Terrestria map builder";
 const int BLOCK_SZ = 64;
 
 const int WALL = 0xdbdbdb;
+const int METAL_WALL = 0x444444;
 const int GRAVITY_REGION = 0x920092;
 const int SPAWN_POINT = 0x009200;
 const int GEM_BANK = 0x0000db;
+const int TROPHY = 0xffff00;
 const int IGNORE = 0x7b7b7b;
 const int EMPTY = 0x000000;
 
@@ -45,14 +47,14 @@ pJsonEntity_t generateGravityRegion(const Span2d& span) {
   return span.toJsonArray();
 }
 
-pJsonEntity_t generateWall(int x, int y) {
+pJsonEntity_t generateSimpleItem(int x, int y, const std::string& type) {
   pJsonObject_t json = make_unique<JsonObject>();
  
   pJsonObject_t data = make_unique<JsonObject>();
   data->add("x", make_unique<JsonNumber>(x * BLOCK_SZ));
   data->add("y", make_unique<JsonNumber>(y * BLOCK_SZ));
 
-  json->add("type", make_unique<JsonString>("WALL"));
+  json->add("type", make_unique<JsonString>(type));
   json->add("data", std::move(data));
   json->add("clearSpace", makeClearSpaceJson(x, y, 1, 1));
 
@@ -85,7 +87,9 @@ pJsonEntity_t generateGemBank(int x, int y) {
 // x and y in grid coords
 pJsonEntity_t generateItem(int id, int x, int y) {
   switch (id) {
-    case WALL: return generateWall(x, y);
+    case WALL: return generateSimpleItem(x, y, "WALL");
+    case METAL_WALL: return generateSimpleItem(x, y, "METAL_WALL");
+    case TROPHY: return generateSimpleItem(x, y, "TROPHY");
     case GEM_BANK: return generateGemBank(x, y);
     default: throw std::runtime_error("Unrecognised item type");
   }
@@ -126,14 +130,13 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data,
           gravRegion.nextX(x);
           break;
         }
+        default: {
+          items->add(generateItem(pixel, x, y));
+          [[fallthrough]];
+        }
         case EMPTY:
         case IGNORE: {
           digRegion.nextX(x);
-          break;
-        }
-        default: {
-          digRegion.nextX(x);
-          items->add(generateItem(pixel, x, y));
           break;
         }
       }

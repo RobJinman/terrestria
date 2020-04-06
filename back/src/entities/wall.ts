@@ -1,5 +1,5 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
-import { EntityId } from "../common/system";
+import { EntityId, Component } from "../common/system";
 import { Rectangle } from "../common/geometry";
 import { BLOCK_SZ } from "../common/constants";
 import { SpatialSystem } from "../spatial_system";
@@ -9,7 +9,15 @@ import { GameEventType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
-export function constructWall(em: EntityManager, desc: any): EntityId {
+export function constructDestructableWall(em: EntityManager, desc: any): EntityId {
+  return constructWall(em, desc, true);
+}
+
+export function constructMetalWall(em: EntityManager, desc: any): EntityId {
+  return constructWall(em, desc, false);
+}
+
+function constructWall(em: EntityManager, desc: any, destructable: boolean) {
   const id = getNextEntityId();
 
   const gridModeProps = {
@@ -38,14 +46,21 @@ export function constructWall(em: EntityManager, desc: any): EntityId {
                                    freeModeProps,
                                    shape);
 
-  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
-    em.removeEntity(id);
-  });
+  const components: Component[] = [ spatialComp ];
 
-  const behaviourComp = new CBehaviour(id, targetedEvents);
+  if (destructable) {
+    const targetedEvents = new Map<GameEventType, EventHandlerFn>();
+    targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
+      em.removeEntity(id);
+    });
 
-  em.addEntity(id, EntityType.WALL, desc, [ spatialComp, behaviourComp ]);
+    const behaviourComp = new CBehaviour(id, targetedEvents);
+
+    components.push(behaviourComp);
+  }
+
+  const type = destructable ? EntityType.WALL : EntityType.METAL_WALL;
+  em.addEntity(id, type, desc, components);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 

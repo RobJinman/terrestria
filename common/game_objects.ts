@@ -5,6 +5,7 @@ export enum EntityType {
   ROUND_ROCK = "ROUND_ROCK",
   SQUARE_ROCK = "SQUARE_ROCK",
   WALL = "WALL",
+  METAL_WALL = "METAL_WALL",
   SOIL = "SOIL",
   EARTH = "EARTH",
   BLIMP = "BLIMP",

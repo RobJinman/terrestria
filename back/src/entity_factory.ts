@@ -13,7 +13,7 @@ import { constructAd } from "./entities/advert";
 import { constructGemBank } from "./entities/gem_bank";
 import { Scheduler } from "./common/scheduler";
 import { constructGemBundle } from "./entities/gem_bundle";
-import { constructWall } from "./entities/wall";
+import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructRespawnArea } from "./entities/respawn_area";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
@@ -62,7 +62,10 @@ export class EntityFactory {
         return constructSquareRock(this._em, desc.data);
       }
       case EntityType.WALL: {
-        return constructWall(this._em, desc.data);
+        return constructDestructableWall(this._em, desc.data);
+      }
+      case EntityType.METAL_WALL: {
+        return constructMetalWall(this._em, desc.data);
       }
       case EntityType.SOIL: {
         return constructSoil(this._em, desc.data);

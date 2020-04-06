@@ -375,6 +375,7 @@
             <key type="filename">man_run_u1.png</key>
             <key type="filename">man_run_u2.png</key>
             <key type="filename">man_run_u3.png</key>
+            <key type="filename">metal_wall.png</key>
             <key type="filename">round_rock.png</key>
             <key type="filename">round_rock_burn0.png</key>
             <key type="filename">round_rock_burn1.png</key>
@@ -558,6 +559,7 @@
             <filename>wall_burn1.png</filename>
             <filename>wall_burn2.png</filename>
             <filename>wall_burn3.png</filename>
+            <filename>metal_wall.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

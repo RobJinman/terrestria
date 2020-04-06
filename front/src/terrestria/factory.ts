@@ -18,7 +18,7 @@ import { constructGemBundle } from "./entities/gem_bundle";
 import { constructSfx } from "./entities/sfx";
 import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
-import { constructWall } from "./entities/wall";
+import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -46,7 +46,11 @@ export function constructEntities(entityManager: EntityManager,
         break;
       }
       case EntityType.WALL: {
-        constructWall(entityManager, entity);
+        constructDestructableWall(entityManager, entity);
+        break;
+      }
+      case EntityType.METAL_WALL: {
+        constructMetalWall(entityManager, entity);
         break;
       }
       case EntityType.SOIL: {
