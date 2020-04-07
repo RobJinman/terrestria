@@ -181,6 +181,21 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">award_icon.png</key>
+            <key type="filename">award_icon_null.png</key>
+            <key type="filename">award_icon_signed_out.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>20,20,40,40</rect>
+                <key>scale9Paddings</key>
+                <rect>20,20,40,40</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">blimp.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -560,6 +575,9 @@
             <filename>wall_burn2.png</filename>
             <filename>wall_burn3.png</filename>
             <filename>metal_wall.png</filename>
+            <filename>award_icon.png</filename>
+            <filename>award_icon_null.png</filename>
+            <filename>award_icon_signed_out.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

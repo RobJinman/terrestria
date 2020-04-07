@@ -92,7 +92,7 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
 
   constructEarth(em, mapData);
   // constructSky(em, mapData);
-  constructAwardNotification(em);
+  constructAwardNotification(em, scheduler);
   constructSfx(em, audioManager, scheduler);
   constructHud(em);
 }

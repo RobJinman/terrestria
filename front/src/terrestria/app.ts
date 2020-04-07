@@ -21,7 +21,9 @@ import { BehaviourSystem } from './common/behaviour_system';
 import { AdvertSystem } from './advert_system';
 import { CSpatial } from './spatial_component';
 import { UserInputManager } from "./user_input_manager";
-import { EWindowResized, GameEventType, EPlayerRespawned } from "./common/event";
+import { EWindowResized, GameEventType, EPlayerRespawned, GameEvent,
+         EAgentScoreChanged, EClientScoreChanged, EAwardGranted,
+         EClientAwardGranted } from "./common/event";
 import { GameState } from "./definitions";
 import { InventorySystem } from "./inventory_system";
 import { AudioManager } from "./audio_manager";
@@ -491,6 +493,44 @@ export class App {
     this._username = msg.username;
   }
 
+  private _onGameEvent(e: GameEvent) {
+    this._em.postEvent(e);
+
+    switch (e.type) {
+      case GameEventType.AGENT_SCORE_CHANGED: {
+        const event = <EAgentScoreChanged>e;
+    
+        if (this._playerId > 0 && event.agentId == this._playerId) {
+          const scoreChanged: EClientScoreChanged = {
+            type: GameEventType.CLIENT_SCORE_CHANGED,
+            entities: [ this._playerId ],
+            score: event.score
+          };
+      
+          this._em.postEvent(scoreChanged);
+        }
+
+        break;
+      }
+      case GameEventType.AWARD_GRANTED: {
+        const event = <EAwardGranted>e;
+
+        if (this._playerId > 0 && event.playerId == this._playerId) {     
+          const awardGranted: EClientAwardGranted = {
+            type: GameEventType.CLIENT_AWARD_GRANTED,
+            entities: [ this._playerId ],
+            name: event.name,
+            fetti: event.fetti,
+            loggedOut: event.loggedOut
+          };
+          this._em.postEvent(awardGranted);
+        }
+
+        break;
+      }
+    }
+  }
+
   private _handleServerMessage(msg: GameResponse) {
     switch (msg.type) {
       case GameResponseType.MAP_DATA:{
@@ -514,7 +554,8 @@ export class App {
         break;
       }
       case GameResponseType.EVENT: {
-        this._em.postEvent((<REvent>msg).event);
+        //this._em.postEvent((<REvent>msg).event);
+        this._onGameEvent((<REvent>msg).event);
         break;
       }
       case GameResponseType.LOG_IN_SUCCESS: {

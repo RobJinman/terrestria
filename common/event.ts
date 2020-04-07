@@ -20,7 +20,9 @@ export enum GameEventType {
   // Client-side only
   CLIENT_SCORE_CHANGED = "CLIENT_SCORE_CHANGED",
   PLAYER_RESPAWNED = "PLAYER_RESPAWNED",
-  WINDOW_RESIZED = "WINDOW_RESIZED"
+  WINDOW_RESIZED = "WINDOW_RESIZED",
+  CLIENT_AWARD_GRANTED = "CLIENT_AWARD_GRANTED",
+  AWARD_DISPLAYED = "AWARD_DISPLAYED"
 }
 
 export interface GameEvent {
@@ -100,6 +102,7 @@ export interface EGemsBanked extends GameEvent {
 }
 
 export interface EAgentScoreChanged extends GameEvent {
+  agentId: EntityId;
   score: number;
 }
 
@@ -108,8 +111,10 @@ export interface EPlayerKilled extends GameEvent {
 }
 
 export interface EAwardGranted extends GameEvent {
+  playerId: EntityId;
   name: string;
   fetti: number;
+  loggedOut: boolean;
 }
 
 // Client-side only
@@ -125,3 +130,11 @@ export interface EClientScoreChanged extends GameEvent {
 }
 
 export interface EPlayerRespawned extends GameEvent {}
+
+export interface EClientAwardGranted extends GameEvent {
+  name: string;
+  fetti: number;
+  loggedOut: boolean;
+}
+
+export interface EAwardDisplayed extends GameEvent {}

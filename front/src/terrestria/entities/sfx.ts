@@ -25,7 +25,7 @@ export function constructSfx(em: EntityManager,
 
   const targetedHandlers: EventHandlerMap = new Map();
   const broadcastHandlers: EventHandlerMap = new Map([
-    [ GameEventType.AWARD_GRANTED, () => am.playSound("award", 0) ],
+    [ GameEventType.AWARD_DISPLAYED, () => am.playSound("award", 0) ],
     [ GameEventType.AGENT_ACTION, (e: GameEvent) => onAgentAction(em, am, e) ],
     [ GameEventType.ENTITY_HIT, (e: GameEvent) =>
                                   onEntityHit(em, am, scheduler, e) ],

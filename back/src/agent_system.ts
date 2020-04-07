@@ -3,10 +3,10 @@ import { ComponentType } from "./common/component_types";
 import { ServerSystem } from "./common/server_system";
 import { GameError } from "./common/error";
 import { GameEvent, EPlayerKilled, GameEventType, EEntityBurned,
-         EAgentEnterCell, EEntityCollision, EGemsBanked,
-         EAgentScoreChanged } from "./common/event";
+         EAgentEnterCell, EEntityCollision, EGemsBanked, EAgentScoreChanged,
+         EAwardGranted } from "./common/event";
 import { EntityManager } from "./entity_manager";
-import { Pinata, CreateAwardResponse } from "./pinata";
+import { Pinata } from "./pinata";
 import { PlayerAction, UserInput, InputState, ActionType,
          UserInputAction } from "./common/action";
 import { EntityFactory } from "./entity_factory";
@@ -21,6 +21,8 @@ import { SpatialSystem } from "./spatial_system";
 import { Direction } from "./common/definitions";
 import { SpatialMode } from "./common/spatial_packet";
 import { BLOCK_SZ } from "./common/constants";
+
+const SCORE_THRESHOLDS = [ 10, 25, 50, 75 ];
 
 const LOCK_DURATION_ON_FREE_MODE_TRANSITION = 200;
 
@@ -98,14 +100,32 @@ export class AgentSystem implements ServerSystem {
 
   removeChildFromEntity(id: EntityId, childId: EntityId) {}
 
-  async grantAward(entityId: EntityId,
-                   name: string): Promise<CreateAwardResponse|null> {
+  async grantAward(entityId: EntityId, name: string): Promise<void> {
     const c = this.getComponent(entityId);
-    if (c.pinataToken) {
-      const response = await this._pinata.grantAward(name, c.pinataToken);
-      return response;
+    let fetti = 0;
+
+    if (c.pinataToken !== undefined) {
+      try {
+        const response = await this._pinata.grantAward(name, c.pinataToken);
+        fetti = response.fetti;
+      }
+      catch (err) {
+        this._logger.error("Failed to grant award", err);
+      }
     }
-    return Promise.resolve(null);
+
+    const awardEvent: EAwardGranted = {
+      type: GameEventType.AWARD_GRANTED,
+      entities: [ entityId ],
+      playerId: entityId,
+      name,
+      fetti,
+      loggedOut: c.pinataToken === undefined
+    };
+
+    this._em.submitEvent(awardEvent);
+
+    return Promise.resolve();
   }
 
   onPlayerAction(action: PlayerAction) {
@@ -195,15 +215,30 @@ export class AgentSystem implements ServerSystem {
     const event = <EGemsBanked>e;
     const c = this.getComponent(event.playerId);
 
+    const oldScore = c.score;
+
     c._score += event.numGems;
 
     const scoreChanged: EAgentScoreChanged = {
       type: GameEventType.AGENT_SCORE_CHANGED,
       entities: [ c.entityId ],
+      agentId: c.entityId,
       score: c.score
     };
 
-    this._em.submitEvent(scoreChanged)
+    this._em.submitEvent(scoreChanged);
+
+    if (event.numGems == 5) {
+      this.grantAward(c.entityId, "full_load");
+    }
+
+    for (let i = 0; i < SCORE_THRESHOLDS.length; ++i) {
+      const threshold = SCORE_THRESHOLDS[i];
+      if (oldScore < threshold && c.score >= threshold) {
+        this.grantAward(c.entityId, `high_score_${i}`);
+        break;
+      }
+    }
   }
 
   private _onEntityCollision(e: GameEvent) {

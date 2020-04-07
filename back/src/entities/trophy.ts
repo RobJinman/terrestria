@@ -6,11 +6,9 @@ import { CSpatial } from "../spatial_component";
 import { Rectangle } from "../common/geometry";
 import { InventorySystem, CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
-import { GameEventType, EAgentEnterCell, EAwardGranted,
+import { GameEventType, EAgentEnterCell,
          EEntityCollision } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
-import { CreateAwardResult } from "../pinata";
-import { GameError } from "../common/error";
 import { EntityType } from "../common/game_objects";
 
 export function constructTrophy(em: EntityManager,
@@ -68,25 +66,7 @@ function onAgentEnterCell(em: EntityManager,
 
   inventorySys.collectItem(event.entityId, trophyId);
 
-  agentSys.grantAward(event.entityId, "special_item_collect")
-  .then(response => {
-    if (response !== null) {
-      if (response.result == CreateAwardResult.SUCCESS) {
-        const awardEvent: EAwardGranted = {
-          type: GameEventType.AWARD_GRANTED,
-          entities: [event.entityId],
-          name: "special_item_collect",
-          fetti: response.fetti
-        };
-        em.submitEvent(awardEvent);
-      }
-    }
-    else {
-      // TODO: Handle not logged-in user
-    }
-  }, reason => {
-    throw new GameError(`failed to grant award: ${reason}`);
-  });
+  agentSys.grantAward(event.entityId, "special_item_collect");
 
   em.removeEntity_onClients(trophyId);
 }
