@@ -16,15 +16,15 @@ const NOTIFICATION_DELAY_MS = 500;
 const NOTIFICATION_WIDTH = 500;
 const NOTIFICATION_HEIGHT = 100;
 const NOTIFICATION_RADIUS = 50;
-const NOTIFICATION_PADDING = 10;
+const NOTIFICATION_PADDING = 20;
 const NOTIFICATION_FONT_SIZE = 26;
 const NOTIFICATION_Y = 0.85; // As percentage from top of screen
 const NOTIFICATION_BG_COLOUR = new Colour(1, 1, 1, 0.8);
 const NOTIFICATION_CAPTION_COLOUR = new Colour(0, 0, 0, 1);
-const NOTIFICATION_FETTI_COLOUR = new Colour(0, 1, 0, 1);
+const NOTIFICATION_FETTI_COLOUR = new Colour(0, 0.6, 0, 1);
 
 const AWARD_STRINGS = new Map<string, string>([
-  [ "full_load", "Full load!" ],
+  [ "full_load", "Banked a quintuple!" ],
   [ "high_score_0", "Banked 10 gems!" ],
   [ "high_score_1", "Banked 25 gems!" ],
   [ "high_score_2", "Banked 50 gems!" ],
@@ -73,25 +73,25 @@ function onAwardGranted(em: EntityManager,
 function displayNotification(em: EntityManager,
                              scheduler: Scheduler,
                              event: EClientAwardGranted) {
-    const bgId = constructBg(em);
-    const textId = constructText(em, event);
-    const iconId = constructIcon(em, event);
-    const fettiId = event.loggedOut ? -1 : constructFetti(em, event);
+  const bgId = constructBg(em);
+  const textId = constructText(em, event);
+  const iconId = constructIcon(em, event);
+  const fettiId = event.loggedOut ? -1 : constructFetti(em, event);
 
-    const displayedEvent: EAwardDisplayed = {
-      type: GameEventType.AWARD_DISPLAYED,
-      entities: []
-    };
-    em.postEvent(displayedEvent);
+  const displayedEvent: EAwardDisplayed = {
+    type: GameEventType.AWARD_DISPLAYED,
+    entities: []
+  };
+  em.postEvent(displayedEvent);
 
-    scheduler.addFunction(() => {
-      em.removeEntity(bgId);
-      em.removeEntity(textId);
-      em.removeEntity(iconId);
-      if (fettiId !== -1) {
-        em.removeEntity(fettiId);
-      }
-    }, NOTIFICATION_DURATION_MS);
+  scheduler.addFunction(() => {
+    em.removeEntity(bgId);
+    em.removeEntity(textId);
+    em.removeEntity(iconId);
+    if (fettiId !== -1) {
+      em.removeEntity(fettiId);
+    }
+  }, NOTIFICATION_DURATION_MS);
 }
 
 function constructBg(em: EntityManager) {
@@ -207,7 +207,7 @@ function constructFetti(em: EntityManager, event: EClientAwardGranted) {
     zIndex: UI_Z_INDEX
   };
 
-  const caption = `${event.fetti} fetti`;
+  const caption = `${event.fetti}`;
 
   const renderComp = new CText(id,
                                caption,
@@ -218,15 +218,17 @@ function constructFetti(em: EntityManager, event: EClientAwardGranted) {
   em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
   const bgW = NOTIFICATION_WIDTH;
+  const bgH = NOTIFICATION_HEIGHT;
   const bgX0 = (renderSys.viewW - bgW) * 0.5;
   const bgX1 = bgX0 + bgW;
+  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
 
   const textW = renderComp.width;
   const textH = renderComp.height;
 
   const textX1 = bgX1 - NOTIFICATION_PADDING;
   const textX0 = textX1 - textW;
-  const textY = (renderSys.viewH - textH) * 0.5;
+  const textY = bgY + 0.5 * (bgH - textH);
 
   renderSys.setScreenPosition(id, textX0, textY);
 

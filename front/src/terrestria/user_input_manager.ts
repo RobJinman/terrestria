@@ -9,7 +9,7 @@ import { GameEventType } from "./common/event";
 import { ComponentType } from "./common/component_types";
 import { Scheduler } from "./common/scheduler";
 import { UI_Z_INDEX } from "./constants";
-import { Rectangle } from "./common/geometry";
+import { RoundedRectangle } from "./common/geometry";
 import { GameError } from "./common/error";
 
 export type DirectionInputHandlerFn = (input: UserInput) => void;
@@ -201,7 +201,7 @@ export class UserInputManager {
       onPress
     };
 
-    const shape = new Rectangle(1, 1); // Will get resized
+    const shape = new RoundedRectangle(1, 1, 1); // Will get resized
     const colour = new Colour(0, 0, 0, 0.5);
 
     const renderComp = new CShape(id,
@@ -272,12 +272,13 @@ export class UserInputManager {
       throw new GameError("UserInputManager not initialised");
     }
 
-    const bgW = 500;
-    const bgH = 70;
+    const bgW = 550;
+    const bgH = 80;
     const bgX = (renderSys.viewW - bgW) * 0.5;
     const bgY = (renderSys.viewH - bgH) * 0.5;
+    const r = 40;
 
-    const shape = new Rectangle(bgW, bgH);
+    const shape = new RoundedRectangle(bgW, bgH, r);
 
     renderSys.assignNewShape(this._ids.respawnPromptBg, shape);
     renderSys.setScreenPosition(this._ids.respawnPromptBg, bgX, bgY);
