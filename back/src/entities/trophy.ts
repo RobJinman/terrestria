@@ -66,7 +66,7 @@ function onAgentEnterCell(em: EntityManager,
 
   inventorySys.collectItem(event.entityId, trophyId);
 
-  agentSys.grantAward(event.entityId, "special_item_collect");
+  agentSys.grantAward(event.entityId, "trophy_collect");
 
   em.removeEntity_onClients(trophyId);
 }
