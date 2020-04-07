@@ -8,7 +8,8 @@ import { Scheduler, ScheduledFnHandle } from './common/scheduler';
 import { CSpatial } from './spatial_component';
 import { BLOCK_SZ, CLIENT_FRAME_RATE } from './common/constants';
 import { Span2d } from './common/span';
-import { Shape, ShapeType, Circle, Rectangle, Vec2 } from './common/geometry';
+import { Shape, ShapeType, Circle, Rectangle, Vec2,
+         RoundedRectangle } from './common/geometry';
 import { clamp } from './common/utils';
 import { EntityManager } from './entity_manager';
 import { SpatialContainer } from './spatial_container';
@@ -221,7 +222,8 @@ export class CText extends CRender {
 
     this.pixiText = new PIXI.Text(text, {
       fontSize,
-      fill: colour.value
+      fill: colour.value,
+      fontWeight: "bold"
     });
 
     this.pixiText.zIndex = this.zIndex;
@@ -547,6 +549,11 @@ export class RenderSystem implements ClientSystem {
       case ShapeType.RECTANGLE: {
         const rect = <Rectangle>c.shape;
         c.graphics.drawRect(0, 0, rect.width, rect.height);
+        break;
+      }
+      case ShapeType.ROUNDED_RECTANGLE: {
+        const rect = <RoundedRectangle>c.shape;
+        c.graphics.drawRoundedRect(0, 0, rect.width, rect.height, rect.radius);
         break;
       }
       default: {

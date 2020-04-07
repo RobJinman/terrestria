@@ -31,6 +31,7 @@ export function normalise(v: Vec2) {
 export enum ShapeType {
   CIRCLE,
   RECTANGLE,
+  ROUNDED_RECTANGLE,
   POLYGON
 }
 
@@ -55,6 +56,20 @@ export class Rectangle extends Shape {
 
     this.width = width;
     this.height = height;
+  }
+}
+
+export class RoundedRectangle extends Shape {
+  width: number;
+  height: number;
+  radius: number;
+
+  constructor(width: number, height: number, radius: number) {
+    super(ShapeType.ROUNDED_RECTANGLE);
+
+    this.width = width;
+    this.height = height;
+    this.radius = radius;
   }
 }
 
