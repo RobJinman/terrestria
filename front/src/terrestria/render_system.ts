@@ -23,6 +23,7 @@ export type OnInteractionFn = () => void;
 export interface RenderOptions {
   zIndex?: number;
   screenPosition?: Vec2;
+  offset?: Vec2;
   onPress?: OnInteractionFn;
   onRelease?: OnInteractionFn;
 }
@@ -104,6 +105,7 @@ export class CRender extends Component {
   screenPosition: Vec2|null = null;
   readonly onPress: OnInteractionFn|null = null;
   readonly onRelease: OnInteractionFn|null = null;
+  readonly offset: Vec2 = { x: 0, y: 0 };
 
   constructor(entityId: EntityId, options: RenderOptions) {
     super(entityId, ComponentType.RENDER);
@@ -119,6 +121,9 @@ export class CRender extends Component {
     }
     if (options.onRelease) {
       this.onRelease = options.onRelease;
+    }
+    if (options.offset) {
+      this.offset = options.offset;
     }
   }
 }
@@ -682,14 +687,17 @@ export class RenderSystem implements ClientSystem {
         const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
         const newCentreX = this._camera.x - m * dx;
         const newCentreY = this._camera.y - m * dy;
-        this._stageDrawable(
-          c.entityId,
-          c.currentSprite,
-          true,
-          newCentreX - 0.5 * w + c.currentSprite.pivot.x,
-          newCentreY - 0.5 * h + c.currentSprite.pivot.y,
-          w,
-          h);
+        const renderX = newCentreX - 0.5 * w + c.currentSprite.pivot.x +
+                        c.offset.x;
+        const renderY = newCentreY - 0.5 * h + c.currentSprite.pivot.y +
+                        c.offset.y;
+        this._stageDrawable(c.entityId,
+                            c.currentSprite,
+                            true,
+                            renderX,
+                            renderY,
+                            w,
+                            h);
         const zIndex = c.zIndex - Z_INDEXES_START;
         c.currentSprite.zIndex = Z_INDEXES_START - 100 * c.depth + zIndex;
       }
@@ -879,11 +887,13 @@ export class RenderSystem implements ClientSystem {
         // TODO: Shouldn't always assume pivot point
         c.currentSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
         // The pivot needs to be added here to keep the position the same
+        const x = spatialComp.x_abs + c.currentSprite.pivot.x + c.offset.x;
+        const y = spatialComp.y_abs + c.currentSprite.pivot.y + c.offset.y;
         this._stageDrawable(c.entityId,
                             c.currentSprite,
                             true,
-                            spatialComp.x_abs + c.currentSprite.pivot.x,
-                            spatialComp.y_abs + c.currentSprite.pivot.y,
+                            x,
+                            y,
                             c.currentSprite.width,
                             c.currentSprite.height,
                             spatialComp.angle_abs);
@@ -891,22 +901,26 @@ export class RenderSystem implements ClientSystem {
     }
     else if (c instanceof CShape) {
       c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+      const x = spatialComp.x_abs + c.graphics.pivot.x + c.offset.x;
+      const y = spatialComp.y_abs + c.graphics.pivot.y + c.offset.y;
       this._stageDrawable(c.entityId,
                           c.graphics,
                           true,
-                          spatialComp.x_abs + c.graphics.pivot.x,
-                          spatialComp.y_abs + c.graphics.pivot.y,
+                          x,
+                          y,
                           c.graphics.width,
                           c.graphics.height,
                           spatialComp.angle_abs);
     }
     else if (c instanceof CText) {
       c.pixiText.pivot.set(0, 0);
+      const x = spatialComp.x_abs + c.pixiText.pivot.x + c.offset.x;
+      const y = spatialComp.y_abs + c.pixiText.pivot.y + c.offset.y;
       this._stageDrawable(c.entityId,
                           c.pixiText,
                           true,
-                          spatialComp.x_abs + c.pixiText.pivot.x,
-                          spatialComp.y_abs + c.pixiText.pivot.y,
+                          x,
+                          y,
                           c.pixiText.width,
                           c.pixiText.height,
                           spatialComp.angle_abs);

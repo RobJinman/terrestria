@@ -20,7 +20,7 @@ import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructHud } from "./entities/hud";
-import { constructBillboard } from "./entities/billboard";
+import { constructBillboardL, constructBillboardR } from "./entities/billboard";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -63,8 +63,12 @@ export function constructEntities(entityManager: EntityManager,
         constructBlimp(entityManager, entity);
         break;
       }
-      case EntityType.BILLBOARD: {
-        constructBillboard(entityManager, entity);
+      case EntityType.BILLBOARD_L: {
+        constructBillboardL(entityManager, entity);
+        break;
+      }
+      case EntityType.BILLBOARD_R: {
+        constructBillboardR(entityManager, entity);
         break;
       }
       case EntityType.TROPHY: {

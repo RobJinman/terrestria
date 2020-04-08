@@ -9,7 +9,17 @@ import { SpatialMode } from "../common/spatial_packet";
 import { EntityType } from "../common/game_objects";
 import { constructAd } from "./advert";
 
-export function constructBillboard(em: EntityManager, desc: any): EntityId {
+export function constructBillboardL(em: EntityManager, desc: any): EntityId {
+  return constructBillboard(em, desc, EntityType.BILLBOARD_L);
+}
+
+export function constructBillboardR(em: EntityManager, desc: any): EntityId {
+  return constructBillboard(em, desc, EntityType.BILLBOARD_R);
+}
+
+function constructBillboard(em: EntityManager,
+                            desc: any,
+                            type: EntityType): EntityId {
   const id = getNextEntityId();
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
@@ -22,14 +32,14 @@ export function constructBillboard(em: EntityManager, desc: any): EntityId {
 
   spatialComp.currentMode = SpatialMode.FREE_MODE;
 
-  em.addEntity(id, EntityType.BILLBOARD, desc, [ spatialComp ]);
+  em.addEntity(id, type, desc, [ spatialComp ]);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   const adId = constructAd(em, {
     adName: "billboard",
-    x: 10,
-    y: 10
+    x: 0,
+    y: 0
   });
 
   em.addChildToEntity(id, adId);

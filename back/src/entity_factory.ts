@@ -15,7 +15,7 @@ import { Scheduler } from "./common/scheduler";
 import { constructGemBundle } from "./entities/gem_bundle";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructRespawnArea } from "./entities/respawn_area";
-import { constructBillboard } from "./entities/billboard";
+import { constructBillboardL, constructBillboardR } from "./entities/billboard";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -86,8 +86,11 @@ export class EntityFactory {
                               this._scheduler,
                               this._mapData.width);
       }
-      case EntityType.BILLBOARD: {
-        return constructBillboard(this._em, desc.data);
+      case EntityType.BILLBOARD_L: {
+        return constructBillboardL(this._em, desc.data);
+      }
+      case EntityType.BILLBOARD_R: {
+        return constructBillboardR(this._em, desc.data);
       }
       case EntityType.TROPHY: {
         return constructTrophy(this._em, desc.data);

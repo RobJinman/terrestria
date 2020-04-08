@@ -196,16 +196,30 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">billboard.png</key>
+            <key type="filename">billboard_ad_placeholder.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
-                <rect>80,112,160,224</rect>
+                <rect>80,48,160,96</rect>
                 <key>scale9Paddings</key>
-                <rect>80,112,160,224</rect>
+                <rect>80,48,160,96</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">billboard_left.png</key>
+            <key type="filename">billboard_right.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>112,80,224,160</rect>
+                <key>scale9Paddings</key>
+                <rect>112,80,224,160</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -563,7 +577,9 @@
             <filename>award_icon.png</filename>
             <filename>award_icon_null.png</filename>
             <filename>award_icon_signed_out.png</filename>
-            <filename>billboard.png</filename>
+            <filename>billboard_ad_placeholder.png</filename>
+            <filename>billboard_left.png</filename>
+            <filename>billboard_right.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
