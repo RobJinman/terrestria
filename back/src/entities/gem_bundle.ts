@@ -51,7 +51,7 @@ export function constructGemBundle(em: EntityManager, desc: any): EntityId {
                                                   invComp,
                                                   behaviourComp ]);
 
-  addCollectableBehaviour(em, id);
+  addCollectableBehaviour(em, id, EntityType.GEM_BUNDLE);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 

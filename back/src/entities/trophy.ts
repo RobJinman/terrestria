@@ -4,12 +4,13 @@ import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
 import { Rectangle } from "../common/geometry";
-import { InventorySystem, CCollectable } from "../inventory_system";
+import { CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
-import { GameEventType, EAgentEnterCell,
-         EEntityCollision } from "../common/event";
-import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
+import { GameEventType, GameEvent, EAgentAction,
+         AgentActionType } from "../common/event";
+import { CBehaviour, BehaviourSystem } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
+import { addCollectableBehaviour } from "./utils/collectables";
 
 export function constructTrophy(em: EntityManager,
                                 desc: any): EntityId {
@@ -17,7 +18,7 @@ export function constructTrophy(em: EntityManager,
 
   const gridModeProps = {
     solid: true,
-    blocking: false,
+    blocking: true,
     stackable: false,
     squashable: false,
     heavy: true,
@@ -31,6 +32,7 @@ export function constructTrophy(em: EntityManager,
   };
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
+  const behaviourSys = <BehaviourSystem>em.getSystem(ComponentType.BEHAVIOUR);
 
   const spatialComp = new CSpatial(id,
                                    false,
@@ -41,46 +43,29 @@ export function constructTrophy(em: EntityManager,
 
   const invComp = new CCollectable(id, "trophies", 1);
 
-  const targetedEvents = new Map<GameEventType, EventHandlerFn>();
-  targetedEvents.set(GameEventType.AGENT_ENTER_CELL,
-                     e => onAgentEnterCell(em, id, <EAgentEnterCell>e));
-  targetedEvents.set(GameEventType.ENTITY_COLLISION,
-                     e => onEntityCollision(em, id, <EEntityCollision>e));
-
-  const behaviourComp = new CBehaviour(id, targetedEvents);
+  const behComp = new CBehaviour(id);
 
   em.addEntity(id, EntityType.TROPHY, desc, [ spatialComp,
                                               invComp,
-                                              behaviourComp ]);
+                                              behComp ]);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
+
+  addCollectableBehaviour(em, id, EntityType.TROPHY);
+
+  behaviourSys.addTargetedEventHandler(id,
+                                       GameEventType.AGENT_ACTION,
+                                       e => onAgentAction(e, em));
 
   return id;
 }
 
-function onAgentEnterCell(em: EntityManager,
-                          trophyId: EntityId,
-                          event: EAgentEnterCell) {
-  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
+function onAgentAction(e: GameEvent, em: EntityManager) {
   const agentSys = <AgentSystem>em.getSystem(ComponentType.AGENT);
 
-  inventorySys.collectItem(event.entityId, trophyId);
+  const event = <EAgentAction>e;
 
-  agentSys.grantAward(event.entityId, "trophy_collect");
-
-  em.removeEntity_onClients(trophyId);
-}
-
-function onEntityCollision(em: EntityManager,
-                           trophyId: EntityId,
-                           event: EEntityCollision) {
-  const agentSys = <InventorySystem>em.getSystem(ComponentType.AGENT);
-  const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
-
-  const other = event.entityA == trophyId ? event.entityB : event.entityA;
-
-  if (agentSys.hasComponent(other)) {
-    inventorySys.collectItem(other, trophyId);
-    em.removeEntity_onClients(trophyId);
+  if (event.actionType == AgentActionType.COLLECT) {
+    agentSys.grantAward(event.agentId, "trophy_collect");
   }
 }

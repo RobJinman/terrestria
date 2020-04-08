@@ -1,7 +1,9 @@
 import { EntityId } from "./system";
 import { Direction } from "./definitions";
+import { EntityType } from "./game_objects";
 
 // TODO: Remove strings
+// TODO: Naming convention for server/client/common events
 export enum GameEventType {
   ENTITY_MOVED = "ENTITY_MOVED",
   ENTITY_SQUASHED = "ENTITY_SQUASHED",
@@ -16,6 +18,7 @@ export enum GameEventType {
   AWARD_GRANTED = "AWARD_GRANTED",
   GEMS_BANKED = "GEMS_BANKED",
   AGENT_SCORE_CHANGED = "AGENT_SCORE_CHANGED",
+  GAME_ENDING = "GAME_ENDING",
 
   // Client-side only
   CLIENT_SCORE_CHANGED = "CLIENT_SCORE_CHANGED",
@@ -94,6 +97,7 @@ export interface EAgentAction extends GameEvent {
   agentId: EntityId;
   actionType: AgentActionType;
   direction: Direction;
+  collectedType?: EntityType;
 }
 
 export interface EGemsBanked extends GameEvent {
@@ -115,6 +119,10 @@ export interface EAwardGranted extends GameEvent {
   name: string;
   fetti: number;
   loggedOut: boolean;
+}
+
+export interface EGameEnding extends GameEvent {
+  secondsRemaining: number;
 }
 
 // Client-side only

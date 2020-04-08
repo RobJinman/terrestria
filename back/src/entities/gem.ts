@@ -52,7 +52,7 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
                                            invComp,
                                            behaviourComp ]);
 
-  addCollectableBehaviour(em, id);
+  addCollectableBehaviour(em, id, EntityType.GEM);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
 

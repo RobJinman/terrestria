@@ -19,6 +19,8 @@ export function constructSfx(em: EntityManager,
   am.addSound("push");
   am.addSound("dig");
   am.addSound("collect");
+  am.addSound("collect_gem");
+  am.addSound("collect_trophy");
   am.addSound("award");
   am.addSound("thud");
   am.addSound("bank");
@@ -57,11 +59,29 @@ function onAgentAction(em: EntityManager, am: AudioManager, e: GameEvent) {
       break;
     }
     case AgentActionType.COLLECT: {
-      event.agentId
-      am.playSound("collect", distance);
+      onAgentCollect(am, event, distance);
       break;
     }
     // ...
+  }
+}
+
+function onAgentCollect(am: AudioManager,
+                        event: EAgentAction,
+                        distance: number) {
+  switch (event.collectedType) {
+    case EntityType.GEM: {
+      am.playSound("collect_gem", distance);
+      break;
+    }
+    case EntityType.TROPHY: {
+      am.playSound("collect_trophy", distance);
+      break;
+    }
+    default: {
+      am.playSound("collect", distance);
+      break;
+    }
   }
 }
 

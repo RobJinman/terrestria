@@ -8,9 +8,11 @@ import { BehaviourSystem } from "../../common/behaviour_system";
 import { CSpatial } from "../../spatial_component";
 import { PLAYER_SPEED } from "../../common/constants";
 import { AgentSystem } from "../../agent_system";
+import { EntityType } from "../../common/game_objects";
 
 function onAgentBlocked(em: EntityManager,
                         collectableId: EntityId,
+                        collectableType: EntityType,
                         event: EAgentBlocked) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
 
@@ -31,7 +33,8 @@ function onAgentBlocked(em: EntityManager,
       entities: [ event.entityId, collectableId ],
       agentId: event.entityId,
       actionType: AgentActionType.COLLECT,
-      direction: event.direction
+      direction: event.direction,
+      collectedType: collectableType
     };
 
     em.submitEvent(collect);
@@ -41,6 +44,7 @@ function onAgentBlocked(em: EntityManager,
 
 function onEntityCollision(em: EntityManager,
                            collectableId: EntityId,
+                           collectableType: EntityType,
                            event: EEntityCollision) {
   const other = event.entityA == collectableId ? event.entityB : event.entityA;
 
@@ -56,7 +60,8 @@ function onEntityCollision(em: EntityManager,
         entities: [ other, collectableId ],
         agentId: other,
         actionType: AgentActionType.COLLECT,
-        direction: agent.lastDirectionMoved
+        direction: agent.lastDirectionMoved,
+        collectedType: collectableType
       };
 
       em.submitEvent(collect);
@@ -66,14 +71,15 @@ function onEntityCollision(em: EntityManager,
 }
 
 export function addCollectableBehaviour(em: EntityManager,
-                                        entityId: EntityId) {
+                                        entityId: EntityId,
+                                        entityType: EntityType) {
 
   const onAgentBlockedFn = (e: GameEvent) => {
-    onAgentBlocked(em, entityId, <EAgentBlocked>e);
+    onAgentBlocked(em, entityId, entityType, <EAgentBlocked>e);
   };
 
   const onEntityCollisionFn = (e: GameEvent) => {
-    onEntityCollision(em, entityId, <EEntityCollision>e);
+    onEntityCollision(em, entityId, entityType, <EEntityCollision>e);
   };
 
   const behaviourSys = <BehaviourSystem>em.getSystem(ComponentType.BEHAVIOUR);
