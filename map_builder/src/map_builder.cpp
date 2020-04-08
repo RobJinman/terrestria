@@ -1,8 +1,15 @@
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <sstream>
 #include "bitmap.hpp"
 #include "json.hpp"
 #include "span.hpp"
+
+#define EXCEPTION(msg) { \
+  std::stringstream ss; \
+  ss << msg; \
+  throw std::runtime_error(ss.str()); \
+}
 
 namespace po = boost::program_options;
 
@@ -13,13 +20,33 @@ static const std::string DESCRIPTION = "Terrestria map builder";
 const int BLOCK_SZ = 64;
 
 const int WALL = 0xdbdbdb;
-const int METAL_WALL = 0x444444;
-const int GRAVITY_REGION = 0x920092;
+const int METAL_WALL = 0x777777;
+const int GRAVITY_REGION = 0x00038c;
+const int GRAVITY_REGION_ALT = 0x383872;
 const int SPAWN_POINT = 0x009200;
-const int GEM_BANK = 0x0000db;
+const int GEM_BANK = 0x00d0ca;
 const int TROPHY = 0xffff00;
-const int IGNORE = 0x7b7b7b;
-const int EMPTY = 0x000000;
+const int BLIMP = 0xc000ff;
+const int BILLBOARD = 0xff0000;
+const int DIG_REGION = 0x643200;
+const int DIG_REGION_ALT = 0x66523f;
+
+const std::set<int> digRegionItems{
+  DIG_REGION,
+  DIG_REGION_ALT,
+  WALL,
+  METAL_WALL,
+  GEM_BANK,
+  TROPHY
+};
+
+const std::set<int> gravRegionItems{
+  GRAVITY_REGION,
+  GRAVITY_REGION_ALT,
+  SPAWN_POINT,
+  BLIMP,
+  BILLBOARD
+};
 
 int toColour(const ContigMultiArray<uint8_t, 1>& pixel) {
   return (pixel[2] << 16) + (pixel[1] << 8) + pixel[0];
@@ -47,7 +74,9 @@ pJsonEntity_t generateGravityRegion(const Span2d& span) {
   return span.toJsonArray();
 }
 
-pJsonEntity_t generateSimpleItem(int x, int y, const std::string& type) {
+pJsonEntity_t generateSimpleGridModeItem(int x,
+                                         int y,
+                                         const std::string& type) {
   pJsonObject_t json = make_unique<JsonObject>();
  
   pJsonObject_t data = make_unique<JsonObject>();
@@ -84,14 +113,33 @@ pJsonEntity_t generateGemBank(int x, int y) {
   return json;
 }
 
+pJsonEntity_t generateSimpleFreeModeItem(int x,
+                                         int y,
+                                         const std::string& type) {
+  pJsonObject_t json = make_unique<JsonObject>();
+ 
+  pJsonObject_t data = make_unique<JsonObject>();
+  data->add("x", make_unique<JsonNumber>(x * BLOCK_SZ));
+  data->add("y", make_unique<JsonNumber>(y * BLOCK_SZ));
+
+  json->add("type", make_unique<JsonString>(type));
+  json->add("data", std::move(data));
+
+  return json;
+}
+
 // x and y in grid coords
 pJsonEntity_t generateItem(int id, int x, int y) {
   switch (id) {
-    case WALL: return generateSimpleItem(x, y, "WALL");
-    case METAL_WALL: return generateSimpleItem(x, y, "METAL_WALL");
-    case TROPHY: return generateSimpleItem(x, y, "TROPHY");
+    case WALL: return generateSimpleGridModeItem(x, y, "WALL");
+    case METAL_WALL: return generateSimpleGridModeItem(x, y, "METAL_WALL");
+    case TROPHY: return generateSimpleGridModeItem(x, y, "TROPHY");
     case GEM_BANK: return generateGemBank(x, y);
-    default: throw std::runtime_error("Unrecognised item type");
+    case BLIMP: return generateSimpleFreeModeItem(x, y, "BLIMP");
+    case BILLBOARD: return generateSimpleFreeModeItem(x, y, "BILLBOARD");
+    default:
+      EXCEPTION("Unrecognised item type at " << x << ", " << y << ": " <<
+                std::hex << id);
   }
 }
 
@@ -124,21 +172,28 @@ void generateMapData(ContigMultiArray<uint8_t, 3>& data,
       switch (pixel) {
         case SPAWN_POINT: {
           spawnPoints->add(generateSpawnPoint(x, y));
-          [[fallthrough]];
-        }
-        case GRAVITY_REGION: {
-          gravRegion.nextX(x);
           break;
         }
         default: {
           items->add(generateItem(pixel, x, y));
-          [[fallthrough]];
-        }
-        case EMPTY:
-        case IGNORE: {
-          digRegion.nextX(x);
           break;
         }
+        case GRAVITY_REGION:
+        case GRAVITY_REGION_ALT:
+        case DIG_REGION:
+        case DIG_REGION_ALT:
+        break;
+      }
+
+      if (digRegionItems.count(pixel)) {
+        digRegion.nextX(x);
+      }
+      else if (gravRegionItems.count(pixel)) {
+        gravRegion.nextX(x);
+      }
+      else {
+        EXCEPTION("Item at " << x << ", " << y << " of type " << std::hex <<
+                  pixel << " does not belong to dig region or gravity region");
       }
     }
   }

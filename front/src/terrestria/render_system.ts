@@ -264,6 +264,7 @@ export class RenderSystem implements ClientSystem {
   private _camera: Vec2 = { x: 0, y: 0 };
   private _spatialContainer?: SpatialContainer;
   private _visible = new Set<PIXI.DisplayObject>();
+  private _bgSprite?: PIXI.TilingSprite;
 
   constructor(entityManager: EntityManager,
               scheduler: Scheduler,
@@ -283,6 +284,16 @@ export class RenderSystem implements ClientSystem {
     });
     this._pixi.ticker.maxFPS = CLIENT_FRAME_RATE;
     this._pixi.ticker.add(updateFn);
+  }
+
+  setBackground(textureName: string) {
+    const texture = this._textures.get(textureName);
+    if (!texture) {
+      throw new GameError(`No texture named ${textureName}`);
+    }
+    this._bgSprite = new PIXI.TilingSprite(texture, this._viewW, this._viewH);
+    this._pixi.stage.addChild(this._bgSprite);
+    this._bgSprite.position.set(this._viewX, this._viewY);
   }
 
   addChildToEntity(id: EntityId, childId: EntityId) {}
@@ -585,6 +596,14 @@ export class RenderSystem implements ClientSystem {
     this._doCull();
   }
 
+  private _repositionBg() {
+    if (this._bgSprite) {
+      this._bgSprite.width = this._viewW;
+      this._bgSprite.height = this._viewH;
+      this._bgSprite.position.set(this._viewX, this._viewY);
+    }
+  }
+
   private _setCameraPosition(x: number, y: number) {
     this._camera = { x, y };
 
@@ -597,6 +616,7 @@ export class RenderSystem implements ClientSystem {
     this._pixi.stage.x = -this._viewX * scale;
     this._pixi.stage.y = -this._viewY * scale;
 
+    this._repositionBg();
     this._updateScreenSpaceComponentPositions();
     this._computeParallaxOffsets();
   }

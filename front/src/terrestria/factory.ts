@@ -12,7 +12,7 @@ import { constructTrophy } from "./entities/trophy";
 import { constructAd } from "./entities/ad";
 import { constructParallaxSprite } from "./entities/parallax_sprite";
 import { constructGemBank } from "./entities/gem_bank";
-import { constructEarth, constructSky } from "./entities/scenery";
+import { constructEarth } from "./entities/scenery";
 import { constructAwardNotification } from "./entities/awards";
 import { constructGemBundle } from "./entities/gem_bundle";
 import { constructSfx } from "./entities/sfx";
@@ -20,6 +20,7 @@ import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructHud } from "./entities/hud";
+import { constructBillboard } from "./entities/billboard";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -62,6 +63,10 @@ export function constructEntities(entityManager: EntityManager,
         constructBlimp(entityManager, entity);
         break;
       }
+      case EntityType.BILLBOARD: {
+        constructBillboard(entityManager, entity);
+        break;
+      }
       case EntityType.TROPHY: {
         constructTrophy(entityManager, entity);
         break;
@@ -91,7 +96,6 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
   inventorySys.setDisplayedBucket("gems");
 
   constructEarth(em, mapData);
-  // constructSky(em, mapData);
   constructAwardNotification(em, scheduler);
   constructSfx(em, audioManager, scheduler);
   constructHud(em);

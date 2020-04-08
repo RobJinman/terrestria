@@ -196,6 +196,19 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">billboard.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>80,112,160,224</rect>
+                <key>scale9Paddings</key>
+                <rect>80,112,160,224</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">blimp.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -297,19 +310,6 @@
                 <rect>51,39,103,77</rect>
                 <key>scale9Paddings</key>
                 <rect>51,39,103,77</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">cave.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>200,147,400,294</rect>
-                <key>scale9Paddings</key>
-                <rect>200,147,400,294</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -424,19 +424,6 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">foliage.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>100,43,200,87</rect>
-                <key>scale9Paddings</key>
-                <rect>100,43,200,87</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
             <key type="filename">gem_bank.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -460,7 +447,6 @@
             <filename>explosion1.png</filename>
             <filename>explosion2.png</filename>
             <filename>explosion3.png</filename>
-            <filename>foliage.png</filename>
             <filename>gem.png</filename>
             <filename>gem_burn0.png</filename>
             <filename>gem_burn1.png</filename>
@@ -511,7 +497,6 @@
             <filename>soil_puff1.png</filename>
             <filename>soil_puff2.png</filename>
             <filename>soil_puff3.png</filename>
-            <filename>cave.png</filename>
             <filename>button_down.png</filename>
             <filename>button_left.png</filename>
             <filename>button_right.png</filename>
@@ -578,6 +563,7 @@
             <filename>award_icon.png</filename>
             <filename>award_icon_null.png</filename>
             <filename>award_icon_signed_out.png</filename>
+            <filename>billboard.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

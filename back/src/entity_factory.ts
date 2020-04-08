@@ -1,7 +1,7 @@
 import { EntityType } from "./common/game_objects";
 import { EntityId } from "./common/system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
-import { EntityDesc } from "./common/map_data";
+import { EntityDesc, MapData } from "./common/map_data";
 import { GameError } from "./common/error";
 import { constructPlayer } from "./entities/player";
 import { constructGem } from "./entities/gem";
@@ -15,6 +15,7 @@ import { Scheduler } from "./common/scheduler";
 import { constructGemBundle } from "./entities/gem_bundle";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructRespawnArea } from "./entities/respawn_area";
+import { constructBillboard } from "./entities/billboard";
 
 function constructEarth(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -35,10 +36,15 @@ function constructParallaxSprite(em: EntityManager, desc: any) {
 export class EntityFactory {
   private _em: EntityManager;
   private _scheduler: Scheduler;
+  private _mapData?: MapData;
 
   constructor(em: EntityManager, scheduler: Scheduler) {
     this._em = em;
     this._scheduler = scheduler;
+  }
+
+  setMapData(mapData: MapData) {
+    this._mapData = mapData;
   }
 
   constructEntity(desc: EntityDesc): EntityId {
@@ -71,7 +77,17 @@ export class EntityFactory {
         return constructSoil(this._em, desc.data);
       }
       case EntityType.BLIMP: {
-        return constructBlimp(this._em, desc.data);
+        if (!this._mapData) {
+          throw new GameError("Blimp cannot be constructed without map data");
+        }
+
+        return constructBlimp(this._em,
+                              desc.data,
+                              this._scheduler,
+                              this._mapData.width);
+      }
+      case EntityType.BILLBOARD: {
+        return constructBillboard(this._em, desc.data);
       }
       case EntityType.TROPHY: {
         return constructTrophy(this._em, desc.data);

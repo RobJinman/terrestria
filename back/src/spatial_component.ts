@@ -38,6 +38,17 @@ export class CSpatial extends Component {
     }
   }
 
+  get parent(): EntityId|undefined {
+    const gridModeParent = this.gridMode.parent;
+    const freeModeParent = this.freeMode.parent;
+    if (gridModeParent) {
+      return gridModeParent.entityId;
+    }
+    if (freeModeParent) {
+      return freeModeParent.entityId;
+    }
+  }
+
   setClean() {
     this.gridMode.setClean();
     this.freeMode.setClean();

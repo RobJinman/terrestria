@@ -51,8 +51,8 @@ export class SpatialSystem implements ServerSystem {
           componentType: ComponentType.SPATIAL,
           entityId: c.entityId,
           mode: c.currentMode,
-          x: c.x,
-          y: c.y,
+          x: c.x_abs,
+          y: c.y_abs,
           // Ignore angle if fixed. Workaround for
           // https://github.com/liabru/matter-js/issues/800
           angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
@@ -168,34 +168,40 @@ export class SpatialSystem implements ServerSystem {
     const dirties: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
-      if (!c.isLocalOnly && c.isDirty()) {
-        if (c.currentMode == SpatialMode.GRID_MODE) {
-          dirties.push({
-            entityId: c.entityId,
-            componentType: ComponentType.SPATIAL,
-            mode: c.currentMode,
-            x: c.x,
-            y: c.y,
-            angle: 0,
-            speed: c.gridMode.speed
-          });
+      if (!c.isLocalOnly) {
+        const dirty = c.isDirty();
+        const parentDirty = c.parent && this.getComponent(c.parent).isDirty;
+
+        if (dirty || parentDirty) {
+          if (c.currentMode == SpatialMode.GRID_MODE) {
+            dirties.push({
+              entityId: c.entityId,
+              componentType: ComponentType.SPATIAL,
+              mode: c.currentMode,
+              x: c.x_abs,
+              y: c.y_abs,
+              angle: 0,
+              speed: c.gridMode.speed
+            });
+          }
+          else if (c.currentMode == SpatialMode.FREE_MODE) {
+            dirties.push({
+              entityId: c.entityId,
+              componentType: ComponentType.SPATIAL,
+              mode: c.currentMode,
+              x: c.x_abs,
+              y: c.y_abs,
+              // Ignore angle if fixed. Workaround for
+              // https://github.com/liabru/matter-js/issues/800
+              angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
+              speed: 0
+            });
+          }
         }
-        else if (c.currentMode == SpatialMode.FREE_MODE) {
-          dirties.push({
-            entityId: c.entityId,
-            componentType: ComponentType.SPATIAL,
-            mode: c.currentMode,
-            x: c.x,
-            y: c.y,
-            // Ignore angle if fixed. Workaround for
-            // https://github.com/liabru/matter-js/issues/800
-            angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
-            speed: 0
-          });
-        }
-        c.setClean();
       }
     });
+
+    this._components.forEach(c => c.setClean());
 
     return dirties;
   }

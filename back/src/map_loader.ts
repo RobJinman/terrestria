@@ -71,6 +71,8 @@ export class MapLoader {
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
     this._em.addSystem(ComponentType.AD, adSystem);
 
+    this._factory.setMapData(this._mapData);
+
     for (const entity of this._mapData.entities) {
       this._factory.constructEntity(entity);
     }
@@ -91,12 +93,14 @@ export class MapLoader {
       entities.push(item);
 
       const clear = item.clearSpace;
-      for (let j = 0; j < clear.span2d.length; ++j) {
-        const y = clear.y + j;
-        const row = clear.span2d[j];
+      if (clear) {
+        for (let j = 0; j < clear.span2d.length; ++j) {
+          const y = clear.y + j;
+          const row = clear.span2d[j];
 
-        for (const span of row) {
-          addToMapOfArrays(mask.spans, y, new Span(span.a, span.b));
+          for (const span of row) {
+            addToMapOfArrays(mask.spans, y, new Span(span.a, span.b));
+          }
         }
       }
     }

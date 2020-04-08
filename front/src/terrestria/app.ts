@@ -136,6 +136,8 @@ export class App {
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
     await renderSys.initialise();
+    await renderSys.addImage("sky", "assets/sky.png");
+    renderSys.setBackground("sky");
 
     this._onWindowResize();
   }

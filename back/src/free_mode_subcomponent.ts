@@ -46,6 +46,9 @@ export class FreeModeSubcomponent extends SpatialSubcomponent {
     }
 
     this._body = this._createBodyFromShape(shape);
+    if (this._properties.bodiless) {
+      this._body.isSensor = true;
+    }
     this._offset = Vector.sub(this._body.position, this._body.bounds.min);
 
     this._prev = {
