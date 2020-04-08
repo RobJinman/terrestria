@@ -12,6 +12,7 @@ export class CSpatial extends Component {
   currentMode: SpatialMode = SpatialMode.GRID_MODE;
   gridMode: GridModeSubcomponent;
   freeMode: FreeModeSubcomponent;
+  teleport = false;
 
   constructor(entityId: EntityId,
               isLocalOnly: boolean,
@@ -78,21 +79,25 @@ export class CSpatial extends Component {
       this.freeMode.y_abs();
   }
 
-  setInstantaneousPos(x: number, y: number) {
+  setInstantaneousPos(x: number, y: number, teleport = false) {
     if (this.currentMode == SpatialMode.GRID_MODE) {
       this.gridMode.setInstantaneousPos(x, y);
     }
     else if (this.currentMode == SpatialMode.FREE_MODE) {
       this.freeMode.setInstantaneousPos(x, y);
     }
+
+    this.teleport = this.teleport || teleport;
   }
 
-  setStaticPos(x: number, y: number) {
+  setStaticPos(x: number, y: number, teleport = false) {
     if (this.currentMode == SpatialMode.GRID_MODE) {
       this.gridMode.setStaticPos(x, y);
     }
     else if (this.currentMode == SpatialMode.FREE_MODE) {
       this.freeMode.setStaticPos(x, y);
     }
+
+    this.teleport = this.teleport || teleport;
   }
 }

@@ -11,4 +11,5 @@ export interface SpatialPacket extends ComponentPacket {
   y: number;
   angle: number;
   speed: number;
+  teleport: boolean;
 }

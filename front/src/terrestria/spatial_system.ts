@@ -59,7 +59,7 @@ export class SpatialSystem implements ClientSystem {
     const c = this.getComponent(packet.entityId);
 
     if (packet.mode == SpatialMode.GRID_MODE) {
-      if (packet.speed > 0) {
+      if (packet.speed > 0 && !packet.teleport) {
         const dx = packet.x - c.x;
         const dy = packet.y - c.y;
         const s = Math.sqrt(dx * dx + dy * dy);
@@ -81,8 +81,14 @@ export class SpatialSystem implements ClientSystem {
       const dy = packet.y - c.y;
       const s = Math.sqrt(dx * dx + dy * dy);
       const t = SYNC_INTERVAL_MS / 1000;
-      this._setDestination(c, packet.x, packet.y, s / t);
       this._setAngle(c, packet.angle);
+
+      if (packet.teleport) {
+        this._setStaticPos(c, packet.x, packet.y);
+      }
+      else {
+        this._setDestination(c, packet.x, packet.y, s / t);
+      }
     }
   }
 

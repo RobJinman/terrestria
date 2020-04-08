@@ -59,9 +59,14 @@ export function constructBlimp(em: EntityManager,
     const yNorm = Math.sin(xNorm);
     const y_ = yNorm * bobble;
     const finalY = y0 + y_;
-    const finalX = x < range ? x : xOffset;
+    const finalX = x;
 
-    spatialSys.positionEntity(id, finalX, finalY);
+    if (finalX > range) {
+      spatialSys.positionEntity(id, xOffset, finalY, true);
+    }
+    else {
+      spatialSys.positionEntity(id, finalX, finalY, false);
+    }
   }, SERVER_FRAME_DURATION_MS, () => em.hasEntity(id));
 
   return id;

@@ -56,8 +56,10 @@ export class SpatialSystem implements ServerSystem {
           // Ignore angle if fixed. Workaround for
           // https://github.com/liabru/matter-js/issues/800
           angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
-          speed: 0
+          speed: 0,
+          teleport: c.teleport
         });
+        c.teleport = false;
       }
     });
 
@@ -147,9 +149,9 @@ export class SpatialSystem implements ServerSystem {
     return this._gridModeImpl.grid;
   }
 
-  positionEntity(id: EntityId, x: number, y: number) {
+  positionEntity(id: EntityId, x: number, y: number, teleport = false) {
     const c = this.getComponent(id);
-    c.setStaticPos(x, y);
+    c.setStaticPos(x, y, teleport);
   }
 
   moveEntity(id: EntityId, dx: number, dy: number) {
@@ -164,15 +166,28 @@ export class SpatialSystem implements ServerSystem {
     return union(fromGrid, fromGravRegion);
   }
 
+  private _componentDirty(id: EntityId): boolean {
+    const c = this.getComponent(id);
+    return c.isDirty() ||
+           (c.parent !== undefined && this._componentDirty(c.parent));
+  }
+
+  private _componentTeleport(id: EntityId): boolean {
+    const c = this.getComponent(id);
+    return c.teleport ||
+           (c.parent !== undefined && this._componentTeleport(c.parent));
+  }
+
   getDirties() {
     const dirties: SpatialPacket[] = [];
 
     this._components.forEach((c, id) => {
       if (!c.isLocalOnly) {
-        const dirty = c.isDirty();
-        const parentDirty = c.parent && this.getComponent(c.parent).isDirty;
+        const dirty = this._componentDirty(c.entityId);
 
-        if (dirty || parentDirty) {
+        if (dirty) {
+          const teleport = this._componentTeleport(c.entityId);
+
           if (c.currentMode == SpatialMode.GRID_MODE) {
             dirties.push({
               entityId: c.entityId,
@@ -181,7 +196,8 @@ export class SpatialSystem implements ServerSystem {
               x: c.x_abs,
               y: c.y_abs,
               angle: 0,
-              speed: c.gridMode.speed
+              speed: c.gridMode.speed,
+              teleport
             });
           }
           else if (c.currentMode == SpatialMode.FREE_MODE) {
@@ -194,14 +210,20 @@ export class SpatialSystem implements ServerSystem {
               // Ignore angle if fixed. Workaround for
               // https://github.com/liabru/matter-js/issues/800
               angle: c.freeMode.fixedAngle ? 0 : c.freeMode.angle,
-              speed: 0
+              speed: 0,
+              teleport
             });
           }
         }
       }
     });
 
-    this._components.forEach(c => c.setClean());
+    this._components.forEach(c => {
+      if (c.isDirty()) {
+        c.setClean();
+        c.teleport = false;
+      }
+    });
 
     return dirties;
   }
