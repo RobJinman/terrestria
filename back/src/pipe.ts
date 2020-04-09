@@ -33,6 +33,10 @@ export class Pipe {
     return socket;
   }
 
+  get connectionIds() {
+    return Array.from(this._sockets.keys());
+  }
+
   async sendToAll(data: any) {
     const json = JSON.stringify(data);
 

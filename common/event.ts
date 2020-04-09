@@ -18,6 +18,7 @@ export enum GameEventType {
   AWARD_GRANTED = "AWARD_GRANTED",
   GEMS_BANKED = "GEMS_BANKED",
   AGENT_SCORE_CHANGED = "AGENT_SCORE_CHANGED",
+  REQUEST_GAME_END = "REQUEST_GAME_END",
   GAME_ENDING = "GAME_ENDING",
 
   // Client-side only
@@ -119,6 +120,10 @@ export interface EAwardGranted extends GameEvent {
   name: string;
   fetti: number;
   loggedOut: boolean;
+}
+
+export interface ERequestGameEnd extends GameEvent {
+  secondsFromNow: number;
 }
 
 export interface EGameEnding extends GameEvent {

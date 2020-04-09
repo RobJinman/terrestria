@@ -21,6 +21,7 @@ import { Scheduler } from "./common/scheduler";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructHud } from "./entities/hud";
 import { constructBillboardL, constructBillboardR } from "./entities/billboard";
+import { constructGameOverNotification } from "./entities/game_over";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -103,4 +104,5 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
   constructAwardNotification(em, scheduler);
   constructSfx(em, audioManager, scheduler);
   constructHud(em);
+  constructGameOverNotification(em, scheduler);
 }

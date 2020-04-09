@@ -125,7 +125,7 @@ function constructText(em: EntityManager, event: EClientAwardGranted) {
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
-    zIndex: UI_Z_INDEX
+    zIndex: UI_Z_INDEX + 1
   };
 
   const caption = AWARD_STRINGS.get(event.name) || `Award: ${event.name}`;
@@ -159,7 +159,7 @@ function constructIcon(em: EntityManager, event: EClientAwardGranted) {
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
-    zIndex: UI_Z_INDEX
+    zIndex: UI_Z_INDEX + 1
   };
 
   let imageName = "award_icon.png";
@@ -204,7 +204,7 @@ function constructFetti(em: EntityManager, event: EClientAwardGranted) {
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
-    zIndex: UI_Z_INDEX
+    zIndex: UI_Z_INDEX + 1
   };
 
   const caption = `${event.fetti}`;

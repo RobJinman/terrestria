@@ -120,10 +120,7 @@ export class App {
   }
 
   disconnect() {
-    if (this._ws) {
-      this._ws.close();
-      this._ws = undefined;
-    }
+    this._closeWebSocket();
 
     if (this._gameState != GameState.MAIN_MENU) {
       this._audioManager.stopMusic();
@@ -213,7 +210,7 @@ export class App {
 
     this.disconnect();
 
-    this._em.removeAll();
+    this._terminateGame();
     this._setGameState(GameState.MAIN_MENU);
 
     this._audioManager.stopMusic();
@@ -242,8 +239,6 @@ export class App {
 
     const dataString = JSON.stringify(data);
     this._ws.send(dataString);
-
-    this._audioManager.playMusic();
   }
 
   returnFromSettingsMenu() {
@@ -288,6 +283,13 @@ export class App {
 
   get sfxEnabled() {
     return !this._audioManager.sfxMuted;
+  }
+
+  private _closeWebSocket() {
+    if (this._ws) {
+      this._ws.close();
+      this._ws = undefined;
+    }
   }
 
   private _onSettingsOpen() {
@@ -434,6 +436,8 @@ export class App {
   }
 
   private _startGame(playerId: EntityId) {
+    this._audioManager.playMusic();
+
     this._playerId = playerId;
 
     const event: EPlayerRespawned = {
@@ -442,6 +446,14 @@ export class App {
     };
 
     this._em.postEvent(event);
+
+    this._setGameState(GameState.GAME_ACTIVE);
+    this._onWindowResize();
+  }
+
+  private _onGameOver() {
+    this._closeWebSocket();
+    this.connect().then(() => this.start());
   }
 
   private _updateGameState(response: RGameState) {
@@ -468,7 +480,17 @@ export class App {
     }
   }
 
+  private _terminateGame() {
+    this._em.removeAll();
+    this._em.update();
+    this._scheduler.abortAll();
+    this._actionQueue = [];
+  }
+
   private _initialiseGame(mapData: ClientMapData) {
+    this._terminateGame();
+
+    this._playerId = PLAYER_ID_UNSET;
     this._mapData = mapData;
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
@@ -501,7 +523,7 @@ export class App {
     switch (e.type) {
       case GameEventType.AGENT_SCORE_CHANGED: {
         const event = <EAgentScoreChanged>e;
-    
+
         if (this._playerId > 0 && event.agentId == this._playerId) {
           const scoreChanged: EClientScoreChanged = {
             type: GameEventType.CLIENT_SCORE_CHANGED,
@@ -556,7 +578,6 @@ export class App {
         break;
       }
       case GameResponseType.EVENT: {
-        //this._em.postEvent((<REvent>msg).event);
         this._onGameEvent((<REvent>msg).event);
         break;
       }
@@ -572,9 +593,6 @@ export class App {
       case GameResponseType.JOIN_GAME_SUCCESS: {
         const m = <RJoinGameSuccess>msg;
         this._startGame(m.playerId);
-
-        this._setGameState(GameState.GAME_ACTIVE);
-        this._onWindowResize();
         break;
       }
       case GameResponseType.PLAYER_KILLED: {
@@ -584,6 +602,10 @@ export class App {
       case GameResponseType.NEW_PLAYER_ID: {
         const m = <RNewPlayerId>msg;
         this._startGame(m.playerId);
+        break;
+      }
+      case GameResponseType.GAME_OVER: {
+        this._onGameOver();
         break;
       }
       case GameResponseType.ERROR: {

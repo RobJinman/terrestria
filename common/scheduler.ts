@@ -75,6 +75,12 @@ export class Scheduler {
     this._pendingDelete.push(handle);
   }
 
+  abortAll() {
+    this._functions.clear();
+    this._pendingAdd = [];
+    this._pendingDelete = [];
+  }
+
   private _addFunction(id: ScheduledFnHandle,
                        fn: ScheduledFn,
                        delayMs: number,

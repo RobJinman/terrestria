@@ -5,8 +5,8 @@ import { Game } from "./game";
 import { ActionType, LogInAction, deserialiseMessage,
          RespawnAction, JoinGameAction, SignUpAction } from "./common/action";
 import { GameResponse, GameResponseType, RError, RLogInSuccess, 
-         RNewPlayerId, RJoinGameSuccess, RSignUpSuccess, 
-         RSignUpFailure } from "./common/response";
+         RNewPlayerId, RJoinGameSuccess, RSignUpSuccess, RSignUpFailure, 
+         RGameOver } from "./common/response";
 import { PinataApiErrorCode } from "./common/pinata_api";
 import { Pinata, PinataHttpError } from "./pinata";
 import { EntityId } from "./common/system";
@@ -63,7 +63,7 @@ export class App {
                               this._config.productKey,
                               this._logger);
 
-    this._wss = new WebSocket.Server({ server: this._server });;
+    this._wss = new WebSocket.Server({ server: this._server });
     this._games = new Set<Game>();
     this._users = new Map<EntityId, UserConnection>();
 
@@ -183,10 +183,33 @@ export class App {
       }
     }
 
-    const game = new Game(this._config, this._logger, this._pinata);
+    const game = new Game(this._config,
+                          this._logger,
+                          this._pinata,
+                          game => this._onGameOver(game));
     this._games.add(game);
 
     return game;
+  }
+
+  private _onGameOver(game: Game) {
+    console.log("Game over!");
+
+    const playerIds = game.playerIds;
+
+    this._logger.info("Deleting game " + game.id);
+    game.terminate();
+    this._games.delete(game);
+
+    for (const playerId of playerIds) {
+      const user = this._users.get(playerId);
+      if (user) {
+        const response: RGameOver = {
+          type: GameResponseType.GAME_OVER
+        };
+        this._sendResponse(user.ws, response);
+      }
+    }
   }
 
   private async _handleLogIn(sock: ExtWebSocket, data: LogInAction) {

@@ -7,7 +7,7 @@ import { Rectangle } from "../common/geometry";
 import { CCollectable } from "../inventory_system";
 import { AgentSystem } from "../agent_system";
 import { GameEventType, GameEvent, EAgentAction,
-         AgentActionType } from "../common/event";
+         AgentActionType, ERequestGameEnd } from "../common/event";
 import { CBehaviour, BehaviourSystem } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 import { addCollectableBehaviour } from "./utils/collectables";
@@ -67,5 +67,13 @@ function onAgentAction(e: GameEvent, em: EntityManager) {
 
   if (event.actionType == AgentActionType.COLLECT) {
     agentSys.grantAward(event.agentId, "trophy_collect");
+
+    const gameOver: ERequestGameEnd = {
+      type: GameEventType.REQUEST_GAME_END,
+      entities: [],
+      secondsFromNow: 5
+    };
+
+    em.postEvent(gameOver);
   }
 }

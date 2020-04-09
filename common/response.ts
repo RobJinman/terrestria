@@ -18,7 +18,8 @@ export enum GameResponseType {
   ENTITIES_DELETED = "ENTITIES_DELETED",
   EVENT = "EVENT",
   PLAYER_KILLED = "PLAYER_KILLED",
-  NEW_PLAYER_ID = "NEW_PLAYER_ID"
+  NEW_PLAYER_ID = "NEW_PLAYER_ID",
+  GAME_OVER = "GAME_OVER"
 }
 
 export type ClientMapData = Omit<MapData, "entities">;
@@ -75,3 +76,5 @@ export interface RPlayerKilled extends GameResponse {}
 export interface RNewPlayerId extends GameResponse {
   playerId: EntityId;
 }
+
+export interface RGameOver extends GameResponse {}

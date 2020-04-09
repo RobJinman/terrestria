@@ -13,7 +13,9 @@ import { CBehaviour, EventHandlerFn } from "./common/behaviour_system";
 import { EntityManager, getNextEntityId } from "./entity_manager";
 import { EntityId } from "./common/system";
 import { debounce, randomInt } from "./common/utils";
-import { GameEventType, GameEvent, EPlayerKilled } from "./common/event";
+import { GameEventType, GameEvent, EPlayerKilled,
+         ERequestGameEnd, 
+         EGameEnding} from "./common/event";
 import { GameError, ErrorCode } from "./common/error";
 import { AppConfig } from "./config";
 import { CSpatial } from "./spatial_component";
@@ -49,11 +51,16 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _entityId: EntityId;
   private _doSyncFn: () => void;
+  private _gameOverFn: (game: Game) => void;
 
-  constructor(appConfig: AppConfig, logger: Logger, pinata: Pinata) {
+  constructor(appConfig: AppConfig,
+              logger: Logger,
+              pinata: Pinata,
+              gameOverFn: (game: Game) => void) {
     this._appConfig = appConfig;
     this._logger = logger;
     this._pinata = pinata;
+    this._gameOverFn = gameOverFn;
     this._id = Game.nextGameId++;
     this._pipe = new Pipe();
     this._em = new EntityManager(this._pipe);
@@ -73,6 +80,8 @@ export class Game {
     const broadcastHandlers = new Map<GameEventType, EventHandlerFn>();
     broadcastHandlers.set(GameEventType.PLAYER_KILLED,
                           event => this._onPlayerKilled(event));
+    broadcastHandlers.set(GameEventType.REQUEST_GAME_END,
+                          event => this._handleGameEndRequest(event));
 
     const behaviourComp = new CBehaviour(this._entityId,
                                          targetedHandlers,
@@ -188,6 +197,10 @@ export class Game {
     return this._pipe.hasConnection(playerId);
   }
 
+  get playerIds() {
+    return this._pipe.connectionIds;
+  }
+
   get numPlayers() {
     return this._pipe.numConnections;
   }
@@ -204,6 +217,20 @@ export class Game {
   terminate() {
     this._logger.info(`Terminating game ${this._id}`);
     clearInterval(this._loopTimeout);
+  }
+
+  private _handleGameEndRequest(e: GameEvent) {
+    const event = <ERequestGameEnd>e;
+    this._scheduler.addFunction(() => this._gameOverFn(this),
+                                event.secondsFromNow * 1000);
+
+    const gameEnding: EGameEnding = {
+      type: GameEventType.GAME_ENDING,
+      entities: [],
+      secondsRemaining: event.secondsFromNow
+    }
+
+    this._em.submitEvent(gameEnding);
   }
 
   private _respawn(entityId: EntityId): Vec2 {
