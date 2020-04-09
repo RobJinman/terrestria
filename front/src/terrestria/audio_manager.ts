@@ -11,14 +11,11 @@ export class AudioManager {
   _music: sound.Sound[] = [];
   _sfxMuted = false;
   _musicMuted = false;
+  _currentMusic = -1;
 
   constructor() {
     for (let i = 0; i < NUM_MUSIC_FILES; ++i) {
-      const music = sound.Sound.from({
-        url: `assets/music${i}.mp3`,
-        volume: MUSIC_VOLUME,
-        complete: () => this._onMusicFinished(i)
-      });
+      const music = sound.Sound.from(`assets/music${i}.mp3`);
       this._music.push(music);
     }
   }
@@ -66,14 +63,15 @@ export class AudioManager {
   }
 
   playMusic() {
-    this.stopMusic();
-    const i = Math.floor(Math.random() * NUM_MUSIC_FILES);
-    this._music[i].play();
+    if (this._currentMusic == -1) {
+      this._currentMusic = Math.floor(Math.random() * NUM_MUSIC_FILES);
+      this._playMusic();
+    }
   }
 
   stopMusic() {
-    for (const sound of this._music) {
-      sound.stop();
+    if (this._currentMusic !== -1) {
+      this._music[this._currentMusic].stop();
     }
   }
 
@@ -91,8 +89,13 @@ export class AudioManager {
     this._musicMuted = false;
   }
 
-  private _onMusicFinished(i: number) {
-    const next = (i + 1) % NUM_MUSIC_FILES;
-    this._music[next].play();
+  private _onMusicFinished() {
+    this._currentMusic = (this._currentMusic + 1) % NUM_MUSIC_FILES;
+    this._playMusic();
+  }
+
+  private _playMusic() {
+    this._music[this._currentMusic].volume = MUSIC_VOLUME;
+    this._music[this._currentMusic].play(() => this._onMusicFinished());
   }
 }

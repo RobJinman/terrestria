@@ -70,6 +70,7 @@ function onAgentCollect(am: AudioManager,
                         event: EAgentAction,
                         distance: number) {
   switch (event.collectedType) {
+    case EntityType.GEM_BUNDLE:
     case EntityType.GEM: {
       am.playSound("collect_gem", distance);
       break;
