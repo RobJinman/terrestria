@@ -193,11 +193,11 @@ export class App {
   }
 
   private _onGameOver(game: Game) {
-    console.log("Game over!");
-
     const playerIds = game.playerIds;
 
+    this._logger.info("Game over!");
     this._logger.info("Deleting game " + game.id);
+
     game.terminate();
     this._games.delete(game);
 

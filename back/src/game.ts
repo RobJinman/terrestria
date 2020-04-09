@@ -51,6 +51,7 @@ export class Game {
   private _loopTimeout: NodeJS.Timeout;
   private _entityId: EntityId;
   private _doSyncFn: () => void;
+  private _gameOver = false;
   private _gameOverFn: (game: Game) => void;
 
   constructor(appConfig: AppConfig,
@@ -221,8 +222,10 @@ export class Game {
 
   private _handleGameEndRequest(e: GameEvent) {
     const event = <ERequestGameEnd>e;
-    this._scheduler.addFunction(() => this._gameOverFn(this),
-                                event.secondsFromNow * 1000);
+    this._scheduler.addFunction(() => {
+      this._gameOver = true;
+      this._gameOverFn(this);
+    }, event.secondsFromNow * 1000);
 
     const gameEnding: EGameEnding = {
       type: GameEventType.GAME_ENDING,
@@ -274,7 +277,12 @@ export class Game {
 
   private _tick() {
     this._em.update();
-    this._scheduler.update();
+    this._scheduler.update(); // Potentially calls this._gameOverFn
+
+    if (this._gameOver) {
+      return;
+    }
+
     this._doSyncFn();
 
     if (this._frame % SERVER_FRAME_RATE === 0) {

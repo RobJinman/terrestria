@@ -211,6 +211,7 @@ export class App {
     this.disconnect();
 
     this._terminateGame();
+    this._responseQueue = [];
     this._setGameState(GameState.MAIN_MENU);
 
     this._audioManager.stopMusic();
