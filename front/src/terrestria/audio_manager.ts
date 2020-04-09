@@ -49,7 +49,7 @@ export class AudioManager {
 
   unmuteSfx() {
     for (const [ soundName, sound ] of this._sounds) {
-      sound.muted = true;
+      sound.muted = false;
     }
     this._sfxMuted = false;
   }
