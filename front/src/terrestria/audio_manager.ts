@@ -72,6 +72,7 @@ export class AudioManager {
   stopMusic() {
     if (this._currentMusic !== -1) {
       this._music[this._currentMusic].stop();
+      this._currentMusic = -1;
     }
   }
 
