@@ -250,9 +250,7 @@
                 <false/>
             </struct>
             <key type="filename">button_action.png</key>
-            <key type="filename">button_action_active.png</key>
             <key type="filename">button_settings.png</key>
-            <key type="filename">button_settings_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -266,13 +264,9 @@
                 <false/>
             </struct>
             <key type="filename">button_down.png</key>
-            <key type="filename">button_down_active.png</key>
             <key type="filename">button_left.png</key>
-            <key type="filename">button_left_active.png</key>
             <key type="filename">button_right.png</key>
-            <key type="filename">button_right_active.png</key>
             <key type="filename">button_up.png</key>
-            <key type="filename">button_up_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -286,7 +280,6 @@
                 <false/>
             </struct>
             <key type="filename">button_fullscreen.png</key>
-            <key type="filename">button_fullscreen_active.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -296,34 +289,6 @@
                 <rect>100,30,199,61</rect>
                 <key>scale9Paddings</key>
                 <rect>100,30,199,61</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">button_sound_off.png</key>
-            <key type="filename">button_sound_off_active.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>27,35,54,71</rect>
-                <key>scale9Paddings</key>
-                <rect>27,35,54,71</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">button_sound_on.png</key>
-            <key type="filename">button_sound_on_active.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0.5,0.5</point_f>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>51,39,103,77</rect>
-                <key>scale9Paddings</key>
-                <rect>51,39,103,77</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -516,16 +481,7 @@
             <filename>button_right.png</filename>
             <filename>button_up.png</filename>
             <filename>button_fullscreen.png</filename>
-            <filename>button_down_active.png</filename>
-            <filename>button_fullscreen_active.png</filename>
-            <filename>button_left_active.png</filename>
-            <filename>button_right_active.png</filename>
-            <filename>button_up_active.png</filename>
             <filename>trophy.png</filename>
-            <filename>button_sound_off.png</filename>
-            <filename>button_sound_off_active.png</filename>
-            <filename>button_sound_on.png</filename>
-            <filename>button_sound_on_active.png</filename>
             <filename>gem_bank.png</filename>
             <filename>gem_bank_entrance.png</filename>
             <filename>gem_bank_exit.png</filename>
@@ -565,9 +521,7 @@
             <filename>square_rock_burn2.png</filename>
             <filename>square_rock_burn3.png</filename>
             <filename>button_action.png</filename>
-            <filename>button_action_active.png</filename>
             <filename>button_settings.png</filename>
-            <filename>button_settings_active.png</filename>
             <filename>wall.png</filename>
             <filename>wall_burn0.png</filename>
             <filename>wall_burn1.png</filename>

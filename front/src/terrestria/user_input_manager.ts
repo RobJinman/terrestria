@@ -12,6 +12,9 @@ import { UI_Z_INDEX } from "./constants";
 import { RoundedRectangle } from "./common/geometry";
 import { GameError } from "./common/error";
 
+const BUTTON_OPACITY_INACTIVE = 0.5;
+const BUTTON_OPACITY_ACTIVE = 1.0;
+
 export type DirectionInputHandlerFn = (input: UserInput) => void;
 export type VoidInputHandlerFn = () => void;
 
@@ -432,16 +435,14 @@ export class UserInputManager {
 
   private _setButtonActive(id: EntityId, buttonName: string) {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    this._scheduler.addFunction(() => {
-      renderSys.setCurrentImage(id, `${buttonName}_active.png`);
-    }, 0);
+    const fn = () => renderSys.setOpacity(id, BUTTON_OPACITY_ACTIVE);
+    this._scheduler.addFunction(fn, 0);
   }
 
   private _setButtonInactive(id: EntityId, buttonName: string) {
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    this._scheduler.addFunction(() => {
-      renderSys.setCurrentImage(id, `${buttonName}.png`);
-    }, 0);
+    const fn = () => renderSys.setOpacity(id, BUTTON_OPACITY_INACTIVE);
+    this._scheduler.addFunction(fn, 0);
   }
 
   private _constructButton(buttonName: string,
@@ -452,9 +453,6 @@ export class UserInputManager {
     const staticImages: StaticImage[] = [
       {
         name: `${buttonName}.png`
-      },
-      {
-        name: `${buttonName}_active.png`
       }
     ];
 
@@ -472,6 +470,9 @@ export class UserInputManager {
                                    renderOpts);
 
     this._em.addEntity(id, EntityType.OTHER, [ renderComp ]);
+
+    const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
+    renderSys.setOpacity(id, BUTTON_OPACITY_INACTIVE);
 
     return id;
   }

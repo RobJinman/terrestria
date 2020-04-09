@@ -389,6 +389,23 @@ export class RenderSystem implements ClientSystem {
     }
   }
 
+  setOpacity(id: EntityId, opacity: number) {
+    const c = this.getComponent(id);
+    if (c instanceof CSprite) {
+      c.staticSprites.forEach(sprite => sprite.alpha = opacity);
+      c.animatedSprites.forEach(anim => anim.sprite.alpha = opacity);
+    }
+    else if (c instanceof CShape) {
+      c.graphics.alpha = opacity;
+    }
+    else if (c instanceof CText) {
+      c.pixiText.alpha = opacity;
+    }
+    else {
+      throw new GameError("Can't set opacity on component of that type");
+    }
+  }
+
   getSpriteComponent(id: EntityId): CSprite {
     const c = this.getComponent(id);
     if (!(c instanceof CSprite)) {
@@ -772,6 +789,9 @@ export class RenderSystem implements ClientSystem {
       sprite.interactive = true;
       sprite.on("mouseup", c.onRelease);
       sprite.on("touchend", c.onRelease);
+      sprite.on("touchcancel", c.onRelease);
+      sprite.on("touchendoutside", c.onRelease);
+      sprite.on("mouseupoutside", c.onRelease);
     }
   }
 
