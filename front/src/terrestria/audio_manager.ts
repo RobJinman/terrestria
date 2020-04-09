@@ -7,21 +7,20 @@ const SFX_VOLUME = 0.7;
 const MAX_AUDIBLE_DISTANCE = 640;
 
 export class AudioManager {
-  _musicAudioElement: HTMLAudioElement;
-  _musicSourceElement: HTMLSourceElement;
-  _currentMusicFile: number;
   _sounds = new Map<string, sound.Sound>();
+  _music: sound.Sound[] = [];
   _sfxMuted = false;
+  _musicMuted = false;
 
   constructor() {
-    this._currentMusicFile = Math.floor(Math.random() * NUM_MUSIC_FILES);
-
-    this._musicAudioElement = document.createElement("audio");
-    this._musicSourceElement = document.createElement("source");
-    this._musicSourceElement.type = "audio/mpeg";
-    this._musicSourceElement.src = `assets/music${this._currentMusicFile}.mp3`;
-    this._musicAudioElement.appendChild(this._musicSourceElement);
-    this._musicAudioElement.onended = () => this._nextMusicTrack();
+    for (let i = 0; i < NUM_MUSIC_FILES; ++i) {
+      const music = sound.Sound.from({
+        url: `assets/music${i}.mp3`,
+        volume: MUSIC_VOLUME,
+        complete: () => this._onMusicFinished(i)
+      });
+      this._music.push(music);
+    }
   }
 
   addSound(soundName: string) {
@@ -45,17 +44,21 @@ export class AudioManager {
   }
 
   muteSfx() {
-    sound.muteAll();
+    for (const [ soundName, sound ] of this._sounds) {
+      sound.muted = true;
+    }
     this._sfxMuted = true;
   }
 
   unmuteSfx() {
-    sound.unmuteAll();
+    for (const [ soundName, sound ] of this._sounds) {
+      sound.muted = true;
+    }
     this._sfxMuted = false;
   }
 
   get musicMuted() {
-    return this._musicAudioElement.muted;
+    return this._musicMuted;
   }
 
   get sfxMuted() {
@@ -63,26 +66,33 @@ export class AudioManager {
   }
 
   playMusic() {
-    this._musicAudioElement.volume = MUSIC_VOLUME;
-    this._musicAudioElement.play();
+    this.stopMusic();
+    const i = Math.floor(Math.random() * NUM_MUSIC_FILES);
+    this._music[i].play();
   }
 
   stopMusic() {
-    this._musicAudioElement.pause();
+    for (const sound of this._music) {
+      sound.stop();
+    }
   }
 
   muteMusic() {
-    this._musicAudioElement.muted = true;
+    for (const sound of this._music) {
+      sound.muted = true;
+    }
+    this._musicMuted = true;
   }
 
   unmuteMusic() {
-    return this._musicAudioElement.muted = false; 
+    for (const sound of this._music) {
+      sound.muted = false;
+    }
+    this._musicMuted = false;
   }
 
-  private _nextMusicTrack() {
-    this._currentMusicFile = (this._currentMusicFile + 1) % NUM_MUSIC_FILES;
-    this._musicSourceElement.src = `assets/music${this._currentMusicFile}.mp3`;
-    this._musicAudioElement.load();
-    this._musicAudioElement.play();
+  private _onMusicFinished(i: number) {
+    const next = (i + 1) % NUM_MUSIC_FILES;
+    this._music[next].play();
   }
 }
