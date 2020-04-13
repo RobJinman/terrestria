@@ -30,6 +30,7 @@ html, body {
 
     h1 {
       font-size: 18px;
+      text-align: center;
     }
 
     .menu {
@@ -49,6 +50,17 @@ html, body {
 
     .main-menu {
       min-height: 340px;
+     
+      .pinata-logo {
+        display: block;
+        margin: 0 auto;
+        width: 50px;
+        height: 50px;
+
+        img {
+          height: 100%;
+        }
+      }
     }
 
     .settings-menu {

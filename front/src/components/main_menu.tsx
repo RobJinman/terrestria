@@ -87,19 +87,27 @@ export class CMainMenu extends React.Component<CMainMenuProps> {
 
     return (
       <div className="main-menu menu">
+        <a className="pinata-logo" href="https://pinatagames.com">
+          <img src="assets/pinata_logo.svg" alt="pinata-logo"></img>
+        </a>
         {this.state.loading &&
         <div className="loading">Loading...</div>}
         {!this.state.loading &&
         <div className="content">
           {this.state.page == MenuPage.SIGN_UP &&
           <div>
+            <h1>Create your Piñata Account</h1>
+            <p>Once signed up, you can view your awards at{" "}
+              <a href="https://pinatagames.com">pinatagames.com</a> and convert
+              your Fetti to real money via PayPal.
+            </p>
+            <p>Don't care about free money?{" "}
+              <a href="#" onClick={noDefault(startGame)}>Continue to game</a>
+            </p>
             <CSignUpForm onSignUp={signUp} />
             <p>Already have an account?{" "}
               <a href="#" onClick={noDefault(goToPage(MenuPage.LOG_IN))}>
                 Sign in</a></p>
-            <p>Don't care about free money?{" "}
-              <a href="#" onClick={noDefault(startGame)}>Continue to game</a>
-            </p>
           </div>}
           {this.state.page == MenuPage.LOG_IN &&
           <div>
