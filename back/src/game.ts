@@ -221,6 +221,8 @@ export class Game {
   }
 
   private _handleGameEndRequest(e: GameEvent) {
+    this._logger.info("Game ending...");
+
     const event = <ERequestGameEnd>e;
     this._scheduler.addFunction(() => {
       this._gameOver = true;

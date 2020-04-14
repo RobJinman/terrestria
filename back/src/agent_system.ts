@@ -104,6 +104,8 @@ export class AgentSystem implements ServerSystem {
     const c = this.getComponent(entityId);
     let fetti = 0;
 
+    this._logger.info(`Granting award ${name} to entity ${entityId}`);
+
     if (c.pinataToken !== undefined) {
       try {
         const response = await this._pinata.grantAward(name, c.pinataToken);

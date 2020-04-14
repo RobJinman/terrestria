@@ -37,7 +37,7 @@ function constructBillboard(em: EntityManager,
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   const adId = constructAd(em, {
-    adName: "billboard",
+    adName: `billboard`, // TODO: Billboard index
     x: 0,
     y: 0
   });
