@@ -22,6 +22,10 @@ export class AudioManager {
 
   addSound(soundName: string) {
     const s = sound.Sound.from(`assets/${soundName}.mp3`);
+    if (this._sfxMuted) {
+      s.muted = true;
+    }
+
     this._sounds.set(soundName, s);
   }
 
