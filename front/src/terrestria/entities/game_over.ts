@@ -2,11 +2,13 @@ import { EntityManager, getNextEntityId } from "../entity_manager";
 import { GameEventType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
-import { RenderSystem, RenderOptions, CShape, Colour, CText } from "../render_system";
+import { RenderSystem, RenderOptions, CShape, Colour,
+         CText } from "../render_system";
 import { ComponentType } from "../common/component_types";
 import { UI_Z_INDEX } from "../constants";
 import { RoundedRectangle } from "../common/geometry";
 import { Scheduler } from "../common/scheduler";
+import { EntityId } from "../common/system";
 
 const NOTIFICATION_WIDTH = 500;
 const NOTIFICATION_HEIGHT = 100;
@@ -22,15 +24,12 @@ export function constructGameOverNotification(em: EntityManager,
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
-  const bgW = NOTIFICATION_WIDTH;
-  const bgH = NOTIFICATION_HEIGHT;
-  const bgX = (renderSys.viewW - bgW) * 0.5;
-  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
-
-  const shape = new RoundedRectangle(bgW, bgH, NOTIFICATION_RADIUS);
+  const shape = new RoundedRectangle(NOTIFICATION_WIDTH,
+                                     NOTIFICATION_HEIGHT,
+                                     NOTIFICATION_RADIUS);
 
   const renderOpts: RenderOptions = {
-    screenPosition: { x: bgX, y: bgY },
+    screenPosition: { x: 0, y: 0 },
     zIndex: UI_Z_INDEX
   };
 
@@ -43,6 +42,9 @@ export function constructGameOverNotification(em: EntityManager,
 
   broadcastHandlers.set(GameEventType.GAME_ENDING, () => {
     scheduler.addFunction(() => {
+      positionBg(id, renderSys);
+      positionText(textId, renderSys);
+
       renderSys.setVisible(id, true);
       renderSys.setVisible(textId, true);
     }, 2000);
@@ -63,8 +65,6 @@ export function constructGameOverNotification(em: EntityManager,
 function constructText(em: EntityManager) {
   const id = getNextEntityId();
 
-  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
-
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
     zIndex: UI_Z_INDEX + 1
@@ -80,6 +80,19 @@ function constructText(em: EntityManager) {
 
   em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
+  return id;
+}
+
+function positionBg(id: EntityId, renderSys: RenderSystem) {
+  const bgX = (renderSys.viewW - NOTIFICATION_WIDTH) * 0.5;
+  const bgY = (renderSys.viewH - NOTIFICATION_HEIGHT) * NOTIFICATION_Y;
+
+  renderSys.setScreenPosition(id, bgX, bgY);
+}
+
+function positionText(id: EntityId, renderSys: RenderSystem) {
+  const renderComp = <CText>renderSys.getComponent(id);
+
   const bgH = NOTIFICATION_HEIGHT;
   const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
 
@@ -90,6 +103,4 @@ function constructText(em: EntityManager) {
   const textY = bgY + 0.5 * (bgH - textH);
 
   renderSys.setScreenPosition(id, textX, textY);
-
-  return id;
 }
