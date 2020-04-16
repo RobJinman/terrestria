@@ -292,10 +292,7 @@ export class RenderSystem implements ClientSystem {
   }
 
   setBackground(textureName: string) {
-    const texture = this._textures.get(textureName);
-    if (!texture) {
-      throw new GameError(`No texture named ${textureName}`);
-    }
+    const texture = this._findTexture(textureName);
     this._bgSprite = new PIXI.TilingSprite(texture, this._viewW, this._viewH);
     this._pixi.stage.addChild(this._bgSprite);
     this._bgSprite.position.set(this._viewX, this._viewY);

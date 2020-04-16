@@ -22,6 +22,7 @@ import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructHud } from "./entities/hud";
 import { constructBillboardL, constructBillboardR } from "./entities/billboard";
 import { constructGameOverNotification } from "./entities/game_over";
+import { RenderSystem } from "./render_system";
 
 export function constructEntities(entityManager: EntityManager,
                                   mapData: ClientMapData,
@@ -99,6 +100,9 @@ export function constructInitialEntitiesFromMapData(em: EntityManager,
                                                     mapData: ClientMapData) {
   const inventorySys = <InventorySystem>em.getSystem(ComponentType.INVENTORY);
   inventorySys.setDisplayedBucket("gems");
+
+  const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+  renderSys.setBackground("sky.png");
 
   constructEarth(em, mapData);
   constructAwardNotification(em, scheduler);

@@ -416,6 +416,19 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">sky.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>160,160,320,320</rect>
+                <key>scale9Paddings</key>
+                <rect>160,160,320,320</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
         </map>
         <key>fileList</key>
         <array>
@@ -534,6 +547,7 @@
             <filename>billboard_ad_placeholder.png</filename>
             <filename>billboard_left.png</filename>
             <filename>billboard_right.png</filename>
+            <filename>sky.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
