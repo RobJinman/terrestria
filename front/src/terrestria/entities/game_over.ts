@@ -10,12 +10,12 @@ import { RoundedRectangle } from "../common/geometry";
 import { Scheduler } from "../common/scheduler";
 import { EntityId } from "../common/system";
 
-const NOTIFICATION_WIDTH = 500;
-const NOTIFICATION_HEIGHT = 100;
+const NOTIFICATION_WIDTH = 550;
+const NOTIFICATION_HEIGHT = 80;
 const NOTIFICATION_RADIUS = 50;
 const NOTIFICATION_FONT_SIZE = 26;
 const NOTIFICATION_Y = 0.5; // As percentage from top of screen
-const NOTIFICATION_BG_COLOUR = new Colour(0, 0, 0, 0.8);
+const NOTIFICATION_BG_COLOUR = new Colour(0, 0, 0, 1);
 const NOTIFICATION_CAPTION_COLOUR = new Colour(1, 1, 1, 1);
 
 export function constructGameOverNotification(em: EntityManager,
@@ -30,7 +30,7 @@ export function constructGameOverNotification(em: EntityManager,
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
-    zIndex: UI_Z_INDEX
+    zIndex: UI_Z_INDEX + 1
   };
 
   const renderComp = new CShape(id, shape, NOTIFICATION_BG_COLOUR, renderOpts);
@@ -67,7 +67,7 @@ function constructText(em: EntityManager) {
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
-    zIndex: UI_Z_INDEX + 1
+    zIndex: UI_Z_INDEX + 2
   };
 
   const caption = "Game finished. Restarting...";

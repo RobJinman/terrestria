@@ -410,7 +410,7 @@ export class App {
   }
 
   private _processUserActions() {
-    if (this._ws) {
+    if (this._ws && this._ws.OPEN) {
       for (const action of this._actionQueue) {
         if (this._playerId != PLAYER_ID_DEAD) {
           const dataString = JSON.stringify(action);

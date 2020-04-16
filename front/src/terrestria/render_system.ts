@@ -335,6 +335,7 @@ export class RenderSystem implements ClientSystem {
   }
 
   setWorldSize(worldW: number, worldH: number) {
+    this._pixi.stage.removeChildren();
     this._spatialContainer = new SpatialContainer(worldW, worldH);
   }
 
