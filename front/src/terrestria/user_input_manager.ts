@@ -66,7 +66,6 @@ export class UserInputManager {
 
   initialise() {
     this._respawnPromptVisible = false;
-    this._mobileControlsVisible = false;
 
     const mainId = getNextEntityId();
 

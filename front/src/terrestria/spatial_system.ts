@@ -65,7 +65,7 @@ export class SpatialSystem implements ClientSystem {
         const s = Math.sqrt(dx * dx + dy * dy);
         let multiplier = 1;
         if (s > BLOCK_SZ) {
-          // Hack to speed up lacking entities. Assumes that the speed given
+          // Hack to speed up lagging entities. Assumes that the speed given
           // by the back-end was meant for a distance of BLOCK_SZ.
           multiplier = 1 + (s - BLOCK_SZ) / BLOCK_SZ;
         }
