@@ -7,7 +7,6 @@ import { CSpatial } from "../spatial_component";
 import { DEFAULT_GRID_MODE_PROPS } from "../grid_mode_properties";
 import { SpatialMode } from "../common/spatial_packet";
 import { EntityType } from "../common/game_objects";
-import { constructAd } from "./advert";
 import { Scheduler } from "../common/scheduler";
 import { SERVER_FRAME_DURATION_MS, BLOCK_SZ } from "../common/constants";
 
@@ -36,14 +35,6 @@ export function constructBlimp(em: EntityManager,
   em.addEntity(id, EntityType.BLIMP, desc, [ spatialComp ]);
 
   spatialSys.positionEntity(id, desc.x, desc.y);
-
-  const adId = constructAd(em, {
-    adName: "blimp",
-    x: 80,
-    y: 16
-  });
-
-  em.addChildToEntity(id, adId);
 
   const bobble = 10;
   const xOffset = -BLOCK_SZ * 5;

@@ -10,7 +10,6 @@ import { InventorySystem } from "./inventory_system";
 import { EntityType } from "./common/game_objects";
 import { MapData, Span2dDesc, EntityDesc } from "./common/map_data";
 import { EntityFactory } from "./entity_factory";
-import { AdvertSystem } from "./advert_system";
 import { Pinata } from "./pinata";
 import { Logger } from "./logger";
 import { Pipe } from "./pipe";
@@ -63,13 +62,11 @@ export class MapLoader {
                                         this._logger);
     const behaviourSystem = new BehaviourSystem();
     const inventorySystem = new InventorySystem();
-    const adSystem = new AdvertSystem(pinata);
 
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.AGENT, agentSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
-    this._em.addSystem(ComponentType.AD, adSystem);
 
     this._factory.setMapData(this._mapData);
 

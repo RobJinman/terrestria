@@ -27,8 +27,6 @@ const int SPAWN_POINT = 0x009200;
 const int GEM_BANK = 0x00d0ca;
 const int TROPHY = 0xffff00;
 const int BLIMP = 0xc000ff;
-const int BILLBOARD_L = 0xff0000;
-const int BILLBOARD_R = 0xff0001;
 const int DIG_REGION = 0x643200;
 const int DIG_REGION_ALT = 0x66523f;
 
@@ -45,9 +43,7 @@ const std::set<int> gravRegionItems{
   GRAVITY_REGION,
   GRAVITY_REGION_ALT,
   SPAWN_POINT,
-  BLIMP,
-  BILLBOARD_L,
-  BILLBOARD_R
+  BLIMP
 };
 
 int toColour(const ContigMultiArray<uint8_t, 1>& pixel) {
@@ -138,8 +134,6 @@ pJsonEntity_t generateItem(int id, int x, int y) {
     case TROPHY: return generateSimpleGridModeItem(x, y, "TROPHY");
     case GEM_BANK: return generateGemBank(x, y);
     case BLIMP: return generateSimpleFreeModeItem(x, y, "BLIMP");
-    case BILLBOARD_L: return generateSimpleFreeModeItem(x, y, "BILLBOARD_L");
-    case BILLBOARD_R: return generateSimpleFreeModeItem(x, y, "BILLBOARD_R");
     default:
       EXCEPTION("Unrecognised item type at " << x << ", " << y << ": " <<
                 std::hex << id);

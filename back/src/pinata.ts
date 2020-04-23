@@ -1,10 +1,6 @@
 import https from "https";
 import http from "http";
 import { Logger } from "./logger";
-import { GameError, ErrorCode } from "./common/error";
-
-// How frequently to check for new adverts
-const REFRESH_INTERVAL_MS = 1 * 60 * 1000;
 
 export class PinataHttpError {
   constructor(public reason: string,
@@ -17,27 +13,6 @@ export interface AuthResponse {
   username: string;
   token: string;
 }
-
-export interface AdSpace {
-  id: string;
-  name: string;
-}
-
-export interface Advert {
-  id: string;
-  name: string;
-  asset: {
-    id: string;
-    type: string;
-    fileName: string;
-    sizeInKb: number;
-    url: string;
-  }
-}
-
-export type AdSpacesResponse = AdSpace[];
-
-export type AdvertsResponse = Advert[];
 
 export interface AdSlice {
   url: string;
@@ -59,20 +34,10 @@ function authHeader(token: string): http.OutgoingHttpHeaders {
   };
 }
 
-interface AdvertData {
-  lastUpdated: number; // POSIX time
-  adSlices: AdSlice[];
-}
-
 export class Pinata {
   private _apiBase: string;
   private _productKey: string;
   private _logger: Logger;
-
-  // Name -> id
-  private _adSpaceIds = new Map<string, string>();
-  // Name -> (region -> slices)
-  private _adSlices = new Map<string, Map<string, AdvertData>>();
 
   constructor(apiBase: string, productKey: string, logger: Logger) {
     this._apiBase = apiBase;
@@ -126,90 +91,6 @@ export class Pinata {
     return this._sendPostRequest(url, payload);
   }
 
-  async getAdSlices(adSpaceName: string, region: string): Promise<AdSlice[]> {
-    await this._updateAdSlicesIfNeeded(adSpaceName, region);
-
-    const byRegion = this._adSlices.get(adSpaceName);
-    if (!byRegion) {
-      throw new GameError(`No ads for space with name ${adSpaceName}`,
-                          ErrorCode.INTERNAL_ERROR);
-    }
-
-    const ads = byRegion.get(region);
-    if (!ads) {
-      return [];
-    }
-    return ads.adSlices;
-  }
-
-  private async _updateAdSlicesIfNeeded(adSpaceName: string, region: string) {
-    const byRegion = this._adSlices.get(adSpaceName);
-    if (!byRegion) {
-      await this._fetchAdSlices(adSpaceName, region);
-    }
-    else {
-      const ads = byRegion.get(region);
-      const now = (new Date()).getTime();
-
-      if (!ads || ads.lastUpdated < now - REFRESH_INTERVAL_MS) {
-        await this._fetchAdSlices(adSpaceName, region);
-      }
-    }
-  }
-
-  private async _fetchAdSlices(adSpaceName: string, region: string) {
-    if (this._adSpaceIds.size === 0) {
-      await this._fetchAdSpaces();
-    }
-
-    const id = this._adSpaceIds.get(adSpaceName);
-    if (!id) {
-      throw new GameError(`No ad with name ${adSpaceName}`,
-                          ErrorCode.INTERNAL_ERROR);
-    }
-
-    this._logger.debug("Fetching ad slices");
-
-    const url = `${this._apiBase}/gamer/ad-space/${id}/region/${region}`;
-
-    const headers = {
-      "productKey": this._productKey
-    };
-
-    const response: AdvertsResponse = await this._sendGetRequest(url, headers);
-    const slices: AdSlice[] = response.map(advert => ({
-      url: advert.asset.url
-    }));
-
-    if (!this._adSlices.has(adSpaceName)) {
-      this._adSlices.set(adSpaceName, new Map<string, AdvertData>());
-    }
-
-    const byRegion = this._adSlices.get(adSpaceName);
-    if (!byRegion) {
-      throw new GameError(`No ads for space with name ${adSpaceName}`,
-                          ErrorCode.INTERNAL_ERROR);
-    }
-
-    byRegion.set(region, {
-      adSlices: slices,
-      lastUpdated: (new Date()).getTime()
-    });
-  }
-
-  private async _fetchAdSpaces() {
-    this._logger.debug("Fetching ad spaces");
-
-    const url = `${this._apiBase}/gamer/ad-space`;
-
-    const headers = {
-      "productKey": this._productKey
-    };
-
-    const adSpaces: AdSpacesResponse = await this._sendGetRequest(url, headers);
-    adSpaces.forEach(({ id, name }) => this._adSpaceIds.set(name, id));
-  }
-
   private _sendPostRequest(url: string,
                            payloadJson: string,
                            headers: http.OutgoingHttpHeaders = {}) {
@@ -227,23 +108,6 @@ export class Pinata {
     };
 
     return this._sendRequest(url, options, payloadJson);
-  }
-
-  private _sendGetRequest(url: string,
-                          headers: http.OutgoingHttpHeaders = {}) {
-    const defaultHeaders = {
-      "Content-Type": "application/json"
-    };
-
-    const allHeaders = {...defaultHeaders, ...headers};
-
-    const options: http.RequestOptions = {
-      method: "GET",
-      headers: allHeaders,
-      agent: false
-    };
-
-    return this._sendRequest(url, options);
   }
 
   private _sendRequest(url: string,

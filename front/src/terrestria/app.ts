@@ -18,7 +18,6 @@ import { SpatialSystem } from './spatial_system';
 import { GameError, ErrorCode } from './common/error';
 import { Scheduler } from './common/scheduler';
 import { BehaviourSystem } from './common/behaviour_system';
-import { AdvertSystem } from './advert_system';
 import { CSpatial } from './spatial_component';
 import { UserInputManager } from "./user_input_manager";
 import { EWindowResized, GameEventType, EPlayerRespawned, GameEvent,
@@ -82,12 +81,10 @@ export class App {
                                           this._scheduler,
                                           this._tick.bind(this));
     const behaviourSystem = new BehaviourSystem();
-    const adSystem = new AdvertSystem(this._em, this._scheduler);
     const inventorySystem = new InventorySystem(this._em);
     this._em.addSystem(ComponentType.SPATIAL, spatialSystem);
     this._em.addSystem(ComponentType.RENDER, renderSystem);
     this._em.addSystem(ComponentType.BEHAVIOUR, behaviourSystem);
-    this._em.addSystem(ComponentType.AD, adSystem);
     this._em.addSystem(ComponentType.INVENTORY, inventorySystem);
 
     this._audioManager = new AudioManager();

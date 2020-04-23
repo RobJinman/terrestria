@@ -9,7 +9,6 @@ import { constructRoundRock, constructSquareRock } from "./entities/rock";
 import { constructSoil } from "./entities/soil";
 import { constructBlimp } from "./entities/blimp";
 import { constructTrophy } from "./entities/trophy";
-import { constructAd } from "./entities/ad";
 import { constructParallaxSprite } from "./entities/parallax_sprite";
 import { constructGemBank } from "./entities/gem_bank";
 import { constructEarth } from "./entities/scenery";
@@ -20,7 +19,6 @@ import { AudioManager } from "./audio_manager";
 import { Scheduler } from "./common/scheduler";
 import { constructDestructableWall, constructMetalWall } from "./entities/wall";
 import { constructHud } from "./entities/hud";
-import { constructBillboardL, constructBillboardR } from "./entities/billboard";
 import { constructGameOverNotification } from "./entities/game_over";
 import { RenderSystem } from "./render_system";
 
@@ -65,20 +63,8 @@ export function constructEntities(entityManager: EntityManager,
         constructBlimp(entityManager, entity);
         break;
       }
-      case EntityType.BILLBOARD_L: {
-        constructBillboardL(entityManager, entity);
-        break;
-      }
-      case EntityType.BILLBOARD_R: {
-        constructBillboardR(entityManager, entity);
-        break;
-      }
       case EntityType.TROPHY: {
         constructTrophy(entityManager, entity);
-        break;
-      }
-      case EntityType.AD: {
-        constructAd(entityManager, entity);
         break;
       }
       case EntityType.PARALLAX_SPRITE: {
