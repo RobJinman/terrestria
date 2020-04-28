@@ -8,7 +8,7 @@ import { DEFAULT_GRID_MODE_PROPS } from "../grid_mode_properties";
 import { SpatialMode } from "../common/spatial_packet";
 import { EntityType } from "../common/game_objects";
 import { Scheduler } from "../common/scheduler";
-import { SERVER_FRAME_DURATION_MS, BLOCK_SZ } from "../common/constants";
+import { SERVER_FRAME_DURATION_MS, BLOCK_SZ_WLD } from "../common/constants";
 
 export function constructBlimp(em: EntityManager,
                                desc: any,
@@ -37,8 +37,8 @@ export function constructBlimp(em: EntityManager,
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   const bobble = 10;
-  const xOffset = -BLOCK_SZ * 5;
-  const range = (worldW * BLOCK_SZ) - xOffset;
+  const xOffset = -BLOCK_SZ_WLD * 5;
+  const range = (worldW * BLOCK_SZ_WLD) - xOffset;
   const y0 = spatialComp.y;
   const dx = 1;
   const period = 280;

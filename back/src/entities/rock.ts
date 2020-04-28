@@ -1,7 +1,7 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
 import { Circle, Shape, Rectangle } from "../common/geometry";
-import { BLOCK_SZ } from "../common/constants";
+import { BLOCK_SZ_WLD } from "../common/constants";
 import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
@@ -39,10 +39,10 @@ function constructRock(em: EntityManager,
 
   let shape: Shape;
   if (square) {
-    shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);
+    shape = new Rectangle(BLOCK_SZ_WLD, BLOCK_SZ_WLD);
   }
   else {
-    shape = new Circle(BLOCK_SZ * 0.5);
+    shape = new Circle(BLOCK_SZ_WLD * 0.5);
   }
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);

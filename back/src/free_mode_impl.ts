@@ -2,11 +2,11 @@ import { Engine, World, Bodies, Body, Vector, Events, Query } from "matter-js";
 import { EntityId } from "./common/system";
 import { Direction } from "./common/definitions";
 import { FreeModeSubcomponent } from "./free_mode_subcomponent";
-import { SERVER_FRAME_RATE, BLOCK_SZ } from "./common/constants";
+import { SERVER_FRAME_RATE, BLOCK_SZ_WLD } from "./common/constants";
 import { Span2d, getPerimeter, EdgeOrientation,
          orientation } from "./common/span";
 import { GameError } from "./common/error";
-import { directionToVector, normalise } from "./common/geometry";
+import { directionToVector, vecMult } from "./common/geometry";
 import { SpatialModeImpl, AttemptModeTransitionFn } from "./spatial_mode_impl";
 import { EntityManager } from "./entity_manager";
 import { EEntityCollision, GameEventType } from "./common/event";
@@ -167,7 +167,6 @@ export class FreeModeImpl implements SpatialModeImpl {
       }
 
       const dir = directionToVector(direction);
-      normalise(dir);
 
       // Only 1 component is non-zero
       const vec = {
@@ -220,26 +219,25 @@ export class FreeModeImpl implements SpatialModeImpl {
   private _tryLeaveGravRegion(c: FreeModeSubcomponent,
                               direction: Direction): boolean {
 
-    const v = directionToVector(direction);
+    const v = vecMult(directionToVector(direction), BLOCK_SZ_WLD);
     const u = directionToVector(direction);
-    normalise(u);
 
-    const probeLen = BLOCK_SZ * 0.25;
+    const probeLen = BLOCK_SZ_WLD * 0.25;
     const probe = {
       x: 0.5 * v.x + u.x * probeLen,
       y: 0.5 * v.y + u.y * probeLen
     };
 
-    const centreX = c.x() + 0.5 * BLOCK_SZ;
-    const centreY = c.y() + 0.5 * BLOCK_SZ;
+    const centreX = c.x() + 0.5 * BLOCK_SZ_WLD;
+    const centreY = c.y() + 0.5 * BLOCK_SZ_WLD;
 
-    const gridX = Math.floor((centreX + probe.x) / BLOCK_SZ);
-    const gridY = Math.floor((centreY + probe.y) / BLOCK_SZ);
+    const gridX = Math.floor((centreX + probe.x) / BLOCK_SZ_WLD);
+    const gridY = Math.floor((centreY + probe.y) / BLOCK_SZ_WLD);
 
     if (!this._gravRegion.contains(gridX, gridY)) {
       return this._attemptModeTransitionFn(c.entityId,
-                                           gridX * BLOCK_SZ,
-                                           gridY * BLOCK_SZ,
+                                           gridX * BLOCK_SZ_WLD,
+                                           gridY * BLOCK_SZ_WLD,
                                            direction);
     }
 
@@ -247,14 +245,14 @@ export class FreeModeImpl implements SpatialModeImpl {
   }
 
   private _setupFences() {
-    const fenceThickness = 32;
+    const fenceThickness = BLOCK_SZ_WLD / 2;
     const perimeter = getPerimeter(this._gravRegion);
 
     for (const edge of perimeter) {
-      const w = Math.abs(edge.B.x - edge.A.x) * BLOCK_SZ;
-      const h = Math.abs(edge.B.y - edge.A.y) * BLOCK_SZ;
-      let x = Math.min(edge.A.x, edge.B.x) * BLOCK_SZ;
-      let y = Math.min(edge.A.y, edge.B.y) * BLOCK_SZ;
+      const w = Math.abs(edge.B.x - edge.A.x) * BLOCK_SZ_WLD;
+      const h = Math.abs(edge.B.y - edge.A.y) * BLOCK_SZ_WLD;
+      let x = Math.min(edge.A.x, edge.B.x) * BLOCK_SZ_WLD;
+      let y = Math.min(edge.A.y, edge.B.y) * BLOCK_SZ_WLD;
 
       let body: Body;
 

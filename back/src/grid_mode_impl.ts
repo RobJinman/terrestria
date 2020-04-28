@@ -1,9 +1,9 @@
 import { Grid } from "./grid";
-import { BLOCK_SZ, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
+import { BLOCK_SZ_WLD, FALL_SPEED, PLAYER_SPEED } from "./common/constants";
 import { EntityId } from "./common/system";
 import { GridModeSubcomponent } from "./grid_mode_subcomponent";
 import { GameError } from "./common/error";
-import { directionToVector, normalise } from "./common/geometry";
+import { directionToVector, vecMult } from "./common/geometry";
 import { EAgentEnterCell, GameEventType, EEntitySquashed, EAgentAction,
          AgentActionType, EEntityHit, EAgentBlocked } from "./common/event";
 import { Direction } from "./common/definitions";
@@ -25,8 +25,8 @@ export class GridModeImpl implements SpatialModeImpl {
               attemptModeTransitionFn: AttemptModeTransitionFn,
               logger: Logger) {
     this._em = entityManager;
-    this._grid = new Grid(BLOCK_SZ,
-                          BLOCK_SZ,
+    this._grid = new Grid(BLOCK_SZ_WLD,
+                          BLOCK_SZ_WLD,
                           w,
                           h,
                           gravRegion,
@@ -64,7 +64,6 @@ export class GridModeImpl implements SpatialModeImpl {
       }
 
       const v = directionToVector(direction);
-      normalise(v);
 
       const gridX = this._grid.toGridX(x) - v.x;
       const gridY = this._grid.toGridX(y) - v.y;
@@ -197,9 +196,9 @@ export class GridModeImpl implements SpatialModeImpl {
 
       const x = c.x();
       const y = c.y();
-      const yDown = y + BLOCK_SZ;
-      const xRight = x + BLOCK_SZ;
-      const xLeft = x - BLOCK_SZ;
+      const yDown = y + BLOCK_SZ_WLD;
+      const xRight = x + BLOCK_SZ_WLD;
+      const xLeft = x - BLOCK_SZ_WLD;
 
       const squashable = this._grid.squashableItemsAtPos(x, y);
       if (c.falling && squashable.size > 0) {
@@ -222,7 +221,7 @@ export class GridModeImpl implements SpatialModeImpl {
       const t = 1.0 / FALL_SPEED;
 
       if (this._canFallIntoPos(x, yDown, c.falling)) {
-        c.moveToPos(c.x(), c.y() + BLOCK_SZ, t);
+        c.moveToPos(c.x(), c.y() + BLOCK_SZ_WLD, t);
         c.falling = true;
       }
       else {
@@ -244,12 +243,12 @@ export class GridModeImpl implements SpatialModeImpl {
           if (this.grid.spaceFreeAtPos(xRight, y) &&
             this.grid.spaceFreeAtPos(xRight, yDown)) {
 
-            c.moveToPos(c.x() + BLOCK_SZ, c.y(), t);
+            c.moveToPos(c.x() + BLOCK_SZ_WLD, c.y(), t);
           }
           else if (this.grid.spaceFreeAtPos(xLeft, y) &&
             this.grid.spaceFreeAtPos(xLeft, yDown)) {
 
-            c.moveToPos(c.x() - BLOCK_SZ, c.y(), t);
+            c.moveToPos(c.x() - BLOCK_SZ_WLD, c.y(), t);
           }
         }
       }
@@ -304,7 +303,7 @@ export class GridModeImpl implements SpatialModeImpl {
       const t = 1.0 / PLAYER_SPEED;
 
       if (direction == Direction.LEFT) {
-        const xLeft = item.x() - BLOCK_SZ;
+        const xLeft = item.x() - BLOCK_SZ_WLD;
         const y = item.y();
         if (this.grid.spaceFreeAtPos(xLeft, y)) {
           item.stop();
@@ -313,7 +312,7 @@ export class GridModeImpl implements SpatialModeImpl {
         }
       }
       else if (direction == Direction.RIGHT) {
-        const xRight = item.x() + BLOCK_SZ;
+        const xRight = item.x() + BLOCK_SZ_WLD;
         const y = item.y();
         if (this.grid.spaceFreeAtPos(xRight, y)) {
           item.stop();
@@ -342,7 +341,7 @@ export class GridModeImpl implements SpatialModeImpl {
       return false;
     }
 
-    const delta = directionToVector(direction);
+    const delta = vecMult(directionToVector(direction), BLOCK_SZ_WLD);
 
     const destX = c.x() + delta.x;
     const destY = c.y() + delta.y;

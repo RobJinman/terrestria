@@ -1,7 +1,7 @@
 import _ from "underscore";
 import { ComponentType } from "./common/component_types";
 import { EntityManager } from "./entity_manager";
-import { BLOCK_SZ } from "./common/constants";
+import { BLOCK_SZ_WLD } from "./common/constants";
 import { Span, Span2d } from "./common/span";
 import { SpatialSystem } from "./spatial_system";
 import { AgentSystem } from "./agent_system";
@@ -124,8 +124,8 @@ export class MapLoader {
       entities.push({
         type: EntityType.ROUND_ROCK,
         data: {
-          y: r * BLOCK_SZ,
-          x: c * BLOCK_SZ
+          y: r * BLOCK_SZ_WLD,
+          x: c * BLOCK_SZ_WLD
         }
       });
     });
@@ -134,8 +134,8 @@ export class MapLoader {
       entities.push({
         type: EntityType.SQUARE_ROCK,
         data: {
-          y: r * BLOCK_SZ,
-          x: c * BLOCK_SZ
+          y: r * BLOCK_SZ_WLD,
+          x: c * BLOCK_SZ_WLD
         }
       });
     });
@@ -144,8 +144,8 @@ export class MapLoader {
       entities.push({
         type: EntityType.GEM,
         data: {
-          y: r * BLOCK_SZ,
-          x: c * BLOCK_SZ
+          y: r * BLOCK_SZ_WLD,
+          x: c * BLOCK_SZ_WLD
         }
       });
     });
@@ -154,8 +154,8 @@ export class MapLoader {
       entities.push({
         type: EntityType.SOIL,
         data: {
-          x: c * BLOCK_SZ,
-          y: r * BLOCK_SZ
+          x: c * BLOCK_SZ_WLD,
+          y: r * BLOCK_SZ_WLD
         }
       });
     });

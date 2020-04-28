@@ -17,7 +17,7 @@ using std::make_unique;
 
 static const std::string DESCRIPTION = "Terrestria map builder";
 
-const int BLOCK_SZ = 64;
+const int BLOCK_SZ = 50;
 
 const int WALL = 0xdbdbdb;
 const int METAL_WALL = 0x777777;

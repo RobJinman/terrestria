@@ -1,5 +1,4 @@
 import { Direction } from "./definitions";
-import { BLOCK_SZ } from "./constants";
 
 export type Vec2 = {
   x: number;
@@ -8,10 +7,10 @@ export type Vec2 = {
 
 export function directionToVector(dir: Direction) {
   switch (dir) {
-    case Direction.UP: return { x: 0, y: -BLOCK_SZ };
-    case Direction.RIGHT: return { x: BLOCK_SZ, y: 0 };
-    case Direction.DOWN: return { x: 0, y: BLOCK_SZ };
-    case Direction.LEFT: return { x: -BLOCK_SZ, y: 0 };
+    case Direction.UP: return { x: 0, y: -1 };
+    case Direction.RIGHT: return { x: 1, y: 0 };
+    case Direction.DOWN: return { x: 0, y: 1 };
+    case Direction.LEFT: return { x: -1, y: 0 };
     default: return { x: 0, y: 0 };
   }
 }
@@ -26,6 +25,13 @@ export function normalise(v: Vec2) {
     v.x = 0.70710678118;
     v.y = 0.70710678118;
   }
+}
+
+export function vecMult(v: Vec2, s: number) {
+  return {
+    x: v.x * s,
+    y: v.y * s
+  };
 }
 
 export enum ShapeType {

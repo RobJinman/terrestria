@@ -8,7 +8,7 @@ import { GameResponse, GameResponseType, RGameState, RError, RNewEntities,
          RSignUpFailure } from "./common/response";
 import { constructEntities,
          constructInitialEntitiesFromMapData } from './factory';
-import { CLIENT_FRAME_RATE, BLOCK_SZ } from "./common/constants";
+import { CLIENT_FRAME_RATE, BLOCK_SZ_WLD } from "./common/constants";
 import { RenderSystem } from './render_system';
 import { ComponentType } from './common/component_types';
 import { waitForCondition } from './common/utils';
@@ -379,19 +379,19 @@ export class App {
 
       const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
 
-      const camX = renderSys.cameraX;
-      const camY = renderSys.cameraY;
+      const camX = renderSys.cameraX_wld;
+      const camY = renderSys.cameraY_wld;
       const t = 0.25;
       const v = { x: player.x - camX, y: player.y - camY };
 
       if (this._mapData) {
-        const worldW = this._mapData.width * BLOCK_SZ;
-        const worldH = this._mapData.height * BLOCK_SZ;
+        const worldW = this._mapData.width * BLOCK_SZ_WLD;
+        const worldH = this._mapData.height * BLOCK_SZ_WLD;
 
-        const minX = renderSys.viewW  * 0.5;
-        const minY = renderSys.viewH * 0.5;
-        const maxX = worldW - renderSys.viewW * 0.5;
-        const maxY = worldH - renderSys.viewH * 0.5;
+        const minX = renderSys.viewW_wld  * 0.5;
+        const minY = renderSys.viewH_wld * 0.5;
+        const maxX = worldW - renderSys.viewW_wld * 0.5;
+        const maxY = worldH - renderSys.viewH_wld * 0.5;
 
         let destX = camX + v.x / (t * CLIENT_FRAME_RATE);
         let destY = camY + v.y / (t * CLIENT_FRAME_RATE);
@@ -490,11 +490,12 @@ export class App {
     this._mapData = mapData;
 
     const renderSys = <RenderSystem>this._em.getSystem(ComponentType.RENDER);
-    renderSys.setWorldSize(mapData.width * BLOCK_SZ, mapData.height * BLOCK_SZ);
-
-    this._userInputManager.initialise();
+    renderSys.setWorldSize(mapData.width * BLOCK_SZ_WLD,
+                           mapData.height * BLOCK_SZ_WLD);
 
     this._onWindowResize();
+
+    this._userInputManager.initialise();
 
     constructInitialEntitiesFromMapData(this._em,
                                         this._audioManager,

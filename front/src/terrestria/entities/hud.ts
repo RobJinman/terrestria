@@ -5,14 +5,14 @@ import { ComponentType } from "../common/component_types";
 import { EntityId } from "../common/system";
 import { CBehaviour, EventHandlerMap } from "../common/behaviour_system";
 import { GameEventType, GameEvent, EClientScoreChanged } from "../common/event";
-import { UI_Z_INDEX } from "../constants";
+import { UI_Z_INDEX, BLOCK_SZ_PX } from "../constants";
 
 export function constructHud(em: EntityManager) {
   const id = getNextEntityId();
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
-  const renderComp = new CText(id, "Score: 0", 30, new Colour(0, 1, 0), {
+  const renderComp = new CText(id, "Score: 0", 10, new Colour(0, 1, 0), {
     screenPosition: {
       x: 0,
       y: 0
@@ -33,13 +33,12 @@ export function constructHud(em: EntityManager) {
 }
 
 function centreComponent(id: EntityId, renderSys: RenderSystem) {
-
   const c = <CText>renderSys.getComponent(id);
-  const viewW = renderSys.viewW;
+  const viewW = renderSys.viewW_px;
 
   c.screenPosition = {
     x: 0.5 * (viewW - c.width),
-    y: 10
+    y: BLOCK_SZ_PX * 0.5
   };
 }
 

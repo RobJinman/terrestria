@@ -4,7 +4,7 @@ import { Bodies, Body, Vector } from "matter-js";
 import { EntityId } from "./common/system";
 import { Shape, ShapeType, Circle, Rectangle,
          Polygon } from "./common/geometry";
-import { BLOCK_SZ } from "./common/constants";
+import { BLOCK_SZ_WLD } from "./common/constants";
 import { GameError } from "./common/error";
 import { Direction } from "./common/definitions";
 import { EntityManager } from "./entity_manager";
@@ -37,7 +37,7 @@ export class FreeModeSubcomponent extends SpatialSubcomponent {
     this._properties = properties;
 
     if (!shape) {
-      shape = new Circle(BLOCK_SZ * 0.5);
+      shape = new Circle(BLOCK_SZ_WLD * 0.5);
     }
 
     // Workaround for https://github.com/liabru/matter-js/issues/800
@@ -160,7 +160,7 @@ export class FreeModeSubcomponent extends SpatialSubcomponent {
     }
 
     const centreOfMass = Vector.sub(body.position, body.bounds.min);
-    const centre = Vector.create(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+    const centre = Vector.create(BLOCK_SZ_WLD * 0.5, BLOCK_SZ_WLD * 0.5);
     const delta = Vector.sub(centre, centreOfMass);
 
     body.position.x += delta.x;

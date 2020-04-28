@@ -13,12 +13,19 @@ import { ComponentType } from "../common/component_types";
 const NOTIFICATION_DURATION_MS = 2000;
 const NOTIFICATION_DELAY_MS = 500;
 
-const NOTIFICATION_WIDTH = 500;
-const NOTIFICATION_HEIGHT = 100;
-const NOTIFICATION_RADIUS = 50;
-const NOTIFICATION_PADDING = 20;
-const NOTIFICATION_FONT_SIZE = 26;
-const NOTIFICATION_Y = 0.85; // As percentage from top of screen
+// As percentage of viewport width
+const NOTIFICATION_WIDTH = 0.8;
+// As percentage of viewport height
+const NOTIFICATION_HEIGHT = 0.2;
+// As percentage of notification height
+const NOTIFICATION_RADIUS = 0.5;
+// As percentage of notification height
+const NOTIFICATION_PADDING = 0.2;
+// As percentage of notification height
+const NOTIFICATION_FONT_SIZE = 0.3;
+// As percentage from top of screen
+const NOTIFICATION_Y = 0.85;
+
 const NOTIFICATION_BG_COLOUR = new Colour(1, 1, 1, 0.8);
 const NOTIFICATION_CAPTION_COLOUR = new Colour(0, 0, 0, 1);
 const NOTIFICATION_FETTI_COLOUR = new Colour(0, 0.6, 0, 1);
@@ -98,13 +105,15 @@ function constructBg(em: EntityManager) {
   const id = getNextEntityId();
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+  const W = renderSys.viewW_px;
+  const H = renderSys.viewH_px;
 
-  const bgW = NOTIFICATION_WIDTH;
-  const bgH = NOTIFICATION_HEIGHT;
-  const bgX = (renderSys.viewW - bgW) * 0.5;
-  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
+  const bgW = NOTIFICATION_WIDTH * W;
+  const bgH = NOTIFICATION_HEIGHT * H;
+  const bgX = (W - bgW) * 0.5;
+  const bgY = (H - bgH) * NOTIFICATION_Y;
 
-  const shape = new RoundedRectangle(bgW, bgH, NOTIFICATION_RADIUS);
+  const shape = new RoundedRectangle(bgW, bgH, NOTIFICATION_RADIUS * bgH);
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: bgX, y: bgY },
@@ -122,6 +131,10 @@ function constructText(em: EntityManager, event: EClientAwardGranted) {
   const id = getNextEntityId();
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+  const H = renderSys.viewH_px;
+
+  const bgH = NOTIFICATION_HEIGHT * H;
+  const bgY = (renderSys.viewH_px - bgH) * NOTIFICATION_Y;
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
@@ -132,19 +145,16 @@ function constructText(em: EntityManager, event: EClientAwardGranted) {
 
   const renderComp = new CText(id,
                                caption,
-                               NOTIFICATION_FONT_SIZE,
+                               NOTIFICATION_FONT_SIZE * bgH,
                                NOTIFICATION_CAPTION_COLOUR,
                                renderOpts);
 
   em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
-  const bgH = NOTIFICATION_HEIGHT;
-  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
-
   const textW = renderComp.width;
   const textH = renderComp.height;
 
-  const textX = (renderSys.viewW - textW) * 0.5;
+  const textX = (renderSys.viewW_px - textW) * 0.5;
   const textY = bgY + 0.5 * (bgH - textH);
 
   renderSys.setScreenPosition(id, textX, textY);
@@ -156,6 +166,14 @@ function constructIcon(em: EntityManager, event: EClientAwardGranted) {
   const id = getNextEntityId();
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+  const W = renderSys.viewW_px;
+  const H = renderSys.viewH_px;
+
+  const bgW = NOTIFICATION_WIDTH * W;
+  const bgH = NOTIFICATION_HEIGHT * H;
+  const bgX = (renderSys.viewW_px - bgW) * 0.5;
+  const bgY = (renderSys.viewH_px - bgH) * NOTIFICATION_Y;
+  const padding = bgH * NOTIFICATION_PADDING;
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
@@ -170,7 +188,7 @@ function constructIcon(em: EntityManager, event: EClientAwardGranted) {
     imageName = "award_icon_null.png";
   }
 
-  const iconSz = NOTIFICATION_HEIGHT - NOTIFICATION_PADDING * 2;
+  const iconSz = bgH - padding * 2;
 
   const staticImages: StaticImage[] = [
     {
@@ -184,12 +202,7 @@ function constructIcon(em: EntityManager, event: EClientAwardGranted) {
 
   em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
-  const bgW = NOTIFICATION_WIDTH;
-  const bgH = NOTIFICATION_HEIGHT;
-  const bgX = (renderSys.viewW - bgW) * 0.5;
-  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
-
-  const iconX = bgX + NOTIFICATION_PADDING;
+  const iconX = bgX + padding;
   const iconY = bgY + 0.5 * (bgH - iconSz);
 
   renderSys.setScreenPosition(id, iconX, iconY);
@@ -201,6 +214,15 @@ function constructFetti(em: EntityManager, event: EClientAwardGranted) {
   const id = getNextEntityId();
 
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
+  const W = renderSys.viewW_px;
+  const H = renderSys.viewH_px;
+
+  const bgW = NOTIFICATION_WIDTH * W;
+  const bgH = NOTIFICATION_HEIGHT * H;
+  const bgX0 = (renderSys.viewW_px - bgW) * 0.5;
+  const bgX1 = bgX0 + bgW;
+  const bgY = (renderSys.viewH_px - bgH) * NOTIFICATION_Y;
+  const padding = NOTIFICATION_PADDING * bgH;
 
   const renderOpts: RenderOptions = {
     screenPosition: { x: 0, y: 0 },
@@ -211,22 +233,16 @@ function constructFetti(em: EntityManager, event: EClientAwardGranted) {
 
   const renderComp = new CText(id,
                                caption,
-                               NOTIFICATION_FONT_SIZE,
+                               NOTIFICATION_FONT_SIZE * bgH,
                                NOTIFICATION_FETTI_COLOUR,
                                renderOpts);
 
   em.addEntity(id, EntityType.OTHER, [ renderComp ]);
 
-  const bgW = NOTIFICATION_WIDTH;
-  const bgH = NOTIFICATION_HEIGHT;
-  const bgX0 = (renderSys.viewW - bgW) * 0.5;
-  const bgX1 = bgX0 + bgW;
-  const bgY = (renderSys.viewH - bgH) * NOTIFICATION_Y;
-
   const textW = renderComp.width;
   const textH = renderComp.height;
 
-  const textX1 = bgX1 - NOTIFICATION_PADDING;
+  const textX1 = bgX1 - padding;
   const textX0 = textX1 - textW;
   const textY = bgY + 0.5 * (bgH - textH);
 

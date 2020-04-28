@@ -1,7 +1,7 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId, Component } from "../common/system";
 import { Rectangle } from "../common/geometry";
-import { BLOCK_SZ } from "../common/constants";
+import { BLOCK_SZ_WLD } from "../common/constants";
 import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
@@ -35,7 +35,7 @@ function constructWall(em: EntityManager, desc: any, destructable: boolean) {
     fixedAngle: false
   };
 
-  const shape = new Rectangle(BLOCK_SZ, BLOCK_SZ);
+  const shape = new Rectangle(BLOCK_SZ_WLD, BLOCK_SZ_WLD);
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 

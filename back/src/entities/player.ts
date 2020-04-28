@@ -2,7 +2,7 @@ import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
 import { CAgent } from "../agent_system";
 import { Circle } from "../common/geometry";
-import { BLOCK_SZ } from "../common/constants";
+import { BLOCK_SZ_WLD } from "../common/constants";
 import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
@@ -29,7 +29,7 @@ export function constructPlayer(em: EntityManager, desc: any): EntityId {
     fixedAngle: true
   };
 
-  const shape = new Circle(BLOCK_SZ * 0.5);
+  const shape = new Circle(BLOCK_SZ_WLD * 0.5);
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 

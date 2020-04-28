@@ -10,8 +10,9 @@ import { Rectangle } from "./common/geometry";
 import { EntityType } from "./common/game_objects";
 import { CSpatial } from "./spatial_component";
 import { PLAYER_BUCKET_VALUE_Z_INDEX } from "./constants";
-import { BLOCK_SZ } from "./common/constants";
 import { SpatialSystem } from "./spatial_system";
+import { BLOCK_SZ_WLD } from "./common/constants";
+import { toPixels } from "./utils";
 
 interface Bucket {
   name: string;
@@ -120,8 +121,8 @@ export class InventorySystem implements ClientSystem {
     }
 
     const n = bucket.max;
-    const margin = 2;
-    const w = (BLOCK_SZ - margin * (n - 1)) / n;
+    const w = 0.8 * BLOCK_SZ_WLD / n;
+    const margin = (BLOCK_SZ_WLD - w * n) / n;
     const h = w;
 
     const id = getNextEntityId();
@@ -130,7 +131,7 @@ export class InventorySystem implements ClientSystem {
 
     const spatialComp = new CSpatial(id, this._em);
     const renderComp = new CShape(id,
-                                  new Rectangle(w, h),
+                                  new Rectangle(toPixels(w), toPixels(h)),
                                   new Colour(1, 0, 0),
                                   { zIndex: PLAYER_BUCKET_VALUE_Z_INDEX });
 

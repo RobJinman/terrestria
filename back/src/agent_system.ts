@@ -20,7 +20,7 @@ import { RNewEntities, GameResponseType } from "./common/response";
 import { SpatialSystem } from "./spatial_system";
 import { Direction } from "./common/definitions";
 import { SpatialMode } from "./common/spatial_packet";
-import { BLOCK_SZ } from "./common/constants";
+import { BLOCK_SZ_WLD } from "./common/constants";
 
 const SCORE_THRESHOLDS = [ 10, 25, 50, 75 ];
 
@@ -354,9 +354,9 @@ export class AgentSystem implements ServerSystem {
     const spatialSys = <SpatialSystem>this._em.getSystem(ComponentType.SPATIAL);
     const spatialComp = spatialSys.getComponent(id);
 
-    const x = spatialComp.x_abs + BLOCK_SZ * 0.5;
-    const y = spatialComp.y_abs + BLOCK_SZ * 0.5;
-    const r = BLOCK_SZ;
+    const x = spatialComp.x_abs + BLOCK_SZ_WLD * 0.5;
+    const y = spatialComp.y_abs + BLOCK_SZ_WLD * 0.5;
+    const r = BLOCK_SZ_WLD;
 
     const entities = spatialSys.entitiesWithinRadius(x, y, r);
     entities.delete(id);

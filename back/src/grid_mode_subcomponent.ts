@@ -1,7 +1,7 @@
 import { EntityId } from "./common/system";
 import { Grid } from "./grid";
 import { GridModeProperties } from "./grid_mode_properties";
-import { BLOCK_SZ } from "./common/constants";
+import { BLOCK_SZ_WLD } from "./common/constants";
 import { SpatialSubcomponent } from "./spatial_subcomponent";
 import { Direction } from "./common/definitions";
 
@@ -85,8 +85,8 @@ export class GridModeSubcomponent extends SpatialSubcomponent {
 
       const direction = vectorToDirection(dx, dy);
 
-      const destX = x * BLOCK_SZ;
-      const destY = y * BLOCK_SZ;
+      const destX = x * BLOCK_SZ_WLD;
+      const destY = y * BLOCK_SZ_WLD;
 
       if (!noModeTransition && this._grid.gravRegion.contains(x, y)) {
         if (this._grid.attemptModeTransitionFn(this._entityId,
@@ -154,11 +154,11 @@ export class GridModeSubcomponent extends SpatialSubcomponent {
   }
 
   x() {
-    return this._gridX * BLOCK_SZ;
+    return this._gridX * BLOCK_SZ_WLD;
   }
 
   y() {
-    return this._gridY * BLOCK_SZ;
+    return this._gridY * BLOCK_SZ_WLD;
   }
 
   get speed() {

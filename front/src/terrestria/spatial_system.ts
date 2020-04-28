@@ -5,7 +5,7 @@ import { CSpatial } from "./spatial_component";
 import { ClientSystem } from "./common/client_system";
 import { Vec2, normalise } from "./common/geometry";
 import { SpatialPacket, SpatialMode } from "./common/spatial_packet";
-import { SYNC_INTERVAL_MS, BLOCK_SZ } from "./common/constants";
+import { SYNC_INTERVAL_MS, BLOCK_SZ_WLD } from "./common/constants";
 import { EntityManager } from "./entity_manager";
 
 export class SpatialSystem implements ClientSystem {
@@ -64,10 +64,10 @@ export class SpatialSystem implements ClientSystem {
         const dy = packet.y - c.y;
         const s = Math.sqrt(dx * dx + dy * dy);
         let multiplier = 1;
-        if (s > BLOCK_SZ) {
+        if (s > BLOCK_SZ_WLD) {
           // Hack to speed up lagging entities. Assumes that the speed given
-          // by the back-end was meant for a distance of BLOCK_SZ.
-          multiplier = 1 + (s - BLOCK_SZ) / BLOCK_SZ;
+          // by the back-end was meant for a distance of BLOCK_SZ_WLD.
+          multiplier = 1 + (s - BLOCK_SZ_WLD) / BLOCK_SZ_WLD;
         }
 
         this._setDestination(c, packet.x, packet.y, packet.speed * multiplier);

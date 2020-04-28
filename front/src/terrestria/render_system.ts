@@ -6,15 +6,17 @@ import { ClientSystem } from './common/client_system';
 import { Component, EntityId, ComponentPacket } from './common/system';
 import { Scheduler, ScheduledFnHandle } from './common/scheduler';
 import { CSpatial } from './spatial_component';
-import { BLOCK_SZ, CLIENT_FRAME_RATE } from './common/constants';
+import { CLIENT_FRAME_RATE } from './common/constants';
 import { Span2d } from './common/span';
 import { Shape, ShapeType, Circle, Rectangle, Vec2,
          RoundedRectangle } from './common/geometry';
 import { clamp } from './common/utils';
 import { EntityManager } from './entity_manager';
 import { SpatialContainer } from './spatial_container';
+import { BLOCK_SZ_PX } from './constants';
+import { toPixels, toWorldUnits } from './utils';
 
-const VERTICAL_RESOLUTION = 10 * BLOCK_SZ;
+const TARGET_VERTICAL_RESOLUTION = 10 * BLOCK_SZ_PX;
 const Z_INDEXES_START = 1000;
 export const MAX_PARALLAX_DEPTH = 10;
 
@@ -260,10 +262,10 @@ export class RenderSystem implements ClientSystem {
   private _pixi: PIXI.Application;
   private _spriteSheet?: PIXI.Spritesheet;
   private _textures = new Map<string, PIXI.Texture>();
-  private _viewX = 0;
-  private _viewY = 0;
-  private _viewW = 0;
-  private _viewH = VERTICAL_RESOLUTION;
+  private _viewX_px = 0;
+  private _viewY_px = 0;
+  private _viewW_px = 0;
+  private _viewH_px = 0;
   private _windowW = 0;
   private _windowH = 0;
   private _camera: Vec2 = { x: 0, y: 0 };
@@ -293,9 +295,11 @@ export class RenderSystem implements ClientSystem {
 
   setBackground(textureName: string) {
     const texture = this._findTexture(textureName);
-    this._bgSprite = new PIXI.TilingSprite(texture, this._viewW, this._viewH);
+    this._bgSprite = new PIXI.TilingSprite(texture,
+                                           this._viewW_px,
+                                           this._viewH_px);
     this._pixi.stage.addChild(this._bgSprite);
-    this._bgSprite.position.set(this._viewX, this._viewY);
+    this._bgSprite.position.set(this._viewX_px, this._viewY_px);
   }
 
   addChildToEntity(id: EntityId, childId: EntityId) {}
@@ -306,19 +310,27 @@ export class RenderSystem implements ClientSystem {
     return this._pixi.ticker.FPS; 
   }
 
-  get viewW() {
-    return this._viewW;
+  get viewW_wld() {
+    return toWorldUnits(this._viewW_px);
   }
 
-  get viewH() {
-    return this._viewH;
+  get viewH_wld() {
+    return toWorldUnits(this._viewH_px);
   }
 
-  get cameraX() {
+  get viewW_px() {
+    return this._viewW_px;
+  }
+
+  get viewH_px() {
+    return this._viewH_px;
+  }
+
+  get cameraX_wld() {
     return this._camera.x;
   }
 
-  get cameraY() {
+  get cameraY_wld() {
     return this._camera.y;
   }
 
@@ -331,9 +343,10 @@ export class RenderSystem implements ClientSystem {
     this._spriteSheet = resource.spritesheet;
   }
 
-  setWorldSize(worldW: number, worldH: number) {
+  setWorldSize(worldW_wld: number, worldH_wld: number) {
     this._pixi.stage.removeChildren();
-    this._spatialContainer = new SpatialContainer(worldW, worldH);
+    this._spatialContainer = new SpatialContainer(toPixels(worldW_wld),
+                                                  toPixels(worldH_wld));
   }
 
   get ready(): boolean {
@@ -345,13 +358,13 @@ export class RenderSystem implements ClientSystem {
     return this._pixi.view;
   }
 
-  setCameraPosition(x: number, y: number) {
-    if (Math.abs(x - this._camera.x) < 0.1 &&
-        Math.abs(y - this._camera.y) < 0.1) {
+  setCameraPosition(x_wld: number, y_wld: number) {
+    if (Math.abs(x_wld - this._camera.x) < 0.1 &&
+        Math.abs(y_wld - this._camera.y) < 0.1) {
       return;
     }
 
-    this._setCameraPosition(x, y);
+    this._setCameraPosition(x_wld, y_wld);
   }
 
   async addImage(name: string, url: string) {
@@ -598,16 +611,22 @@ export class RenderSystem implements ClientSystem {
     this._updateComponentPosition(c);
   }
 
+  setFontSize(entityId: EntityId, size: number) {
+    const c = this.getTextComponent(entityId);
+    c.pixiText.style.fontSize = size;
+  }
+
   onWindowResized(w: number, h: number) {
     this._windowW = w;
     this._windowH = h;
 
+    const scale = Math.ceil(h / TARGET_VERTICAL_RESOLUTION);
+
     const aspect = w / this._windowH;
-    this._viewW = this._viewH * aspect;
+    this._viewH_px = h / scale;
+    this._viewW_px = this._viewH_px * aspect;
 
     this._pixi.renderer.resize(w, h);
-
-    const scale = h / VERTICAL_RESOLUTION;
 
     this._pixi.stage.scale.x = scale;
     this._pixi.stage.scale.y = scale;
@@ -618,23 +637,23 @@ export class RenderSystem implements ClientSystem {
 
   private _repositionBg() {
     if (this._bgSprite) {
-      this._bgSprite.width = this._viewW;
-      this._bgSprite.height = this._viewH;
-      this._bgSprite.position.set(this._viewX, this._viewY);
+      this._bgSprite.width = this._viewW_px;
+      this._bgSprite.height = this._viewH_px;
+      this._bgSprite.position.set(this._viewX_px, this._viewY_px);
     }
   }
 
-  private _setCameraPosition(x: number, y: number) {
-    this._camera = { x, y };
+  private _setCameraPosition(x_wld: number, y_wld: number) {
+    this._camera = { x: x_wld, y: y_wld };
 
-    // Screen origin in world space
-    this._viewX = this._camera.x - 0.5 * this._viewW;
-    this._viewY = this._camera.y - 0.5 * this._viewH;
+    // Screen origin in world space, in pixels
+    this._viewX_px = toPixels(this._camera.x) - 0.5 * this._viewW_px;
+    this._viewY_px = toPixels(this._camera.y) - 0.5 * this._viewH_px;
 
-    const scale = this._windowH / this._viewH;
+    const scale = this._windowH / this._viewH_px;
 
-    this._pixi.stage.x = -this._viewX * scale;
-    this._pixi.stage.y = -this._viewY * scale;
+    this._pixi.stage.x = -this._viewX_px * scale;
+    this._pixi.stage.y = -this._viewY_px * scale;
 
     this._repositionBg();
     this._updateScreenSpaceComponentPositions();
@@ -646,10 +665,10 @@ export class RenderSystem implements ClientSystem {
       throw new GameError("Render system not initialised");
     }
 
-    const newVisible = this._spatialContainer.itemsInRegion(this._viewX,
-                                                            this._viewY,
-                                                            this._viewW,
-                                                            this._viewH);
+    const newVisible = this._spatialContainer.itemsInRegion(this._viewX_px,
+                                                            this._viewY_px,
+                                                            this._viewW_px,
+                                                            this._viewH_px);
 
     this._visible.forEach(item => {
       if (!newVisible.has(item)) {
@@ -691,17 +710,17 @@ export class RenderSystem implements ClientSystem {
       const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                       c.entityId);
       if (c.currentSprite) {
-        const x = spatial.x_abs;
-        const y = spatial.y_abs;
+        const x = toPixels(spatial.x_abs);
+        const y = toPixels(spatial.y_abs);
         const w = c.currentSprite.width;
         const h = c.currentSprite.height;
         const centreX = x + 0.5 * w;
         const centreY = y + 0.5 * h;
-        const dx = this._camera.x - centreX;
-        const dy = this._camera.y - centreY;
+        const dx = toPixels(this._camera.x) - centreX;
+        const dy = toPixels(this._camera.y) - centreY;
         const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
-        const newCentreX = this._camera.x - m * dx;
-        const newCentreY = this._camera.y - m * dy;
+        const newCentreX = toPixels(this._camera.x) - m * dx;
+        const newCentreY = toPixels(this._camera.y) - m * dy;
         const renderX = newCentreX - 0.5 * w + c.currentSprite.pivot.x +
                         c.offset.x;
         const renderY = newCentreY - 0.5 * h + c.currentSprite.pivot.y +
@@ -854,19 +873,21 @@ export class RenderSystem implements ClientSystem {
 
       for (const [j, spans] of c.region.spans) {
         for (const span of spans) {
-          const x = span.a * BLOCK_SZ;
-          const y = j * BLOCK_SZ;
+          const x = span.a * BLOCK_SZ_PX;
+          const y = j * BLOCK_SZ_PX;
           const n = span.b - span.a + 1;
 
-          const sprite = new PIXI.TilingSprite(texture, n * BLOCK_SZ, BLOCK_SZ);
+          const sprite = new PIXI.TilingSprite(texture,
+                                               n * BLOCK_SZ_PX,
+                                               BLOCK_SZ_PX);
           this._addInteractionCallbacks(c, sprite);
           this._stageDrawable(c.entityId,
                               sprite,
                               false,
                               x,
                               y,
-                              span.size() * BLOCK_SZ,
-                              BLOCK_SZ);
+                              span.size() * BLOCK_SZ_PX,
+                              BLOCK_SZ_PX);
           sprite.zIndex = c.zIndex;
           sprites.push(sprite);
         }
@@ -900,13 +921,15 @@ export class RenderSystem implements ClientSystem {
   private _setWorldPosition(c: CRender) {
     const spatialComp = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
                                                         c.entityId);
+    const x_px = toPixels(spatialComp.x_abs);
+    const y_px = toPixels(spatialComp.y_abs);
     if (c instanceof CSprite) {
       if (c.currentSprite) {
         // TODO: Shouldn't always assume pivot point
-        c.currentSprite.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
+        c.currentSprite.pivot.set(BLOCK_SZ_PX * 0.5, BLOCK_SZ_PX * 0.5);
         // The pivot needs to be added here to keep the position the same
-        const x = spatialComp.x_abs + c.currentSprite.pivot.x + c.offset.x;
-        const y = spatialComp.y_abs + c.currentSprite.pivot.y + c.offset.y;
+        const x = x_px + c.currentSprite.pivot.x + c.offset.x;
+        const y = y_px + c.currentSprite.pivot.y + c.offset.y;
         this._stageDrawable(c.entityId,
                             c.currentSprite,
                             true,
@@ -918,9 +941,9 @@ export class RenderSystem implements ClientSystem {
       }
     }
     else if (c instanceof CShape) {
-      c.graphics.pivot.set(BLOCK_SZ * 0.5, BLOCK_SZ * 0.5);
-      const x = spatialComp.x_abs + c.graphics.pivot.x + c.offset.x;
-      const y = spatialComp.y_abs + c.graphics.pivot.y + c.offset.y;
+      c.graphics.pivot.set(BLOCK_SZ_PX * 0.5, BLOCK_SZ_PX * 0.5);
+      const x = x_px + c.graphics.pivot.x + c.offset.x;
+      const y = y_px + c.graphics.pivot.y + c.offset.y;
       this._stageDrawable(c.entityId,
                           c.graphics,
                           true,
@@ -932,8 +955,8 @@ export class RenderSystem implements ClientSystem {
     }
     else if (c instanceof CText) {
       c.pixiText.pivot.set(0, 0);
-      const x = spatialComp.x_abs + c.pixiText.pivot.x + c.offset.x;
-      const y = spatialComp.y_abs + c.pixiText.pivot.y + c.offset.y;
+      const x = x_px + c.pixiText.pivot.x + c.offset.x;
+      const y = y_px + c.pixiText.pivot.y + c.offset.y;
       this._stageDrawable(c.entityId,
                           c.pixiText,
                           true,
@@ -946,8 +969,8 @@ export class RenderSystem implements ClientSystem {
   }
 
   private _setScreenPosition(c: CRender) {
-    const viewX = this._camera.x - 0.5 * this._viewW;
-    const viewY = this._camera.y - 0.5 * this._viewH;
+    const viewX_px = toPixels(this._camera.x) - 0.5 * this._viewW_px;
+    const viewY_px = toPixels(this._camera.y) - 0.5 * this._viewH_px;
 
     if (c instanceof CSprite) {
       if (c.currentSprite) {
@@ -958,8 +981,8 @@ export class RenderSystem implements ClientSystem {
         this._stageDrawable(c.entityId,
                             c.currentSprite,
                             true,
-                            viewX + c.screenPosition.x,
-                            viewY + c.screenPosition.y,
+                            viewX_px + c.screenPosition.x,
+                            viewY_px + c.screenPosition.y,
                             c.currentSprite.width,
                             c.currentSprite.height);
       }
@@ -972,8 +995,8 @@ export class RenderSystem implements ClientSystem {
       this._stageDrawable(c.entityId,
                           c.graphics,
                           true,
-                          viewX + c.screenPosition.x,
-                          viewY + c.screenPosition.y,
+                          viewX_px + c.screenPosition.x,
+                          viewY_px + c.screenPosition.y,
                           c.graphics.width,
                           c.graphics.height);
     }
@@ -985,8 +1008,8 @@ export class RenderSystem implements ClientSystem {
       this._stageDrawable(c.entityId,
                           c.pixiText,
                           true,
-                          viewX + c.screenPosition.x,
-                          viewY + c.screenPosition.y,
+                          viewX_px + c.screenPosition.x,
+                          viewY_px + c.screenPosition.y,
                           c.pixiText.width,
                           c.pixiText.height);
     }
@@ -1037,7 +1060,7 @@ export class RenderSystem implements ClientSystem {
                             sprite.x,
                             sprite.y,
                             sprite.width,
-                            BLOCK_SZ);
+                            BLOCK_SZ_PX);
       }
     }
   }

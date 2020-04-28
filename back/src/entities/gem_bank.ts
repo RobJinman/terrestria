@@ -10,7 +10,7 @@ import { DEFAULT_GRID_MODE_PROPS,
 import { EntityType } from "../common/game_objects";
 import { CBehaviour, EventHandlerFn } from "../common/behaviour_system";
 import { GameEventType, EAgentEnterCell, EGemsBanked } from "../common/event";
-import { BLOCK_SZ, PLAYER_SPEED } from "../common/constants";
+import { BLOCK_SZ_WLD, PLAYER_SPEED } from "../common/constants";
 import { CCollector } from "../inventory_system";
 import { Scheduler } from "../common/scheduler";
 
@@ -91,7 +91,7 @@ function constructBlockingSpaces(em: EntityManager, parentId: EntityId) {
     em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);
     em.addChildToEntity(parentId, id);
 
-    spatialComp.setStaticPos(i * BLOCK_SZ, j * BLOCK_SZ);
+    spatialComp.setStaticPos(i * BLOCK_SZ_WLD, j * BLOCK_SZ_WLD);
   }
 }
 
@@ -121,8 +121,8 @@ function constructEntrance(em: EntityManager,
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp, behaviourComp ]);
   em.addChildToEntity(parentId, id);
 
-  spatialSys.positionEntity(id, ENTRANCE_POS[0] * BLOCK_SZ,
-                                ENTRANCE_POS[1] * BLOCK_SZ);
+  spatialSys.positionEntity(id, ENTRANCE_POS[0] * BLOCK_SZ_WLD,
+                                ENTRANCE_POS[1] * BLOCK_SZ_WLD);
 }
 
 function constructExit(em: EntityManager, parentId: EntityId) {
@@ -149,7 +149,9 @@ function constructExit(em: EntityManager, parentId: EntityId) {
   em.addEntity(id, EntityType.OTHER, {}, [ spatialComp ]);
   em.addChildToEntity(parentId, id);
 
-  spatialSys.positionEntity(id, EXIT_POS[0] * BLOCK_SZ, EXIT_POS[1] * BLOCK_SZ);
+  spatialSys.positionEntity(id,
+                            EXIT_POS[0] * BLOCK_SZ_WLD,
+                            EXIT_POS[1] * BLOCK_SZ_WLD);
 
   return id;
 }

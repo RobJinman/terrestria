@@ -15,6 +15,15 @@ import { GameError } from "./common/error";
 const BUTTON_OPACITY_INACTIVE = 0.5;
 const BUTTON_OPACITY_ACTIVE = 1.0;
 
+// As percentage of viewport width
+const NOTIFICATION_WIDTH = 0.8;
+// As percentage of viewport height
+const NOTIFICATION_HEIGHT = 0.2;
+// As percentage of notification height
+const NOTIFICATION_RADIUS = 0.5;
+// As percentage of notification height
+const NOTIFICATION_FONT_SIZE = 0.3;
+
 export type DirectionInputHandlerFn = (input: UserInput) => void;
 export type VoidInputHandlerFn = () => void;
 
@@ -188,7 +197,7 @@ export class UserInputManager {
 
     const renderComp = new CText(id,
                                 "Tap here to respawn (or press enter)",
-                                28,
+                                10, // Arbitrary number. Will be changed later
                                 colour,
                                 renderOpts);
 
@@ -277,11 +286,16 @@ export class UserInputManager {
       throw new GameError("UserInputManager not initialised");
     }
 
-    const bgW = 550;
-    const bgH = 80;
-    const bgX = (renderSys.viewW - bgW) * 0.5;
-    const bgY = (renderSys.viewH - bgH) * 0.5;
-    const r = 40;
+    const W = renderSys.viewW_px;
+    const H = renderSys.viewH_px;
+
+    const bgW = NOTIFICATION_WIDTH * W;
+    const bgH = NOTIFICATION_HEIGHT * H;
+    const bgX = (W - bgW) * 0.5;
+    const bgY = (H - bgH) * 0.5;
+    const r = NOTIFICATION_RADIUS * bgH;
+
+    const fontSz = NOTIFICATION_FONT_SIZE * bgH;
 
     const shape = new RoundedRectangle(bgW, bgH, r);
 
@@ -289,12 +303,13 @@ export class UserInputManager {
     renderSys.setScreenPosition(this._ids.respawnPromptBg, bgX, bgY);
 
     const textComp = renderSys.getTextComponent(this._ids.respawnPromptText);
+    renderSys.setFontSize(textComp.entityId, fontSz);
 
     const textW = textComp.width;
     const textH = textComp.height;
 
-    const textX = (renderSys.viewW - textW) * 0.5;
-    const textY = (renderSys.viewH - textH) * 0.5;
+    const textX = (renderSys.viewW_px - textW) * 0.5;
+    const textY = (renderSys.viewH_px - textH) * 0.5;
 
     renderSys.setScreenPosition(this._ids.respawnPromptText, textX, textY);
   }
@@ -311,15 +326,15 @@ export class UserInputManager {
 
     const sz = 0.15; // As percentage of view height
 
-    const margin = renderSys.viewH * 0.02;
-    const w = renderSys.viewH * sz;
-    const h = renderSys.viewH * sz;
+    const margin = renderSys.viewH_px * 0.02;
+    const w = renderSys.viewH_px * sz;
+    const h = renderSys.viewH_px * sz;
     const x1 = 0 * w + margin;
     const x2 = 1 * w + margin;
     const x3 = 2 * w + margin;
-    const y1 = renderSys.viewH - 3 * h - margin;
-    const y2 = renderSys.viewH - 2 * h - margin;
-    const y3 = renderSys.viewH - 1 * h - margin;
+    const y1 = renderSys.viewH_px - 3 * h - margin;
+    const y2 = renderSys.viewH_px - 2 * h - margin;
+    const y3 = renderSys.viewH_px - 1 * h - margin;
 
     renderSys.setSpriteSize(upArrow, w, h);
     renderSys.setSpriteSize(rightArrow, w, h);
@@ -337,9 +352,9 @@ export class UserInputManager {
       throw new GameError("UserInputManager not initialised");
     }
 
-    const w = 0.25 * renderSys.viewH;
-    const h = 0.09 * renderSys.viewH;
-    const margin = 0.02 * renderSys.viewH;
+    const w = 0.25 * renderSys.viewH_px;
+    const h = 0.09 * renderSys.viewH_px;
+    const margin = 0.02 * renderSys.viewH_px;
     renderSys.setSpriteSize(this._ids.fullscreenButton, w, h);
     renderSys.setScreenPosition(this._ids.fullscreenButton, margin, margin);
   }
@@ -349,10 +364,10 @@ export class UserInputManager {
       throw new GameError("UserInputManager not initialised");
     }
 
-    const w = 0.13 * renderSys.viewH;
-    const h = 0.13 * renderSys.viewH;
-    const margin = 0.02 * renderSys.viewH;
-    const x = renderSys.viewW - margin - w;
+    const w = 0.13 * renderSys.viewH_px;
+    const h = 0.13 * renderSys.viewH_px;
+    const margin = 0.02 * renderSys.viewH_px;
+    const x = renderSys.viewW_px - margin - w;
     const y = margin;
     renderSys.setSpriteSize(this._ids.settingsButton, w, h);
     renderSys.setScreenPosition(this._ids.settingsButton, x, y);

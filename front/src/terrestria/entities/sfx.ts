@@ -7,7 +7,7 @@ import { EntityType } from "../common/game_objects";
 import { ComponentType } from "../common/component_types";
 import { RenderSystem } from "../render_system";
 import { CSpatial } from "../spatial_component";
-import { BLOCK_SZ, FALL_SPEED } from "../common/constants";
+import { FALL_SPEED, BLOCK_SZ_WLD } from "../common/constants";
 import { Scheduler } from "../common/scheduler";
 
 export function constructSfx(em: EntityManager,
@@ -104,8 +104,8 @@ function onEntityHit(em: EntityManager,
   const event = <EEntityHit>e;
 
   const distance = getDistanceFromViewport(em,
-                                           event.gridX * BLOCK_SZ,
-                                           event.gridY * BLOCK_SZ);
+                                           event.gridX * BLOCK_SZ_WLD,
+                                           event.gridY * BLOCK_SZ_WLD);
 
   scheduler.addFunction(() => am.playSound("thud", distance),
                         1000 / FALL_SPEED);
@@ -126,10 +126,10 @@ function onGemsBanked(em: EntityManager, am: AudioManager, e: GameEvent) {
 function getDistanceFromViewport(em: EntityManager, x: number, y: number) {
   const renderSys = <RenderSystem>em.getSystem(ComponentType.RENDER);
 
-  const viewportX0 = renderSys.cameraX - renderSys.viewW * 0.5;
-  const viewportX1 = renderSys.cameraX + renderSys.viewW * 0.5;
-  const viewportY0 = renderSys.cameraY - renderSys.viewH * 0.5;
-  const viewportY1 = renderSys.cameraY + renderSys.viewH * 0.5;
+  const viewportX0 = renderSys.cameraX_wld - renderSys.viewW_wld * 0.5;
+  const viewportX1 = renderSys.cameraX_wld + renderSys.viewW_wld * 0.5;
+  const viewportY0 = renderSys.cameraY_wld - renderSys.viewH_wld * 0.5;
+  const viewportY1 = renderSys.cameraY_wld + renderSys.viewH_wld * 0.5;
 
   let dx = 0;
   let dy = 0;
