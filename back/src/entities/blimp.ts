@@ -37,7 +37,7 @@ export function constructBlimp(em: EntityManager,
   spatialSys.positionEntity(id, desc.x, desc.y);
 
   const bobble = 10;
-  const xOffset = -BLOCK_SZ_WLD * 5;
+  const xOffset = -BLOCK_SZ_WLD * 10;
   const range = (worldW * BLOCK_SZ_WLD) - xOffset;
   const y0 = spatialComp.y;
   const dx = 1;

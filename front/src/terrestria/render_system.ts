@@ -346,7 +346,8 @@ export class RenderSystem implements ClientSystem {
   setWorldSize(worldW_wld: number, worldH_wld: number) {
     this._pixi.stage.removeChildren();
     this._spatialContainer = new SpatialContainer(toPixels(worldW_wld),
-                                                  toPixels(worldH_wld));
+                                                  toPixels(worldH_wld),
+                                                  BLOCK_SZ_PX * 1.5);
   }
 
   get ready(): boolean {
@@ -657,7 +658,10 @@ export class RenderSystem implements ClientSystem {
 
     this._repositionBg();
     this._updateScreenSpaceComponentPositions();
-    this._computeParallaxOffsets();
+  
+    this._parallaxComponents.forEach(c => {
+      this._computeParallaxOffsets(c);
+    });
   }
 
   private _doCull() {
@@ -705,37 +709,35 @@ export class RenderSystem implements ClientSystem {
     return sprite;
   }
 
-  private _computeParallaxOffsets() {
-    this._parallaxComponents.forEach(c => {
-      const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
-                                                      c.entityId);
-      if (c.currentSprite) {
-        const x = toPixels(spatial.x_abs);
-        const y = toPixels(spatial.y_abs);
-        const w = c.currentSprite.width;
-        const h = c.currentSprite.height;
-        const centreX = x + 0.5 * w;
-        const centreY = y + 0.5 * h;
-        const dx = toPixels(this._camera.x) - centreX;
-        const dy = toPixels(this._camera.y) - centreY;
-        const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
-        const newCentreX = toPixels(this._camera.x) - m * dx;
-        const newCentreY = toPixels(this._camera.y) - m * dy;
-        const renderX = newCentreX - 0.5 * w + c.currentSprite.pivot.x +
-                        c.offset.x;
-        const renderY = newCentreY - 0.5 * h + c.currentSprite.pivot.y +
-                        c.offset.y;
-        this._stageDrawable(c.entityId,
-                            c.currentSprite,
-                            true,
-                            renderX,
-                            renderY,
-                            w,
-                            h);
-        const zIndex = c.zIndex - Z_INDEXES_START;
-        c.currentSprite.zIndex = Z_INDEXES_START - 100 * c.depth + zIndex;
-      }
-    });
+  private _computeParallaxOffsets(c: CParallax) {
+    const spatial = <CSpatial>this._em.getComponent(ComponentType.SPATIAL,
+                                                    c.entityId);
+    if (c.currentSprite) {
+      const x = toPixels(spatial.x_abs);
+      const y = toPixels(spatial.y_abs);
+      const w = c.currentSprite.width;
+      const h = c.currentSprite.height;
+      const centreX = x + 0.5 * w;
+      const centreY = y + 0.5 * h;
+      const dx = toPixels(this._camera.x) - centreX;
+      const dy = toPixels(this._camera.y) - centreY;
+      const m = (MAX_PARALLAX_DEPTH - c.depth) / MAX_PARALLAX_DEPTH;
+      const newCentreX = toPixels(this._camera.x) - m * dx;
+      const newCentreY = toPixels(this._camera.y) - m * dy;
+      const renderX = newCentreX - 0.5 * w + c.currentSprite.pivot.x +
+                      c.offset.x;
+      const renderY = newCentreY - 0.5 * h + c.currentSprite.pivot.y +
+                      c.offset.y;
+      this._stageDrawable(c.entityId,
+                          c.currentSprite,
+                          true,
+                          renderX,
+                          renderY,
+                          w,
+                          h);
+      const zIndex = c.zIndex - Z_INDEXES_START;
+      c.currentSprite.zIndex = Z_INDEXES_START - 100 * c.depth + zIndex;
+    }
   }
 
   private _stageDrawable(entityId: EntityId,
@@ -938,6 +940,9 @@ export class RenderSystem implements ClientSystem {
                             c.currentSprite.width,
                             c.currentSprite.height,
                             spatialComp.angle_abs);
+      }
+      if (c instanceof CParallax) {
+        this._computeParallaxOffsets(c);
       }
     }
     else if (c instanceof CShape) {

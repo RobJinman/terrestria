@@ -1,18 +1,18 @@
 import { clamp, addToMapOfSets, addToMapOfArrays } from "./common/utils";
 import { EntityId } from "./common/system";
 
-const CELL_SZ = 100;
-
 export class SpatialContainer {
   private _gridW = 0;
   private _gridH = 0;
+  private _cellSz: number;
   private _grid: Set<PIXI.DisplayObject>[][];
   private _entityItems = new Map<EntityId, Set<PIXI.DisplayObject>>();
   private _itemLocations = new Map<PIXI.DisplayObject, [ number, number ][]>();
 
-  constructor(worldW: number, worldH: number) {
-    this._gridW = Math.ceil(worldW / CELL_SZ);
-    this._gridH = Math.ceil(worldH / CELL_SZ);
+  constructor(worldW: number, worldH: number, cellSz: number) {
+    this._cellSz = cellSz;
+    this._gridW = Math.ceil(worldW / this._cellSz);
+    this._gridH = Math.ceil(worldH / this._cellSz);
 
     this._grid = [];
     for (let i = 0; i < this._gridW; ++i) {
@@ -77,10 +77,10 @@ export class SpatialContainer {
   }
 
   private _worldRectToGridCoords(x: number, y: number, w: number, h: number) {
-    let x0 = Math.floor(x / CELL_SZ);
-    let x1 = Math.ceil((x + w) / CELL_SZ);
-    let y0 = Math.floor(y / CELL_SZ);
-    let y1 = Math.ceil((y + h) / CELL_SZ);
+    let x0 = Math.floor(x / this._cellSz);
+    let x1 = Math.ceil((x + w) / this._cellSz);
+    let y0 = Math.floor(y / this._cellSz);
+    let y1 = Math.ceil((y + h) / this._cellSz);
 
     x0 = clamp(x0, 0, this._gridW - 1);
     x1 = clamp(x1, 0, this._gridW - 1);
