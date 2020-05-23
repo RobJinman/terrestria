@@ -22,6 +22,10 @@ export function constructSoil(em: EntityManager, entity: EntityData) {
     {
       name: "soil_puff",
       duration: 1.0 / PLAYER_SPEED
+    },
+    {
+      name: "soil_zap",
+      duration: 1.0 / PLAYER_SPEED
     }
   ];
 
@@ -38,7 +42,7 @@ export function constructSoil(em: EntityManager, entity: EntityData) {
   targetedEvents.set(GameEventType.AGENT_ACTION, e => {
     const event = <EAgentAction>e;
     if (event.actionType == AgentActionType.DIG) {
-      renderSys.playAnimation(id, "soil_puff", () => {
+      renderSys.playAnimation(id, "soil_zap", () => {
         em.removeEntity(id);
       });
     }

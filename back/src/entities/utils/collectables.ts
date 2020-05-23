@@ -38,7 +38,7 @@ function onAgentBlocked(em: EntityManager,
     };
 
     em.submitEvent(collect);
-    em.removeEntity_onClients(collectableId);
+    em.removeEntity(collectableId);
   }
 }
 
@@ -65,7 +65,7 @@ function onEntityCollision(em: EntityManager,
       };
 
       em.submitEvent(collect);
-      em.removeEntity_onClients(collectableId);
+      em.removeEntity(collectableId);
     }
   }
 }

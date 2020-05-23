@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>4</int>
         <key>texturePackerVersion</key>
-        <string>5.1.0</string>
+        <string>5.3.0</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -187,6 +187,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -200,6 +202,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -214,6 +218,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -230,6 +236,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -243,6 +251,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -354,6 +364,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -367,6 +379,8 @@
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -376,10 +390,38 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">gem_zap0.png</key>
+            <key type="filename">gem_zap1.png</key>
+            <key type="filename">gem_zap2.png</key>
+            <key type="filename">gem_zap3.png</key>
+            <key type="filename">round_rock_roll0.png</key>
+            <key type="filename">round_rock_roll1.png</key>
+            <key type="filename">round_rock_roll2.png</key>
+            <key type="filename">round_rock_roll3.png</key>
+            <key type="filename">soil_zap0.png</key>
+            <key type="filename">soil_zap1.png</key>
+            <key type="filename">soil_zap2.png</key>
+            <key type="filename">soil_zap3.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>6,6,12,12</rect>
+                <key>scale9Paddings</key>
+                <rect>6,6,12,12</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">sky.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
@@ -504,6 +546,18 @@
             <filename>award_icon_null.png</filename>
             <filename>award_icon_signed_out.png</filename>
             <filename>sky.png</filename>
+            <filename>soil_zap0.png</filename>
+            <filename>soil_zap1.png</filename>
+            <filename>soil_zap2.png</filename>
+            <filename>soil_zap3.png</filename>
+            <filename>gem_zap0.png</filename>
+            <filename>gem_zap1.png</filename>
+            <filename>gem_zap2.png</filename>
+            <filename>gem_zap3.png</filename>
+            <filename>round_rock_roll0.png</filename>
+            <filename>round_rock_roll1.png</filename>
+            <filename>round_rock_roll2.png</filename>
+            <filename>round_rock_roll3.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

@@ -5,7 +5,7 @@ import { StaticImage, AnimationDesc, CSprite,
 import { PLAYER_SPEED } from "../common/constants";
 import { CSpatial } from "../spatial_component";
 import { ComponentType } from "../common/component_types";
-import { GameEventType } from "../common/event";
+import { GameEventType, EAgentAction, AgentActionType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 import { SpatialSystem } from "../spatial_system";
@@ -22,6 +22,10 @@ export function constructGem(em: EntityManager, entity: EntityData) {
   const animations: AnimationDesc[] = [
     {
       name: "gem_burn",
+      duration: 1.0 / PLAYER_SPEED
+    },
+    {
+      name: "gem_zap",
       duration: 1.0 / PLAYER_SPEED
     }
   ];
@@ -40,6 +44,15 @@ export function constructGem(em: EntityManager, entity: EntityData) {
     renderSys.playAnimation(id, "gem_burn", () => {
       em.removeEntity(id);
     });
+  });
+  targetedEvents.set(GameEventType.AGENT_ACTION, e => {
+    const event = <EAgentAction>e;
+
+    if (event.actionType == AgentActionType.COLLECT) {
+      renderSys.playAnimation(id, "gem_zap", () => {
+        em.removeEntity(id);
+      });
+    }
   });
 
   const behaviourComp = new CBehaviour(id, targetedEvents);

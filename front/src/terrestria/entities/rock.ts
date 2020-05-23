@@ -5,7 +5,7 @@ import { StaticImage, AnimationDesc, CSprite,
 import { PLAYER_SPEED } from "../common/constants";
 import { CSpatial } from "../spatial_component";
 import { ComponentType } from "../common/component_types";
-import { GameEventType } from "../common/event";
+import { GameEventType, EAgentAction, AgentActionType } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 
@@ -36,6 +36,13 @@ function constructRock(em: EntityManager,
     }
   ];
 
+  if (!square) {
+    animations.push({
+      name: `${typeString}_rock_roll`,
+      duration: 1.0 / PLAYER_SPEED
+    });
+  }
+
   const renderComp = new CSprite(id,
                                  staticImages,
                                  animations,
@@ -51,6 +58,15 @@ function constructRock(em: EntityManager,
       em.removeEntity(id);
     });
   });
+
+  if (!square) {
+    targetedEvents.set(GameEventType.AGENT_ACTION, e_ => {
+      const e = <EAgentAction>e_;
+      if (e.actionType == AgentActionType.PUSH) {
+        renderSys.playAnimation(id, `${typeString}_rock_roll`);
+      }
+    });
+  }
 
   const behaviourComp = new CBehaviour(id, targetedEvents);
 
