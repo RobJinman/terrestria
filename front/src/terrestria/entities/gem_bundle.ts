@@ -5,7 +5,7 @@ import { StaticImage, AnimationDesc, CSprite,
 import { PLAYER_SPEED } from "../common/constants";
 import { CSpatial } from "../spatial_component";
 import { ComponentType } from "../common/component_types";
-import { GameEventType } from "../common/event";
+import { GameEventType, AgentActionType, EAgentAction } from "../common/event";
 import { EventHandlerFn, CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 import { GameError } from "../common/error";
@@ -27,7 +27,11 @@ export function constructGemBundle(em: EntityManager, entity: EntityData) {
 
   const animations: AnimationDesc[] = [
     {
-      name: `gem_bundle_${value}_burn`,
+      name: `gem_bundle_burn`,
+      duration: 1.0 / PLAYER_SPEED
+    },
+    {
+      name: `gem_bundle_zap`,
       duration: 1.0 / PLAYER_SPEED
     }
   ];
@@ -43,9 +47,18 @@ export function constructGemBundle(em: EntityManager, entity: EntityData) {
 
   const targetedEvents = new Map<GameEventType, EventHandlerFn>();
   targetedEvents.set(GameEventType.ENTITY_BURNED, e => {
-    renderSys.playAnimation(id, `gem_bundle_${value}_burn`, () => {
+    renderSys.playAnimation(id, `gem_bundle_burn`, () => {
       em.removeEntity(id);
     });
+  });
+  targetedEvents.set(GameEventType.AGENT_ACTION, e => {
+    const event = <EAgentAction>e;
+
+    if (event.actionType == AgentActionType.COLLECT) {
+      renderSys.playAnimation(id, "gem_bundle_zap", () => {
+        em.removeEntity(id);
+      });
+    }
   });
 
   const behaviourComp = new CBehaviour(id, targetedEvents);

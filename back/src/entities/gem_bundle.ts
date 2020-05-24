@@ -8,6 +8,7 @@ import { CCollectable } from "../inventory_system";
 import { CBehaviour } from "../common/behaviour_system";
 import { EntityType } from "../common/game_objects";
 import { addCollectableBehaviour } from "./utils/collectables";
+import { BLOCK_SZ_WLD } from "../common/constants";
 
 export function constructGemBundle(em: EntityManager, desc: any): EntityId {
   const id = getNextEntityId();
@@ -28,10 +29,10 @@ export function constructGemBundle(em: EntityManager, desc: any): EntityId {
   };
 
   const points = [
-    { x: 32, y: 0 },
-    { x: 64, y: 32 },
-    { x: 32, y: 64 },
-    { x: 0, y: 32 }
+    { x: BLOCK_SZ_WLD / 2, y: 0 },
+    { x: BLOCK_SZ_WLD, y: BLOCK_SZ_WLD / 2 },
+    { x: BLOCK_SZ_WLD / 2, y: BLOCK_SZ_WLD },
+    { x: 0, y: BLOCK_SZ_WLD / 2 }
   ];
   const shape = new Polygon(points);
 

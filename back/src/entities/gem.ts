@@ -1,6 +1,6 @@
 import { EntityManager, getNextEntityId } from "../entity_manager";
 import { EntityId } from "../common/system";
-import { Polygon } from "../common/geometry";
+import { Circle } from "../common/geometry";
 import { SpatialSystem } from "../spatial_system";
 import { ComponentType } from "../common/component_types";
 import { CSpatial } from "../spatial_component";
@@ -28,14 +28,7 @@ export function constructGem(em: EntityManager, desc: any): EntityId {
     fixedAngle: false
   };
 
-  const points = [
-    { x: 0, y: 0.3125 * BLOCK_SZ_WLD },
-    { x: 0.5 * BLOCK_SZ_WLD, y: BLOCK_SZ_WLD },
-    { x: BLOCK_SZ_WLD, y: 0.3125 * BLOCK_SZ_WLD },
-    { x: 0.84375 * BLOCK_SZ_WLD, y: 0 },
-    { x: 0.15625 * BLOCK_SZ_WLD, y: 0 }
-  ];
-  const shape = new Polygon(points);
+  const shape = new Circle(BLOCK_SZ_WLD * 0.5);
 
   const spatialSys = <SpatialSystem>em.getSystem(ComponentType.SPATIAL);
 
